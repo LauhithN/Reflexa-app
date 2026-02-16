@@ -4,56 +4,78 @@ import SwiftUI
 struct GameCard: View {
     let gameType: GameType
     let isLocked: Bool
-    let action: () -> Void
+    let action: (() -> Void)?
+
+    init(gameType: GameType, isLocked: Bool, action: (() -> Void)? = nil) {
+        self.gameType = gameType
+        self.isLocked = isLocked
+        self.action = action
+    }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: gameType.iconName)
-                    .font(.system(size: 24))
-                    .foregroundStyle(isLocked ? .gray : .white)
-                    .frame(width: 44, height: 44)
-                    .background(isLocked ? Color.cardBackground : Color.waiting)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+        let content = cardContent
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(gameType.displayName)
-                            .font(.playerLabel)
-                            .foregroundStyle(.white)
+        if let action {
+            Button(action: action) {
+                content
+            }
+            .accessibleTapTarget()
+            .accessibilityLabel(accessibilityText)
+        } else {
+            content
+                .accessibleTapTarget()
+                .accessibilityLabel(accessibilityText)
+        }
+    }
 
-                        if isLocked {
-                            UnlockBadge()
-                        }
-                    }
+    private var cardContent: some View {
+        HStack(spacing: 16) {
+            Image(systemName: gameType.iconName)
+                .font(.system(size: 24))
+                .foregroundStyle(isLocked ? .gray : Color(hex: "FBBF24"))
+                .frame(width: 44, height: 44)
+                .background(isLocked ? Color.cardBackground : Color(hex: "A855F7"))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                    Text(gameType.description)
-                        .font(.caption)
-                        .foregroundStyle(.gray)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(gameType.displayName)
+                        .font(.playerLabel)
+                        .foregroundStyle(.white)
 
-                    HStack(spacing: 8) {
-                        ForEach(gameType.supportedModes) { mode in
-                            Text(mode.displayName)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.gray)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.cardBackground)
-                                .clipShape(Capsule())
-                        }
+                    if isLocked {
+                        UnlockBadge()
                     }
                 }
 
-                Spacer()
-
-                Image(systemName: "chevron.right")
+                Text(gameType.description)
+                    .font(.caption)
                     .foregroundStyle(.gray)
+
+                HStack(spacing: 8) {
+                    ForEach(gameType.supportedModes) { mode in
+                        Text(mode.displayName)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.gray)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.cardBackground)
+                            .clipShape(Capsule())
+                    }
+                }
             }
-            .padding()
-            .background(Color.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.gray)
         }
-        .accessibleTapTarget()
-        .accessibilityLabel("\(gameType.displayName). \(gameType.description). \(isLocked ? "Premium, locked" : "")")
+        .padding()
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var accessibilityText: String {
+        "\(gameType.displayName). \(gameType.description). \(isLocked ? "Premium, locked" : "")"
     }
 }

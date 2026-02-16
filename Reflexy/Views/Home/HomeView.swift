@@ -1,4 +1,5 @@
 import SwiftUI
+import GameKit
 
 struct HomeView: View {
     @State private var showStore = false
@@ -39,8 +40,7 @@ struct HomeView: View {
                         NavigationLink {
                             GameSetupView(gameType: game)
                         } label: {
-                            GameCard(gameType: game, isLocked: false) {}
-                                .allowsHitTesting(false)
+                            GameCard(gameType: game, isLocked: false)
                         }
                         .buttonStyle(.plain)
                     }
@@ -62,8 +62,7 @@ struct HomeView: View {
                             NavigationLink {
                                 GameSetupView(gameType: game)
                             } label: {
-                                GameCard(gameType: game, isLocked: false) {}
-                                    .allowsHitTesting(false)
+                                GameCard(gameType: game, isLocked: false)
                             }
                             .buttonStyle(.plain)
                         }
@@ -94,6 +93,16 @@ struct HomeView: View {
         }
         .background(Color.appBackground)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    GameCenterService.shared.showDashboard()
+                } label: {
+                    Image(systemName: "gamecontroller.fill")
+                        .foregroundStyle(.gray)
+                        .accessibleTapTarget()
+                }
+                .accessibilityLabel("Game Center")
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showSettings = true

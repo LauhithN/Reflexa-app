@@ -39,4 +39,14 @@ extension View {
             self
         }
     }
+
+    /// Dismiss the view when the app goes to background during an active game
+    func dismissOnBackground(dismiss: DismissAction, isActive: Bool) -> some View {
+        self.onChange(of: isActive) { _, _ in }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+                if isActive {
+                    dismiss()
+                }
+            }
+    }
 }

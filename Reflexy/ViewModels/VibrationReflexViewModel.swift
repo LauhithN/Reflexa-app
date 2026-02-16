@@ -11,6 +11,7 @@ final class VibrationReflexViewModel: GameViewModelProtocol {
     var reactionTimes: [Int?]
     var winnerIndex: Int?
     var percentile: Int = 0
+    var waitingStartTime: CFTimeInterval = 0
 
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
@@ -67,6 +68,7 @@ final class VibrationReflexViewModel: GameViewModelProtocol {
             if config.playerMode == .solo {
                 if let ms = reactionTimes[0] {
                     percentile = Constants.percentile(forReactionMs: ms)
+                    GameCenterService.shared.submitScore(ms, for: .vibrationReflex)
                 }
                 haptic.success()
                 state = .result
@@ -79,6 +81,16 @@ final class VibrationReflexViewModel: GameViewModelProtocol {
         }
     }
 
+    var speedTier: String {
+        guard let ms = reactionTimes[0] else { return "" }
+        switch ms {
+        case ..<170: return "Reflex Master"
+        case 170..<250: return "Quick Hands"
+        case 250..<350: return "Steady"
+        default: return "Room to Grow"
+        }
+    }
+
     // MARK: - Private
 
     private func resetValues() {
@@ -86,6 +98,7 @@ final class VibrationReflexViewModel: GameViewModelProtocol {
         winnerIndex = nil
         percentile = 0
         hasFalseStart = false
+        waitingStartTime = 0
         waitTask?.cancel()
     }
 
@@ -105,6 +118,7 @@ final class VibrationReflexViewModel: GameViewModelProtocol {
     }
 
     private func beginWaitingPhase() {
+        waitingStartTime = CACurrentMediaTime()
         state = .waiting
 
         let delay = Double.random(

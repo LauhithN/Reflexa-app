@@ -15,7 +15,7 @@ final class StoreService {
     @AppStorage(Constants.hasPurchasedUnlockKey) private var hasPurchasedBackup = false
 
     var isUnlocked: Bool {
-        hasPurchasedBackup
+        Constants.forceUnlockAllGames || hasPurchasedBackup
     }
 
     private var transactionListener: Task<Void, Never>?

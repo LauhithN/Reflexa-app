@@ -12,6 +12,19 @@ final class QuickTapViewModel: GameViewModelProtocol {
     var timeRemaining: Double = Constants.quickTapDuration
     var isFinished: Bool = false
 
+    var tapsPerSecond: Double = 0
+    var bestTapsPerSecond: Double = 0
+    var tapTimestamps: [CFTimeInterval] = []
+
+    var speedTier: String {
+        switch tapCount {
+        case 80...: return "Inhuman"
+        case 60..<80: return "Blazing"
+        case 40..<60: return "Fast"
+        default: return "Casual"
+        }
+    }
+
     private let timing = TimingService()
     private let haptic = HapticService.shared
 
@@ -36,6 +49,7 @@ final class QuickTapViewModel: GameViewModelProtocol {
         guard case .active = state else { return }
         haptic.lightTap()
         tapCount += 1
+        tapTimestamps.append(CACurrentMediaTime())
     }
 
     // MARK: - Private
@@ -44,6 +58,9 @@ final class QuickTapViewModel: GameViewModelProtocol {
         tapCount = 0
         timeRemaining = Constants.quickTapDuration
         isFinished = false
+        tapsPerSecond = 0
+        bestTapsPerSecond = 0
+        tapTimestamps = []
     }
 
     private func runCountdown(from value: Int) {
@@ -72,10 +89,22 @@ final class QuickTapViewModel: GameViewModelProtocol {
                 self.timing.stop()
                 self.isFinished = true
                 self.haptic.success()
+                GameCenterService.shared.submitScore(self.tapCount, for: .quickTap)
                 self.state = .result
             } else {
                 self.timeRemaining = remaining
+                self.updateTapsPerSecond()
             }
+        }
+    }
+
+    private func updateTapsPerSecond() {
+        let now = CACurrentMediaTime()
+        let windowStart = now - 1.0
+        let recentTaps = tapTimestamps.filter { $0 >= windowStart }
+        tapsPerSecond = Double(recentTaps.count)
+        if tapsPerSecond > bestTapsPerSecond {
+            bestTapsPerSecond = tapsPerSecond
         }
     }
 

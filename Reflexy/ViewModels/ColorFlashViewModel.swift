@@ -10,6 +10,8 @@ final class ColorFlashViewModel: GameViewModelProtocol {
 
     var reactionTimeMs: Int = 0
     var percentile: Int = 0
+    var isDecoyFlashVisible = false
+    var decoyFlashesShown = 0
 
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
@@ -20,7 +22,6 @@ final class ColorFlashViewModel: GameViewModelProtocol {
     }
 
     func startGame() {
-        guard state == .ready || state == .result || state is GameState else { return }
         if case .ready = state { } else if case .result = state { } else if case .falseStart = state { } else { return }
         resetValues()
         state = .countdown(3)
@@ -38,6 +39,7 @@ final class ColorFlashViewModel: GameViewModelProtocol {
         case .waiting:
             // False start — tapped before stimulus
             waitTask?.cancel()
+            isDecoyFlashVisible = false
             haptic.error()
             state = .falseStart(nil)
 
@@ -47,6 +49,7 @@ final class ColorFlashViewModel: GameViewModelProtocol {
             reactionTimeMs = TimingService.reactionMs(from: stimulusTime, to: now)
             percentile = Constants.percentile(forReactionMs: reactionTimeMs)
             haptic.success()
+            GameCenterService.shared.submitScore(reactionTimeMs, for: .colorFlash)
             state = .result
 
         default:
@@ -59,6 +62,8 @@ final class ColorFlashViewModel: GameViewModelProtocol {
     private func resetValues() {
         reactionTimeMs = 0
         percentile = 0
+        isDecoyFlashVisible = false
+        decoyFlashesShown = 0
         stimulusTime = 0
         waitTask?.cancel()
     }
@@ -80,21 +85,57 @@ final class ColorFlashViewModel: GameViewModelProtocol {
 
     private func beginWaitingPhase() {
         state = .waiting
+        isDecoyFlashVisible = false
 
         // Random delay between minWaitTime and maxWaitTime
         // Never less than minSafeWaitTime (1.5s)
         let delay = Double.random(
             in: max(Constants.minWaitTime, Constants.minSafeWaitTime)...Constants.maxWaitTime
         )
+        let decoyCount = Int.random(in: 1...2)
+        let latestDecoyMoment = max(delay - 0.45, 0.35)
+        let decoyMoments: [Double] = (0..<decoyCount).map { _ in
+            Double.random(in: 0.35...latestDecoyMoment)
+        }
+        .sorted()
 
         waitTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(Int(delay * 1000)))
+            guard let self else { return }
+
+            var elapsed = 0.0
+
+            for moment in decoyMoments {
+                let segment = max(moment - elapsed, 0)
+                if segment > 0 {
+                    try? await Task.sleep(for: .milliseconds(Int(segment * 1000)))
+                }
+                guard !Task.isCancelled else { return }
+                guard self.state == .waiting else { return }
+                await self.triggerDecoyFlash()
+                elapsed = moment + 0.14
+            }
+
+            let remaining = max(delay - elapsed, 0)
+            if remaining > 0 {
+                try? await Task.sleep(for: .milliseconds(Int(remaining * 1000)))
+            }
             guard !Task.isCancelled else { return }
-            self?.showStimulus()
+            self.showStimulus()
         }
     }
 
+    @MainActor
+    private func triggerDecoyFlash() async {
+        isDecoyFlashVisible = true
+        decoyFlashesShown += 1
+        haptic.lightTap()
+        try? await Task.sleep(for: .milliseconds(120))
+        guard state == .waiting else { return }
+        isDecoyFlashVisible = false
+    }
+
     private func showStimulus() {
+        isDecoyFlashVisible = false
         stimulusTime = TimingService.now()
         state = .active
         haptic.goImpact()

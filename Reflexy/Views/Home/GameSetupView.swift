@@ -70,6 +70,7 @@ struct GameSetupView: View {
         .navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(isPresented: $isPlaying) {
             gameView
+                .howToPlayOverlay(for: gameType)
         }
     }
 

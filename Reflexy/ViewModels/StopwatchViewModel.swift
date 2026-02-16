@@ -50,8 +50,12 @@ final class StopwatchViewModel: GameViewModelProtocol {
         // Check if all players have stopped
         if playerStopped.allSatisfy({ $0 }) {
             timing.stop()
-            state = .result
             haptic.success()
+            if config.playerMode == .solo {
+                let scoreMs = Int(scoreFor(player: 0) * 1000)
+                GameCenterService.shared.submitScore(scoreMs, for: .stopwatch)
+            }
+            state = .result
         }
     }
 
@@ -98,7 +102,6 @@ final class StopwatchViewModel: GameViewModelProtocol {
 
     /// Start the stopwatch countdown from 100 to negative values using CADisplayLink
     private func startStopwatch() {
-        let startTime = CACurrentMediaTime()
         timing.start { [weak self] elapsed in
             guard let self else { return }
             // Count down at 25 units per second (100 / 4 seconds = nice speed)

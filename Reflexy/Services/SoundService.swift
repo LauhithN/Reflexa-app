@@ -1,4 +1,5 @@
 import AVFoundation
+import SwiftUI
 
 /// Audio playback service for game sounds.
 /// Pre-loads sounds during .ready state to avoid first-play latency.
@@ -8,13 +9,17 @@ final class SoundService {
     private var beepPlayer: AVAudioPlayer?
     private var countdownPlayer: AVAudioPlayer?
 
+    @AppStorage("soundEnabled") private var soundEnabled = true
+
+    private var isEnabled: Bool { soundEnabled }
+
     private init() {
         configureAudioSession()
     }
 
     private func configureAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("Audio session configuration failed: \(error)")
@@ -35,12 +40,14 @@ final class SoundService {
 
     /// Play the beep stimulus for Sound Reflex
     func playBeep() {
+        guard isEnabled else { return }
         beepPlayer?.currentTime = 0
         beepPlayer?.play()
     }
 
     /// Play countdown tick
     func playCountdownTick() {
+        guard isEnabled else { return }
         countdownPlayer?.currentTime = 0
         countdownPlayer?.play()
     }

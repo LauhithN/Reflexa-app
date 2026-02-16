@@ -1,88 +1,119 @@
 import Foundation
 import QuartzCore
 
-/// Reaction Duel: Like Color Battle but measures exact reaction times.
-/// Winner = fastest time. Single round.
+/// Charge & Release: Wait for signal, hold to charge, release near target.
+/// Winner = lowest offset from target. False start loses immediately.
 @Observable
 final class ReactionDuelViewModel: GameViewModelProtocol {
     let config: GameConfiguration
     var state: GameState = .ready
 
-    var reactionTimes: [Int?] // ms per player, nil = not yet tapped
+    let targetCharge: Double = 75
+    let perfectWindow: ClosedRange<Double> = 72...78
+
+    var chargeValues: [Double] // live charge 0...100
+    var lockedCharges: [Double?] // final released charge
+    var roundScores: [Double?] // abs offset from target (lower is better)
+    var reactionTimes: [Int?] // ms to initial press after signal
+    var chargingStates: [Bool] // true while player is holding
     var winnerIndex: Int?
     var falseStartPlayer: Int?
 
-    private var stimulusTime: CFTimeInterval = 0
-    private var waitTask: Task<Void, Never>?
     private let haptic = HapticService.shared
+    private let timing = TimingService()
+    private var signalTime: CFTimeInterval = 0
+    private var chargeStartTimes: [CFTimeInterval?]
+    private var waitTask: Task<Void, Never>?
+    private var delayedResultTask: Task<Void, Never>?
     private var hasFalseStart = false
+
+    private let chargeRatePerSecond = 68.0
+    private let overchargePenalty = 12.0
 
     init(config: GameConfiguration) {
         self.config = config
-        self.reactionTimes = Array(repeating: nil, count: config.playerMode.playerCount)
+        let count = config.playerMode.playerCount
+        self.chargeValues = Array(repeating: 0, count: count)
+        self.lockedCharges = Array(repeating: nil, count: count)
+        self.roundScores = Array(repeating: nil, count: count)
+        self.reactionTimes = Array(repeating: nil, count: count)
+        self.chargingStates = Array(repeating: false, count: count)
+        self.chargeStartTimes = Array(repeating: nil, count: count)
     }
 
     func startGame() {
-        guard state == .ready || state == .result else { return }
-        if case .falseStart = state { } else if state != .ready && state != .result { return }
-        resetValues()
-        state = .countdown(3)
-        runCountdown(from: 3)
+        switch state {
+        case .ready, .result, .falseStart:
+            resetValues()
+            state = .countdown(3)
+            runCountdown(from: 3)
+        default:
+            return
+        }
     }
 
     func resetGame() {
+        timing.stop()
         waitTask?.cancel()
+        delayedResultTask?.cancel()
         resetValues()
         state = .ready
     }
 
-    func playerTapped(index: Int) {
+    /// Protocol requirement; charge mode uses press begin/end instead of taps.
+    func playerTapped(index: Int) {}
+
+    // MARK: - Charge Input
+
+    func playerPressBegan(index: Int) {
+        guard chargeValues.indices.contains(index) else { return }
         guard !hasFalseStart else { return }
 
         switch state {
         case .waiting:
-            // False start
-            hasFalseStart = true
-            waitTask?.cancel()
-            haptic.error()
-            falseStartPlayer = index
-
-            // Opponent(s) win automatically
-            let opponents = (0..<config.playerMode.playerCount).filter { $0 != index }
-            if let first = opponents.first {
-                winnerIndex = first
-            }
-            state = .falseStart(index)
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                self?.state = .result
-            }
+            handleFalseStart(by: index)
 
         case .active:
-            guard reactionTimes[index] == nil else { return } // Already tapped
-            haptic.lightTap()
+            guard winnerIndex == nil else { return }
+            guard lockedCharges[index] == nil else { return }
+            guard !chargingStates[index] else { return }
 
-            let now = TimingService.now()
-            reactionTimes[index] = TimingService.reactionMs(from: stimulusTime, to: now)
+            chargingStates[index] = true
+            let start = TimingService.now()
+            chargeStartTimes[index] = start
 
-            // Check if all players have tapped
-            if reactionTimes.allSatisfy({ $0 != nil }) {
-                determineWinner()
+            if reactionTimes[index] == nil {
+                reactionTimes[index] = TimingService.reactionMs(from: signalTime, to: start)
             }
+
+            haptic.lightTap()
 
         default:
             break
         }
     }
 
+    func playerPressEnded(index: Int) {
+        guard chargeValues.indices.contains(index) else { return }
+        guard !hasFalseStart else { return }
+        guard case .active = state else { return }
+        finalizeCharge(for: index, manualRelease: true)
+    }
+
     // MARK: - Private
 
     private func resetValues() {
-        reactionTimes = Array(repeating: nil, count: config.playerMode.playerCount)
+        let count = config.playerMode.playerCount
+        chargeValues = Array(repeating: 0, count: count)
+        lockedCharges = Array(repeating: nil, count: count)
+        roundScores = Array(repeating: nil, count: count)
+        reactionTimes = Array(repeating: nil, count: count)
+        chargingStates = Array(repeating: false, count: count)
+        chargeStartTimes = Array(repeating: nil, count: count)
         winnerIndex = nil
         falseStartPlayer = nil
         hasFalseStart = false
-        waitTask?.cancel()
+        signalTime = 0
     }
 
     private func runCountdown(from value: Int) {
@@ -104,7 +135,7 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
         state = .waiting
 
         let delay = Double.random(
-            in: max(Constants.minWaitTime, Constants.minSafeWaitTime)...Constants.maxWaitTime
+            in: max(1.3, Constants.minSafeWaitTime)...3.2
         )
 
         waitTask = Task { @MainActor [weak self] in
@@ -115,26 +146,101 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
     }
 
     private func showStimulus() {
-        stimulusTime = TimingService.now()
+        signalTime = TimingService.now()
         state = .active
+        haptic.goImpact()
+        timing.start { [weak self] _ in
+            self?.tickChargeFrame()
+        }
+    }
+
+    private func tickChargeFrame() {
+        guard case .active = state else { return }
+
+        let now = TimingService.now()
+        var autoFinalizePlayers: [Int] = []
+
+        for index in chargeValues.indices where chargingStates[index] {
+            guard let start = chargeStartTimes[index] else { continue }
+            let elapsed = now - start
+            let charge = min(100, max(chargeValues[index], elapsed * chargeRatePerSecond))
+            chargeValues[index] = charge
+
+            if charge >= 100 {
+                autoFinalizePlayers.append(index)
+            }
+        }
+
+        for index in autoFinalizePlayers {
+            finalizeCharge(for: index, manualRelease: false)
+        }
+    }
+
+    private func finalizeCharge(for index: Int, manualRelease: Bool) {
+        guard chargingStates.indices.contains(index) else { return }
+        guard chargingStates[index] else { return }
+        guard lockedCharges[index] == nil else { return }
+
+        chargingStates[index] = false
+        chargeStartTimes[index] = nil
+
+        let finalCharge = min(max(chargeValues[index], 0), 100)
+        chargeValues[index] = finalCharge
+        lockedCharges[index] = finalCharge
+
+        let offset = abs(finalCharge - targetCharge)
+        if manualRelease {
+            roundScores[index] = offset
+            haptic.lightTap()
+        } else {
+            roundScores[index] = offset + overchargePenalty
+            haptic.warning()
+        }
+
+        if lockedCharges.allSatisfy({ $0 != nil }) {
+            determineWinner()
+        }
     }
 
     private func determineWinner() {
-        // Winner = lowest reaction time
-        var bestIndex = 0
-        var bestTime = Int.max
-        for (i, time) in reactionTimes.enumerated() {
-            if let t = time, t < bestTime {
-                bestTime = t
-                bestIndex = i
+        timing.stop()
+
+        let ranking = (0..<config.playerMode.playerCount).sorted { lhs, rhs in
+            let lhsScore = roundScores[lhs] ?? Double.greatestFiniteMagnitude
+            let rhsScore = roundScores[rhs] ?? Double.greatestFiniteMagnitude
+            if lhsScore == rhsScore {
+                let lhsReaction = reactionTimes[lhs] ?? Int.max
+                let rhsReaction = reactionTimes[rhs] ?? Int.max
+                return lhsReaction < rhsReaction
             }
+            return lhsScore < rhsScore
         }
-        winnerIndex = bestIndex
+
+        winnerIndex = ranking.first
         haptic.success()
         state = .result
     }
 
-    deinit {
+    private func handleFalseStart(by index: Int) {
+        guard !hasFalseStart else { return }
+        hasFalseStart = true
         waitTask?.cancel()
+
+        falseStartPlayer = index
+        winnerIndex = (0..<config.playerMode.playerCount).first(where: { $0 != index })
+        haptic.error()
+        state = .falseStart(index)
+
+        delayedResultTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1.3))
+            guard !Task.isCancelled else { return }
+            self?.state = .result
+        }
+    }
+
+    deinit {
+        timing.stop()
+        waitTask?.cancel()
+        delayedResultTask?.cancel()
     }
 }

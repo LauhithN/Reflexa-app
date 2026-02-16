@@ -3,8 +3,12 @@ import SwiftData
 
 struct StatsView: View {
     @Query private var playerStats: [PlayerStats]
-    @Query(sort: \GameResult.timestamp, order: .reverse, fetchLimit: 50)
-    private var recentGames: [GameResult]
+    @Query(sort: \GameResult.timestamp, order: .reverse)
+    private var allGames: [GameResult]
+
+    private var recentGames: [GameResult] {
+        Array(allGames.prefix(50))
+    }
 
     private var stats: PlayerStats? {
         playerStats.first

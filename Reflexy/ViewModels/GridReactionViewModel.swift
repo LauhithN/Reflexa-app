@@ -15,10 +15,26 @@ final class GridReactionViewModel: GameViewModelProtocol {
     var averageTimeMs: Int = 0
     var percentile: Int = 0
 
+    var lastTapCorrect: Bool?
+    var lastTapCellIndex: Int?
+    var wrongTapCount: Int = 0
+    var fastestRoundMs: Int?
+    var slowestRoundMs: Int?
+
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
+    private var feedbackTask: Task<Void, Never>?
     private let haptic = HapticService.shared
     private var lastActiveCell: Int = -1
+
+    var speedTier: String {
+        switch averageTimeMs {
+        case ..<300: return "Lightning Reflexes"
+        case 300..<450: return "Sharp Eyes"
+        case 450..<600: return "Good Start"
+        default: return "Keep Practicing"
+        }
+    }
 
     init(config: GameConfiguration) {
         self.config = config
@@ -33,6 +49,7 @@ final class GridReactionViewModel: GameViewModelProtocol {
 
     func resetGame() {
         waitTask?.cancel()
+        feedbackTask?.cancel()
         resetValues()
         state = .ready
     }
@@ -40,30 +57,53 @@ final class GridReactionViewModel: GameViewModelProtocol {
     func playerTapped(index: Int) {
         // In grid reaction, index = cell tapped (0-15)
         guard case .active = state else { return }
-        guard index == activeCell else { return } // Must tap the lit cell
 
-        haptic.lightTap()
-        let now = TimingService.now()
-        let ms = TimingService.reactionMs(from: stimulusTime, to: now)
-        roundTimes.append(ms)
-        activeCell = nil
+        if index == activeCell {
+            // Correct tap
+            haptic.lightTap()
+            let now = TimingService.now()
+            let ms = TimingService.reactionMs(from: stimulusTime, to: now)
+            roundTimes.append(ms)
 
-        if roundTimes.count >= Constants.gridReactionRounds {
-            // All rounds complete
-            averageTimeMs = roundTimes.reduce(0, +) / roundTimes.count
-            percentile = Constants.percentile(forReactionMs: averageTimeMs)
-            haptic.success()
-            state = .result
-        } else {
-            // Brief pause then next round
-            currentRound = roundTimes.count + 1
-            state = .waiting
-
-            waitTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(for: .milliseconds(Int.random(in: 800...1500)))
-                guard !Task.isCancelled else { return }
-                self?.lightUpRandomCell()
+            // Update fastest/slowest
+            if fastestRoundMs == nil || ms < fastestRoundMs! {
+                fastestRoundMs = ms
             }
+            if slowestRoundMs == nil || ms > slowestRoundMs! {
+                slowestRoundMs = ms
+            }
+
+            lastTapCorrect = true
+            lastTapCellIndex = index
+            activeCell = nil
+
+            clearFeedbackAfterDelay()
+
+            if roundTimes.count >= Constants.gridReactionRounds {
+                // All rounds complete
+                averageTimeMs = roundTimes.reduce(0, +) / roundTimes.count
+                percentile = Constants.percentile(forReactionMs: averageTimeMs)
+                haptic.success()
+                GameCenterService.shared.submitScore(averageTimeMs, for: .gridReaction)
+                state = .result
+            } else {
+                // Brief pause then next round
+                currentRound = roundTimes.count + 1
+                state = .waiting
+
+                waitTask = Task { @MainActor [weak self] in
+                    try? await Task.sleep(for: .milliseconds(Int.random(in: 800...1500)))
+                    guard !Task.isCancelled else { return }
+                    self?.lightUpRandomCell()
+                }
+            }
+        } else {
+            // Wrong tap
+            haptic.error()
+            wrongTapCount += 1
+            lastTapCorrect = false
+            lastTapCellIndex = index
+            clearFeedbackAfterDelay()
         }
     }
 
@@ -81,7 +121,23 @@ final class GridReactionViewModel: GameViewModelProtocol {
         averageTimeMs = 0
         percentile = 0
         lastActiveCell = -1
+        lastTapCorrect = nil
+        lastTapCellIndex = nil
+        wrongTapCount = 0
+        fastestRoundMs = nil
+        slowestRoundMs = nil
         waitTask?.cancel()
+        feedbackTask?.cancel()
+    }
+
+    private func clearFeedbackAfterDelay() {
+        feedbackTask?.cancel()
+        feedbackTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            self?.lastTapCorrect = nil
+            self?.lastTapCellIndex = nil
+        }
     }
 
     private func runCountdown(from value: Int) {
@@ -124,5 +180,6 @@ final class GridReactionViewModel: GameViewModelProtocol {
 
     deinit {
         waitTask?.cancel()
+        feedbackTask?.cancel()
     }
 }

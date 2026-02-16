@@ -1,8 +1,8 @@
 import Foundation
 import QuartzCore
 
-/// Color Battle: Best of N rounds. Screen changes color after random delay.
-/// First to tap wins round. False start = opponent gets point.
+/// Color Battle: Multi-round arena scoring mode.
+/// Power rounds (every 3rd round) award bonus points. False start costs points.
 @Observable
 final class ColorBattleViewModel: GameViewModelProtocol {
     let config: GameConfiguration
@@ -13,6 +13,17 @@ final class ColorBattleViewModel: GameViewModelProtocol {
     var currentRound: Int = 1
     var roundWinner: Int? // Index of round winner (for display)
     var matchWinner: Int? // Overall match winner
+    var lastRoundPointDelta: Int = 0
+    var tieBreakUsed = false
+    var tiedPlayers: [Int] = []
+
+    var currentRoundPointValue: Int {
+        currentRound.isMultiple(of: 3) ? 2 : 1
+    }
+
+    var isPowerRound: Bool {
+        currentRoundPointValue > 1
+    }
 
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
@@ -44,14 +55,13 @@ final class ColorBattleViewModel: GameViewModelProtocol {
 
         switch state {
         case .waiting:
-            // False start — all other players get a point
+            // False start — player loses points (cannot go below zero)
             roundHandled = true
             waitTask?.cancel()
             haptic.error()
 
-            for i in 0..<scores.count where i != index {
-                scores[i] += 1
-            }
+            scores[index] = max(scores[index] - 1, 0)
+            lastRoundPointDelta = -1
             roundWinner = nil
             state = .falseStart(index)
             advanceOrFinish()
@@ -61,7 +71,9 @@ final class ColorBattleViewModel: GameViewModelProtocol {
             roundHandled = true
             haptic.lightTap()
 
-            scores[index] += 1
+            let points = currentRoundPointValue
+            scores[index] += points
+            lastRoundPointDelta = points
             roundWinner = index
             state = .stopped
             advanceOrFinish()
@@ -78,6 +90,9 @@ final class ColorBattleViewModel: GameViewModelProtocol {
         currentRound = 1
         roundWinner = nil
         matchWinner = nil
+        lastRoundPointDelta = 0
+        tieBreakUsed = false
+        tiedPlayers = []
         roundHandled = false
         waitTask?.cancel()
         roundResetTask?.cancel()
@@ -103,7 +118,7 @@ final class ColorBattleViewModel: GameViewModelProtocol {
         state = .waiting
 
         let delay = Double.random(
-            in: max(Constants.minWaitTime, Constants.minSafeWaitTime)...Constants.maxWaitTime
+            in: max(1.4, Constants.minSafeWaitTime)...3.4
         )
 
         waitTask = Task { @MainActor [weak self] in
@@ -119,26 +134,30 @@ final class ColorBattleViewModel: GameViewModelProtocol {
     }
 
     private func advanceOrFinish() {
-        // Check if anyone has won the majority
-        if let winner = scores.enumerated().first(where: { $0.element >= config.majorityNeeded }) {
-            matchWinner = winner.offset
-            haptic.success()
-
-            roundResetTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(for: .seconds(2))
-                self?.state = .result
-            }
-            return
-        }
-
         // Check if all rounds played
         if currentRound >= config.roundCount {
-            // Find winner by highest score
-            matchWinner = scores.enumerated().max(by: { $0.element < $1.element })?.offset
+            let maxScore = scores.max() ?? 0
+            let leaders = scores.enumerated()
+                .filter { $0.element == maxScore }
+                .map(\.offset)
+
+            tiedPlayers = leaders
+            if leaders.count == 1 {
+                matchWinner = leaders[0]
+                tieBreakUsed = false
+            } else {
+                tieBreakUsed = true
+                if let roundWinner, leaders.contains(roundWinner) {
+                    matchWinner = roundWinner
+                } else {
+                    matchWinner = leaders.first
+                }
+            }
+
             haptic.success()
 
             roundResetTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(for: .seconds(2))
+                try? await Task.sleep(for: .seconds(1.5))
                 self?.state = .result
             }
             return
@@ -146,11 +165,11 @@ final class ColorBattleViewModel: GameViewModelProtocol {
 
         // Next round after brief delay
         roundResetTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(2))
+            try? await Task.sleep(for: .seconds(1.2))
             guard !Task.isCancelled else { return }
             self?.currentRound += 1
             self?.roundWinner = nil
-            self?.runCountdown(from: 3)
+            self?.runCountdown(from: 2)
         }
     }
 

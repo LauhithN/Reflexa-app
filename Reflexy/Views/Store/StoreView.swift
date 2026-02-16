@@ -77,6 +77,14 @@ struct StoreView: View {
                         .foregroundStyle(Color.error)
                 }
 
+                HStack(spacing: 16) {
+                    Link("Terms of Use", destination: URL(string: Constants.termsOfUseURL)!)
+                    Text("·").foregroundStyle(.gray)
+                    Link("Privacy Policy", destination: URL(string: Constants.privacyPolicyURL)!)
+                }
+                .font(.caption2)
+                .foregroundStyle(.gray)
+
                 Button("Close") {
                     dismiss()
                 }

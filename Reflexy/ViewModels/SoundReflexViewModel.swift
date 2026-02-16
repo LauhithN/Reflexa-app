@@ -11,6 +11,7 @@ final class SoundReflexViewModel: GameViewModelProtocol {
     var reactionTimes: [Int?]
     var winnerIndex: Int?
     var percentile: Int = 0
+    var waitingStartTime: CFTimeInterval = 0
 
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
@@ -70,6 +71,7 @@ final class SoundReflexViewModel: GameViewModelProtocol {
             if config.playerMode == .solo {
                 if let ms = reactionTimes[0] {
                     percentile = Constants.percentile(forReactionMs: ms)
+                    GameCenterService.shared.submitScore(ms, for: .soundReflex)
                 }
                 haptic.success()
                 state = .result
@@ -82,6 +84,16 @@ final class SoundReflexViewModel: GameViewModelProtocol {
         }
     }
 
+    var speedTier: String {
+        guard let ms = reactionTimes[0] else { return "" }
+        switch ms {
+        case ..<170: return "Lightning"
+        case 170..<250: return "Quick"
+        case 250..<350: return "Average"
+        default: return "Slow"
+        }
+    }
+
     // MARK: - Private
 
     private func resetValues() {
@@ -89,6 +101,7 @@ final class SoundReflexViewModel: GameViewModelProtocol {
         winnerIndex = nil
         percentile = 0
         hasFalseStart = false
+        waitingStartTime = 0
         waitTask?.cancel()
     }
 
@@ -108,6 +121,7 @@ final class SoundReflexViewModel: GameViewModelProtocol {
     }
 
     private func beginWaitingPhase() {
+        waitingStartTime = CACurrentMediaTime()
         state = .waiting
 
         let delay = Double.random(
