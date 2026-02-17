@@ -3,6 +3,7 @@ import SwiftUI
 struct StopwatchGameView: View {
     @State private var viewModel: StopwatchViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var activePresses: Set<Int> = []
 
     init(config: GameConfiguration) {
@@ -169,7 +170,9 @@ struct StopwatchGameView: View {
                     style: StrokeStyle(lineWidth: 14, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .animation(.easeInOut(duration: 0.12), value: proximity)
+                .if(!reduceMotion) { view in
+                    view.animation(.easeInOut(duration: 0.12), value: proximity)
+                }
 
             VStack(spacing: 8) {
                 Text(Formatters.stopwatchValue(value))
@@ -303,29 +306,11 @@ struct StopwatchGameView: View {
                     .foregroundStyle(.gray)
             }
 
-            HStack(spacing: 16) {
-                Button("Play Again") {
-                    viewModel.resetGame()
-                    viewModel.startGame()
-                }
-                .font(.bodyLarge)
-                .foregroundStyle(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.waiting)
-                .clipShape(Capsule())
-                .accessibleTapTarget()
-
-                Button("Menu") {
-                    dismiss()
-                }
-                .font(.bodyLarge)
-                .foregroundStyle(.gray)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.cardBackground)
-                .clipShape(Capsule())
-                .accessibleTapTarget()
+            GameActionButtons(primaryTint: .accentPrimary) {
+                viewModel.resetGame()
+                viewModel.startGame()
+            } onSecondary: {
+                dismiss()
             }
         }
         .padding(.horizontal, 24)
@@ -344,29 +329,11 @@ struct StopwatchGameView: View {
             }
             .padding(.horizontal, 24)
 
-            HStack(spacing: 16) {
-                Button("Play Again") {
-                    viewModel.resetGame()
-                    viewModel.startGame()
-                }
-                .font(.bodyLarge)
-                .foregroundStyle(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.waiting)
-                .clipShape(Capsule())
-                .accessibleTapTarget()
-
-                Button("Menu") {
-                    dismiss()
-                }
-                .font(.bodyLarge)
-                .foregroundStyle(.gray)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.cardBackground)
-                .clipShape(Capsule())
-                .accessibleTapTarget()
+            GameActionButtons(primaryTint: .accentPrimary) {
+                viewModel.resetGame()
+                viewModel.startGame()
+            } onSecondary: {
+                dismiss()
             }
         }
     }

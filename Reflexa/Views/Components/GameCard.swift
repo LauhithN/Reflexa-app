@@ -19,6 +19,7 @@ struct GameCard: View {
             Button(action: action) {
                 content
             }
+            .buttonStyle(CardButtonStyle())
             .accessibleTapTarget()
             .accessibilityLabel(accessibilityText)
         } else {
@@ -29,19 +30,28 @@ struct GameCard: View {
     }
 
     private var cardContent: some View {
-        HStack(spacing: 16) {
-            Image(systemName: gameType.iconName)
-                .font(.system(size: 24))
-                .foregroundStyle(isLocked ? .gray : Color(hex: "FBBF24"))
-                .frame(width: 44, height: 44)
-                .background(isLocked ? Color.cardBackground : Color(hex: "A855F7"))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [cardTint.opacity(0.95), cardTint.opacity(0.5)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
+                Image(systemName: gameType.iconName)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            .frame(width: 50, height: 50)
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
                     Text(gameType.displayName)
-                        .font(.playerLabel)
-                        .foregroundStyle(.white)
+                        .font(.playerLabel.weight(.bold))
+                        .foregroundStyle(Color.textPrimary)
 
                     if isLocked {
                         UnlockBadge()
@@ -50,30 +60,65 @@ struct GameCard: View {
 
                 Text(gameType.description)
                     .font(.caption)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     ForEach(gameType.supportedModes) { mode in
-                        Text(mode.displayName)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.gray)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.cardBackground)
-                            .clipShape(Capsule())
+                        modeChip(mode.displayName)
                     }
                 }
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
             Image(systemName: "chevron.right")
-                .foregroundStyle(.gray)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Color.textSecondary)
+                .padding(8)
+                .background(Color.white.opacity(0.05))
+                .clipShape(Circle())
         }
-        .padding()
-        .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .contentShape(RoundedRectangle(cornerRadius: 16))
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.elevatedCard.opacity(0.95), Color.cardBackground.opacity(0.78)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
+                )
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private func modeChip(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .foregroundStyle(Color.textSecondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.white.opacity(0.06))
+            .clipShape(Capsule())
+    }
+
+    private var cardTint: Color {
+        if isLocked {
+            return Color.accentSun
+        }
+
+        switch gameType {
+        case .quickTap, .soundReflex, .vibrationReflex, .gridReaction:
+            return Color.accentHot
+        case .dailyChallenge:
+            return Color.accentSecondary
+        default:
+            return Color.accentPrimary
+        }
     }
 
     private var accessibilityText: String {

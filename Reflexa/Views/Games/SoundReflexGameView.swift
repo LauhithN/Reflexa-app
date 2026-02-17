@@ -3,12 +3,13 @@ import SwiftUI
 struct SoundReflexGameView: View {
     @State private var viewModel: SoundReflexViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var activePresses: Set<Int> = []
 
     @State private var activeGlow = false
     @State private var shakeOffset: CGFloat = 0
 
-    private let accentBlue = Color.waiting // Blue accent
+    private let accentBlue = Color.waiting
 
     init(config: GameConfiguration) {
         _viewModel = State(initialValue: SoundReflexViewModel(config: config))
@@ -58,7 +59,7 @@ struct SoundReflexGameView: View {
         case .active:
             RadialGradient(
                 colors: [
-                    accentBlue.opacity(activeGlow ? 0.35 : 0.15),
+                    accentBlue.opacity(activeGlow && !reduceMotion ? 0.35 : 0.18),
                     Color(red: 0.0, green: 0.03, blue: 0.12),
                     .black
                 ],
@@ -67,15 +68,17 @@ struct SoundReflexGameView: View {
                 endRadius: 400
             )
             .animation(
-                .easeInOut(duration: 0.3).repeatForever(autoreverses: true),
+                reduceMotion ? nil : .easeInOut(duration: 0.3).repeatForever(autoreverses: true),
                 value: activeGlow
             )
+
         case .falseStart:
             LinearGradient(
                 colors: [Color.error.opacity(0.4), Color(red: 0.12, green: 0.02, blue: 0.02), .black],
                 startPoint: .top,
                 endPoint: .bottom
             )
+
         case .waiting:
             LinearGradient(
                 colors: [
@@ -86,15 +89,9 @@ struct SoundReflexGameView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+
         default:
-            LinearGradient(
-                colors: [
-                    Color(red: 0.03, green: 0.05, blue: 0.14),
-                    Color(red: 0.01, green: 0.02, blue: 0.06)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            AmbientBackground()
         }
     }
 
@@ -135,54 +132,64 @@ struct SoundReflexGameView: View {
     // MARK: - Ready
 
     private var readyView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 18) {
             Image(systemName: "ear.fill")
                 .font(.system(size: 44, weight: .semibold))
                 .foregroundStyle(accentBlue)
 
             Text("Sound Reflex")
                 .font(.resultTitle)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
 
             Text("React to the audio beep")
                 .font(.bodyLarge)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
 
             Text("No visual cue — listen carefully")
                 .font(.caption)
-                .foregroundStyle(.gray.opacity(0.9))
+                .foregroundStyle(Color.textSecondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(Color.white.opacity(0.08))
                 .clipShape(Capsule())
         }
+        .padding(22)
+        .glassCard(cornerRadius: 24)
+        .padding(.horizontal, 18)
     }
 
     // MARK: - Waiting
 
     private var waitingView: some View {
-        TimelineView(.animation) { timeline in
-            let elapsed = timeline.date.timeIntervalSince1970
-            VStack(spacing: 26) {
-                ZStack {
-                    // Concentric sonar rings
-                    ForEach(0..<3, id: \.self) { ring in
-                        let phase = (elapsed * 0.7 + Double(ring) * 0.5).truncatingRemainder(dividingBy: 2.0)
-                        let scale = 1.0 + phase * 0.5
-                        let opacity = max(0, 1.0 - phase / 2.0) * 0.35
-
-                        Circle()
-                            .stroke(accentBlue.opacity(opacity), lineWidth: 1.5)
-                            .frame(width: 70 * scale, height: 70 * scale)
-                    }
-
-                    Image(systemName: "ear.fill")
-                        .font(.system(size: 36))
-                        .foregroundStyle(accentBlue.opacity(0.8))
+        VStack(spacing: 26) {
+            if reduceMotion {
+                waitingIndicator(phase: 0.8)
+            } else {
+                TimelineView(.animation) { timeline in
+                    let elapsed = timeline.date.timeIntervalSince1970
+                    waitingIndicator(phase: elapsed)
                 }
-
-                PulsingText(text: "Listen for the beep...", color: accentBlue)
             }
+
+            PulsingText(text: "Listen for the beep...", color: accentBlue)
+        }
+    }
+
+    private func waitingIndicator(phase: Double) -> some View {
+        ZStack {
+            ForEach(0..<3, id: \.self) { ring in
+                let shifted = (phase * 0.7 + Double(ring) * 0.5).truncatingRemainder(dividingBy: 2.0)
+                let scale = reduceMotion ? (1.0 + Double(ring) * 0.1) : (1.0 + shifted * 0.5)
+                let opacity = reduceMotion ? 0.25 : (max(0, 1.0 - shifted / 2.0) * 0.35)
+
+                Circle()
+                    .stroke(accentBlue.opacity(opacity), lineWidth: 1.5)
+                    .frame(width: 70 * scale, height: 70 * scale)
+            }
+
+            Image(systemName: "ear.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(accentBlue.opacity(0.85))
         }
     }
 
@@ -192,23 +199,22 @@ struct SoundReflexGameView: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(accentBlue.opacity(activeGlow ? 0.3 : 0.1))
+                    .fill(accentBlue.opacity(activeGlow && !reduceMotion ? 0.3 : 0.14))
                     .frame(width: 160, height: 160)
 
                 Image(systemName: "waveform")
                     .font(.system(size: 50, weight: .bold))
                     .foregroundStyle(accentBlue)
-                    .scaleEffect(activeGlow ? 1.15 : 1.0)
+                    .scaleEffect(activeGlow && !reduceMotion ? 1.15 : 1.0)
                     .animation(
-                        .spring(response: 0.4, dampingFraction: 0.5)
-                            .repeatForever(autoreverses: true),
+                        reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.5).repeatForever(autoreverses: true),
                         value: activeGlow
                     )
             }
 
             Text("TAP NOW")
                 .font(.system(size: 48, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
         }
     }
 
@@ -222,25 +228,24 @@ struct SoundReflexGameView: View {
 
             Text("False Start")
                 .font(.resultTitle)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
                 .offset(x: shakeOffset)
 
             Text("Wait for the beep before tapping")
                 .font(.bodyLarge)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
 
             Button("Try Again") {
                 viewModel.resetGame()
                 viewModel.startGame()
             }
-            .font(.bodyLarge)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
-            .background(accentBlue)
-            .clipShape(Capsule())
+            .buttonStyle(PrimaryCTAButtonStyle(tint: accentBlue))
+            .padding(.horizontal, 28)
             .accessibleTapTarget()
         }
+        .padding(22)
+        .glassCard(cornerRadius: 24)
+        .padding(.horizontal, 16)
     }
 
     // MARK: - Multiplayer Panel
@@ -253,21 +258,12 @@ struct SoundReflexGameView: View {
 
             switch viewModel.state {
             case .waiting:
-                TimelineView(.animation) { timeline in
-                    let elapsed = timeline.date.timeIntervalSince1970
-                    ZStack {
-                        ForEach(0..<2, id: \.self) { ring in
-                            let phase = (elapsed * 0.6 + Double(ring) * 0.5).truncatingRemainder(dividingBy: 1.5)
-                            let scale = 1.0 + phase * 0.4
-                            let opacity = max(0, 1.0 - phase / 1.5) * 0.3
-                            Circle()
-                                .stroke(accentBlue.opacity(opacity), lineWidth: 1.5)
-                                .frame(width: 50 * scale, height: 50 * scale)
-                        }
-
-                        Text("P\(index + 1)")
-                            .font(.playerLabel)
-                            .foregroundStyle(color)
+                if reduceMotion {
+                    waitingPanelCore(index: index, color: color, phase: 0.7)
+                } else {
+                    TimelineView(.animation) { timeline in
+                        let elapsed = timeline.date.timeIntervalSince1970
+                        waitingPanelCore(index: index, color: color, phase: elapsed)
                     }
                 }
 
@@ -293,8 +289,7 @@ struct SoundReflexGameView: View {
                         Text(Formatters.reactionTime(time))
                             .font(.resultScore)
                             .monospacedDigit()
-                            .foregroundStyle(.white)
-                            .transition(.scale.combined(with: .opacity))
+                            .foregroundStyle(Color.textPrimary)
                     }
 
                     if case .falseStart(let faulter) = viewModel.state, faulter == index {
@@ -318,16 +313,34 @@ struct SoundReflexGameView: View {
         )
     }
 
+    private func waitingPanelCore(index: Int, color: Color, phase: Double) -> some View {
+        ZStack {
+            ForEach(0..<2, id: \.self) { ring in
+                let shifted = (phase * 0.6 + Double(ring) * 0.5).truncatingRemainder(dividingBy: 1.5)
+                let scale = reduceMotion ? (1.0 + Double(ring) * 0.1) : (1.0 + shifted * 0.4)
+                let opacity = reduceMotion ? 0.2 : (max(0, 1.0 - shifted / 1.5) * 0.3)
+
+                Circle()
+                    .stroke(accentBlue.opacity(opacity), lineWidth: 1.5)
+                    .frame(width: 50 * scale, height: 50 * scale)
+            }
+
+            Text("P\(index + 1)")
+                .font(.playerLabel)
+                .foregroundStyle(color)
+        }
+    }
+
     // MARK: - Result Overlay
 
     private var resultOverlay: some View {
         ZStack {
             Color.appBackground.opacity(0.95).ignoresSafeArea()
 
-            VStack(spacing: 22) {
+            VStack(spacing: 20) {
                 Text("Sound Reflex")
                     .font(.gameTitle)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
 
                 if viewModel.config.playerMode == .solo {
                     if let ms = viewModel.reactionTimes[0] {
@@ -335,7 +348,7 @@ struct SoundReflexGameView: View {
                             Text(Formatters.reactionTime(ms))
                                 .font(.system(size: 72, weight: .bold, design: .rounded))
                                 .monospacedDigit()
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color.textPrimary)
 
                             Text(viewModel.speedTier)
                                 .font(.playerLabel)
@@ -343,10 +356,8 @@ struct SoundReflexGameView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
-                        .background(accentBlue.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 22))
+                        .glassCard(cornerRadius: 22)
                         .padding(.horizontal, 24)
-                        .transition(.scale.combined(with: .opacity))
 
                         PercentileBar(percentile: viewModel.percentile)
                             .padding(.horizontal, 40)
@@ -363,40 +374,30 @@ struct SoundReflexGameView: View {
                             Text("P\(i + 1)")
                                 .font(.playerLabel)
                                 .foregroundStyle(Color.playerColor(for: i))
+
                             if let time = viewModel.reactionTimes[i] {
+                                Spacer()
                                 Text(Formatters.reactionTime(time))
                                     .font(.bodyLarge)
                                     .monospacedDigit()
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Color.textPrimary)
                             }
                         }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.cardBackground.opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
+                    .padding(.horizontal, 24)
                 }
 
-                HStack(spacing: 16) {
-                    Button("Play Again") {
-                        viewModel.resetGame()
-                        viewModel.startGame()
-                    }
-                    .font(.bodyLarge)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(accentBlue)
-                    .clipShape(Capsule())
-                    .accessibleTapTarget()
-
-                    Button("Menu") {
-                        dismiss()
-                    }
-                    .font(.bodyLarge)
-                    .foregroundStyle(.gray)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.cardBackground)
-                    .clipShape(Capsule())
-                    .accessibleTapTarget()
+                GameActionButtons(primaryTint: accentBlue) {
+                    viewModel.resetGame()
+                    viewModel.startGame()
+                } onSecondary: {
+                    dismiss()
                 }
+                .padding(.horizontal, 24)
 
                 if viewModel.config.playerMode == .solo {
                     Button("Share") {
@@ -407,7 +408,7 @@ struct SoundReflexGameView: View {
                         )
                     }
                     .font(.caption)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
                     .accessibleTapTarget()
                 }
             }
@@ -419,16 +420,23 @@ struct SoundReflexGameView: View {
     private func updateAnimations(for state: GameState) {
         switch state {
         case .active:
-            activeGlow = true
+            activeGlow = !reduceMotion
+
         case .falseStart:
             activeGlow = false
             triggerShake()
+
         default:
             activeGlow = false
         }
     }
 
     private func triggerShake() {
+        guard !reduceMotion else {
+            shakeOffset = 0
+            return
+        }
+
         let shakeSequence: [(CGFloat, Double)] = [
             (12, 0.05), (-12, 0.1), (10, 0.15), (-10, 0.2),
             (6, 0.25), (-6, 0.3), (3, 0.35), (0, 0.4)

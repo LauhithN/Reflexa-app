@@ -58,6 +58,7 @@
 		CA0D829C1E72F3FB6DAA42EC /* ColorBattleGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342355FC0A67872E3FFC364A /* ColorBattleGameView.swift */; };
 		CB0ACC3B5C4E29FC558BBF68 /* SoundService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA54CFD698869EFB7FEC73ED /* SoundService.swift */; };
 		D6E38772F76EC3ED9E3FDC4A /* DailyChallengeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A1AD58A1A25A326D2B4E0C /* DailyChallengeViewModel.swift */; };
+		DA370FEFBD880DBEA0B3A6E1 /* GameActionButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B8BEF264293B68EB0E2B10 /* GameActionButtons.swift */; };
 		DBE792A53CA4E170E2911B17 /* View+Modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02FD4570336BD7D32C4C75CC /* View+Modifiers.swift */; };
 		E1BD4033E0FB0100FFB3CDBB /* DailyChallengeGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B5ED74E40728C3730CF8C06 /* DailyChallengeGameView.swift */; };
 		E94CC39DEFA7FAB26709DB76 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14C34F330E7CBE3CF53041F3 /* CoreHaptics.framework */; };
@@ -66,6 +67,7 @@
 		EDEC63E2BF2F9AE3F67A7898 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859458F518D1FDD29AAA102 /* StatsView.swift */; };
 		EECC9F525DEC8C75D22F4DD2 /* PlayerMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54755585D7C70FA0CDE6590 /* PlayerMode.swift */; };
 		F012B37E11E5A6A7564F01BF /* LeaderboardRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEADDEC865AEA85314777F11 /* LeaderboardRowView.swift */; };
+		F1068D4EBF4E4E1D7547134F /* AmbientBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25980C2EE69654DE45FA528C /* AmbientBackground.swift */; };
 		F3A53096465959591B82759B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5DBD661B437CA591D75BABA /* OnboardingView.swift */; };
 		FC54FB6B373285F958E76106 /* SoundReflexGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D9AFB262FFC60D3EEE0C036 /* SoundReflexGameView.swift */; };
 		FCA9719CD67A3419A6A00AC6 /* GameCenterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA83A9B9557F607D7AB27B64 /* GameCenterService.swift */; };
@@ -80,10 +82,12 @@
 		102B3C7CEED3AC608E12A279 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		141850E27BCE0A4BB6039E40 /* GameSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSetupView.swift; sourceTree = "<group>"; };
 		14C34F330E7CBE3CF53041F3 /* CoreHaptics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreHaptics.framework; path = System/Library/Frameworks/CoreHaptics.framework; sourceTree = SDKROOT; };
+		17B8BEF264293B68EB0E2B10 /* GameActionButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameActionButtons.swift; sourceTree = "<group>"; };
 		1A6FF64113198CD8F9F8E0ED /* GameResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameResult.swift; sourceTree = "<group>"; };
 		1B98301F7BF1F73721B4037D /* HowToPlayOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayOverlay.swift; sourceTree = "<group>"; };
 		1C43228755E6CE6C29D6E35B /* VibrationReflexViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibrationReflexViewModel.swift; sourceTree = "<group>"; };
 		1D9AFB262FFC60D3EEE0C036 /* SoundReflexGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundReflexGameView.swift; sourceTree = "<group>"; };
+		25980C2EE69654DE45FA528C /* AmbientBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientBackground.swift; sourceTree = "<group>"; };
 		27B713202DB79C45CA745BA9 /* StoreViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreViewModel.swift; sourceTree = "<group>"; };
 		2B73F66E7C50DE3752E67BCC /* PercentileBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PercentileBar.swift; sourceTree = "<group>"; };
 		320CE1CDD50FBBC74C74C10F /* StoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreView.swift; sourceTree = "<group>"; };
@@ -337,7 +341,9 @@
 		F2D46D596A91CCB2AF7859CE /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				25980C2EE69654DE45FA528C /* AmbientBackground.swift */,
 				D6283F0B4368F8A292DBE105 /* CountdownOverlay.swift */,
+				17B8BEF264293B68EB0E2B10 /* GameActionButtons.swift */,
 				BA759E4B798DAF28A839A7A7 /* GameCard.swift */,
 				1B98301F7BF1F73721B4037D /* HowToPlayOverlay.swift */,
 				2B73F66E7C50DE3752E67BCC /* PercentileBar.swift */,
@@ -449,6 +455,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F1068D4EBF4E4E1D7547134F /* AmbientBackground.swift in Sources */,
 				95A390569C6C5D10D761BC13 /* Color+App.swift in Sources */,
 				CA0D829C1E72F3FB6DAA42EC /* ColorBattleGameView.swift in Sources */,
 				2AB1F7CDBC664DC651927FF3 /* ColorBattleViewModel.swift in Sources */,
@@ -463,6 +470,7 @@
 				111022EEED11ED8C7A9AC056 /* Font+App.swift in Sources */,
 				925195004B0114925FAFB516 /* Formatters.swift in Sources */,
 				320B0056270372DBD5C46446 /* FourPlayerGridView.swift in Sources */,
+				DA370FEFBD880DBEA0B3A6E1 /* GameActionButtons.swift in Sources */,
 				B97830A353464D1968E324B8 /* GameCard.swift in Sources */,
 				FCA9719CD67A3419A6A00AC6 /* GameCenterService.swift in Sources */,
 				28AE17AD1F9641C9E02551A6 /* GameConfiguration.swift in Sources */,

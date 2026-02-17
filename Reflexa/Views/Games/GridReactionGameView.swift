@@ -3,10 +3,10 @@ import SwiftUI
 struct GridReactionGameView: View {
     @State private var viewModel: GridReactionViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var cellScales: [CGFloat] = Array(repeating: 1.0, count: 16)
     @State private var cellShakes: [CGFloat] = Array(repeating: 0, count: 16)
-    @State private var showResult = false
     @State private var displayedAverage: Int = 0
     @State private var roundRevealCount: Int = 0
 
@@ -40,23 +40,27 @@ struct GridReactionGameView: View {
         .onAppear {
             viewModel.startGame()
         }
-        .onChange(of: viewModel.activeCell) { oldValue, newValue in
-            // Animate active cell appearing
-            if let cell = newValue {
-                withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
-                    cellScales[cell] = 1.0
-                }
-                // Brief bounce in
-                cellScales[cell] = 0.85
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                    cellScales[cell] = 1.0
-                }
+        .onChange(of: viewModel.activeCell) { _, newValue in
+            guard let cell = newValue else { return }
+            guard !reduceMotion else {
+                cellScales[cell] = 1.0
+                return
+            }
+
+            cellScales[cell] = 0.85
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                cellScales[cell] = 1.0
             }
         }
         .onChange(of: viewModel.lastTapCellIndex) { _, newValue in
             guard let cell = newValue, let correct = viewModel.lastTapCorrect else { return }
+
             if correct {
-                // Correct tap bounce
+                guard !reduceMotion else {
+                    cellScales[cell] = 1.0
+                    return
+                }
+
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.4)) {
                     cellScales[cell] = 0.85
                 }
@@ -66,7 +70,6 @@ struct GridReactionGameView: View {
                     }
                 }
             } else {
-                // Wrong tap shake
                 triggerCellShake(cell)
             }
         }
@@ -94,70 +97,68 @@ struct GridReactionGameView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+
         case .result:
             LinearGradient(
                 colors: [
-                    accentAmber.opacity(0.1),
+                    accentAmber.opacity(0.14),
                     Color(red: 0.05, green: 0.04, blue: 0.0),
                     Color(red: 0.01, green: 0.01, blue: 0.01)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
+
         default:
-            LinearGradient(
-                colors: [
-                    Color(red: 0.06, green: 0.05, blue: 0.02),
-                    Color(red: 0.02, green: 0.02, blue: 0.01)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            AmbientBackground()
         }
     }
 
     // MARK: - Ready
 
     private var readyView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 18) {
             Image(systemName: "square.grid.3x3.fill")
                 .font(.system(size: 44, weight: .semibold))
                 .foregroundStyle(accentAmber)
 
             Text("Grid Reaction")
                 .font(.resultTitle)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
 
             Text("Tap the lit square as fast as you can")
                 .font(.bodyLarge)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
 
             Text("\(Constants.gridReactionRounds) rounds")
                 .font(.caption)
-                .foregroundStyle(.gray.opacity(0.9))
+                .foregroundStyle(Color.textSecondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(Color.white.opacity(0.08))
                 .clipShape(Capsule())
         }
+        .padding(22)
+        .glassCard(cornerRadius: 24)
+        .padding(.horizontal, 18)
     }
 
     // MARK: - Game View
 
     private var gameView: some View {
         VStack(spacing: 14) {
-            // Round progress
             VStack(spacing: 8) {
                 Text("Round \(viewModel.currentRound) / \(Constants.gridReactionRounds)")
                     .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(.white)
-                    .contentTransition(.numericText())
+                    .foregroundStyle(Color.textPrimary)
+                    .if(!reduceMotion) { view in
+                        view.contentTransition(.numericText())
+                    }
 
-                // Segment progress bar
                 HStack(spacing: 3) {
                     ForEach(0..<Constants.gridReactionRounds, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(i < viewModel.roundTimes.count ? accentAmber : Color.white.opacity(0.1))
+                            .fill(i < viewModel.roundTimes.count ? accentAmber : Color.white.opacity(0.12))
                             .frame(height: 5)
                     }
                 }
@@ -166,7 +167,6 @@ struct GridReactionGameView: View {
 
             Spacer().frame(height: 6)
 
-            // 4x4 Grid
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: viewModel.gridSize),
                 spacing: 8
@@ -179,20 +179,21 @@ struct GridReactionGameView: View {
 
             Spacer().frame(height: 8)
 
-            // Last round time
             if let lastTime = viewModel.roundTimes.last {
                 Text(Formatters.reactionTime(lastTime))
                     .font(.system(size: 18, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(lastTimeColor(lastTime))
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .contentTransition(.numericText())
+                    .if(!reduceMotion) { view in
+                        view.transition(.move(edge: .bottom).combined(with: .opacity))
+                            .contentTransition(.numericText())
+                    }
             }
 
             if viewModel.wrongTapCount > 0 {
                 Text("Wrong taps: \(viewModel.wrongTapCount)")
                     .font(.caption)
-                    .foregroundStyle(Color.error.opacity(0.7))
+                    .foregroundStyle(Color.error.opacity(0.78))
             }
         }
     }
@@ -206,10 +207,10 @@ struct GridReactionGameView: View {
                 .fill(feedbackColor ?? (isActive ? accentAmber : Color.cardBackground))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.gray.opacity(0.15), lineWidth: 1)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
                 )
                 .if(isActive) { view in
-                    view.shadow(color: accentAmber.opacity(0.6), radius: 12)
+                    view.shadow(color: accentAmber.opacity(0.55), radius: 12)
                 }
         }
         .aspectRatio(1, contentMode: .fit)
@@ -231,7 +232,7 @@ struct GridReactionGameView: View {
     private func lastTimeColor(_ ms: Int) -> Color {
         switch ms {
         case ..<300: return Color.success
-        case 300..<500: return .white
+        case 300..<500: return Color.textPrimary
         default: return Color.error
         }
     }
@@ -239,23 +240,24 @@ struct GridReactionGameView: View {
     // MARK: - Result
 
     private var resultView: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 18) {
                 Text("Grid Reaction")
                     .font(.gameTitle)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
 
-                // Score card
                 VStack(spacing: 10) {
                     Text("Average")
                         .font(.bodyLarge)
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(Color.textSecondary)
 
                     Text(Formatters.reactionTime(displayedAverage))
                         .font(.system(size: 64, weight: .bold, design: .rounded))
                         .monospacedDigit()
-                        .foregroundStyle(.white)
-                        .contentTransition(.numericText())
+                        .foregroundStyle(Color.textPrimary)
+                        .if(!reduceMotion) { view in
+                            view.contentTransition(.numericText())
+                        }
 
                     Text(viewModel.speedTier)
                         .font(.system(size: 18, weight: .semibold))
@@ -263,16 +265,14 @@ struct GridReactionGameView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 22)
-                .background(Color.white.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 22))
+                .glassCard(cornerRadius: 22)
                 .padding(.horizontal, 24)
 
-                // Stats row
                 if let fastest = viewModel.fastestRoundMs, let slowest = viewModel.slowestRoundMs {
                     HStack(spacing: 20) {
                         statPill("Fastest", value: "\(fastest)ms", color: Color.success)
                         statPill("Slowest", value: "\(slowest)ms", color: Color.error)
-                        statPill("Wrong", value: "\(viewModel.wrongTapCount)", color: viewModel.wrongTapCount > 0 ? Color.error : .gray)
+                        statPill("Wrong", value: "\(viewModel.wrongTapCount)", color: viewModel.wrongTapCount > 0 ? Color.error : Color.textSecondary)
                     }
                     .padding(.horizontal, 24)
                 }
@@ -280,44 +280,27 @@ struct GridReactionGameView: View {
                 PercentileBar(percentile: viewModel.percentile)
                     .padding(.horizontal, 40)
 
-                // Round-by-round list
                 VStack(spacing: 6) {
                     ForEach(Array(viewModel.roundTimes.enumerated()), id: \.offset) { index, time in
                         if index < roundRevealCount {
                             roundRow(index: index, time: time)
-                                .transition(.opacity.combined(with: .move(edge: .leading)))
+                                .if(!reduceMotion) { view in
+                                    view.transition(.opacity.combined(with: .move(edge: .leading)))
+                                }
                         }
                     }
                 }
                 .padding(.horizontal, 24)
 
-                HStack(spacing: 16) {
-                    Button("Play Again") {
-                        displayedAverage = 0
-                        roundRevealCount = 0
-                        showResult = false
-                        viewModel.resetGame()
-                        viewModel.startGame()
-                    }
-                    .font(.bodyLarge)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(accentAmber)
-                    .clipShape(Capsule())
-                    .accessibleTapTarget()
-
-                    Button("Menu") {
-                        dismiss()
-                    }
-                    .font(.bodyLarge)
-                    .foregroundStyle(.gray)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.cardBackground)
-                    .clipShape(Capsule())
-                    .accessibleTapTarget()
+                GameActionButtons(primaryTint: accentAmber) {
+                    displayedAverage = 0
+                    roundRevealCount = 0
+                    viewModel.resetGame()
+                    viewModel.startGame()
+                } onSecondary: {
+                    dismiss()
                 }
+                .padding(.horizontal, 24)
 
                 Button("Share") {
                     ShareService.shareResult(
@@ -327,7 +310,7 @@ struct GridReactionGameView: View {
                     )
                 }
                 .font(.caption)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
                 .accessibleTapTarget()
 
                 Spacer().frame(height: 20)
@@ -344,12 +327,18 @@ struct GridReactionGameView: View {
                 .foregroundStyle(color)
             Text(label)
                 .font(.system(size: 11))
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(Color.white.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.white.opacity(0.06))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
+                )
+        )
     }
 
     private func roundRow(index: Int, time: Int) -> some View {
@@ -359,12 +348,12 @@ struct GridReactionGameView: View {
         return HStack(spacing: 10) {
             Text("R\(index + 1)")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
                 .frame(width: 28, alignment: .leading)
 
             GeometryReader { geo in
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(lastTimeColor(time).opacity(0.7))
+                    .fill(lastTimeColor(time).opacity(0.72))
                     .frame(width: geo.size.width * barWidth)
             }
             .frame(height: 14)
@@ -380,6 +369,8 @@ struct GridReactionGameView: View {
     // MARK: - Helpers
 
     private func triggerCellShake(_ cellIndex: Int) {
+        guard !reduceMotion else { return }
+
         let shakeSequence: [(CGFloat, Double)] = [
             (8, 0.03), (-8, 0.06), (6, 0.09), (-6, 0.12),
             (3, 0.15), (0, 0.18)
@@ -394,8 +385,14 @@ struct GridReactionGameView: View {
     }
 
     private func animateResultReveal() {
-        // Count up average
         let target = viewModel.averageTimeMs
+
+        if reduceMotion {
+            displayedAverage = target
+            roundRevealCount = viewModel.roundTimes.count
+            return
+        }
+
         let totalDuration: Double = 1.2
         let steps = 40
         let interval = totalDuration / Double(steps)
@@ -407,11 +404,11 @@ struct GridReactionGameView: View {
                 }
             }
         }
+
         DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration + 0.05) {
             displayedAverage = target
         }
 
-        // Staggered round reveal
         let roundCount = viewModel.roundTimes.count
         for i in 0..<roundCount {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8 + Double(i) * 0.08) {

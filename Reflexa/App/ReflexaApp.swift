@@ -41,14 +41,20 @@ struct ReflexaApp: App {
                 NavigationStack {
                     HomeView()
                 }
+                .tint(Color.accentPrimary)
                 .overlay(alignment: .top) {
                     if didFailToLoadData {
                         Text("Stats may not be saved this session.")
                             .font(.caption)
-                            .foregroundStyle(.white)
-                            .padding(8)
-                            .background(Color.red.opacity(0.8))
+                            .foregroundStyle(Color.textPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.error.opacity(0.9))
                             .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(.white.opacity(0.18), lineWidth: 1)
+                            )
                             .padding(.top, 4)
                     }
                 }

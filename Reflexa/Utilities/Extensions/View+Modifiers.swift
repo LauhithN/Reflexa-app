@@ -4,9 +4,56 @@ import SwiftUI
 struct CardButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .opacity(configuration.isPressed ? 0.7 : 1.0)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
+            .brightness(configuration.isPressed ? -0.02 : 0)
+            .shadow(color: .black.opacity(configuration.isPressed ? 0.12 : 0.2), radius: configuration.isPressed ? 6 : 14, y: configuration.isPressed ? 2 : 8)
+            .animation(.spring(response: 0.26, dampingFraction: 0.78), value: configuration.isPressed)
+    }
+}
+
+/// Button style used for prominent call-to-action actions
+struct PrimaryCTAButtonStyle: ButtonStyle {
+    var tint: Color = .accentPrimary
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.bodyLarge.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(
+                LinearGradient(
+                    colors: [tint, tint.opacity(0.82)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(.white.opacity(0.16), lineWidth: 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: configuration.isPressed)
+    }
+}
+
+/// Button style used for secondary actions
+struct SecondaryCTAButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.bodyLarge.weight(.semibold))
+            .foregroundStyle(Color.textSecondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Color.cardBackground.opacity(0.76))
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(Color.strokeSubtle, lineWidth: 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: configuration.isPressed)
     }
 }
 
@@ -29,10 +76,33 @@ extension View {
 
     /// Standard card styling
     func cardStyle() -> some View {
+        glassCard()
+    }
+
+    /// Elevated card styling used across modernized screens
+    func glassCard(cornerRadius: CGFloat = 20) -> some View {
         self
             .padding()
-            .background(Color.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.elevatedCard.opacity(0.96), Color.cardBackground.opacity(0.82)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .stroke(Color.strokeSubtle, lineWidth: 1)
+                    )
+            )
+            .shadow(color: .black.opacity(0.28), radius: 16, y: 8)
+    }
+
+    /// Applies the shared ambient background.
+    func screenBackground() -> some View {
+        self.background(AmbientBackground())
     }
 
     /// Minimum 44x44 touch target

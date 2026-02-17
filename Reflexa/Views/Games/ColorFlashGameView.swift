@@ -3,6 +3,8 @@ import SwiftUI
 struct ColorFlashGameView: View {
     @State private var viewModel: ColorFlashViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @State private var waitingPulse = false
     @State private var flashGlow = false
 
@@ -63,7 +65,7 @@ struct ColorFlashGameView: View {
         case .active:
             RadialGradient(
                 colors: [
-                    Color.white.opacity(flashGlow ? 0.95 : 0.7),
+                    Color.white.opacity(flashGlow && !reduceMotion ? 0.95 : 0.72),
                     .red,
                     Color(red: 0.18, green: 0.0, blue: 0.0)
                 ],
@@ -72,15 +74,17 @@ struct ColorFlashGameView: View {
                 endRadius: 420
             )
             .animation(
-                .easeInOut(duration: 0.2).repeatForever(autoreverses: true),
+                reduceMotion ? nil : .easeInOut(duration: 0.2).repeatForever(autoreverses: true),
                 value: flashGlow
             )
+
         case .falseStart:
             LinearGradient(
-                colors: [Color.error.opacity(0.5), Color.appBackground],
+                colors: [Color.error.opacity(0.55), Color.appBackground],
                 startPoint: .top,
                 endPoint: .bottom
             )
+
         case .waiting where viewModel.isDecoyFlashVisible:
             LinearGradient(
                 colors: [
@@ -91,44 +95,41 @@ struct ColorFlashGameView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+
         default:
-            LinearGradient(
-                colors: [
-                    Color(red: 0.03, green: 0.07, blue: 0.14),
-                    Color(red: 0.01, green: 0.02, blue: 0.06)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            AmbientBackground()
         }
     }
 
     private var readyView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 18) {
             Image(systemName: "scope")
                 .font(.system(size: 44, weight: .semibold))
                 .foregroundStyle(Color.waiting)
 
             Text("Color Flash")
                 .font(.resultTitle)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
 
             Text("Single-moment precision challenge")
                 .font(.bodyLarge)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
 
             Text("Tap only when the full flash appears")
                 .font(.caption)
-                .foregroundStyle(.gray.opacity(0.9))
+                .foregroundStyle(Color.textSecondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(Color.white.opacity(0.08))
                 .clipShape(Capsule())
         }
+        .padding(22)
+        .glassCard(cornerRadius: 24)
+        .padding(.horizontal, 18)
     }
 
     private var waitingView: some View {
-        VStack(spacing: 26) {
+        VStack(spacing: 24) {
             ZStack {
                 Circle()
                     .stroke(
@@ -136,8 +137,8 @@ struct ColorFlashGameView: View {
                         lineWidth: 2
                     )
                     .frame(
-                        width: waitingPulse ? 240 : 170,
-                        height: waitingPulse ? 240 : 170
+                        width: waitingPulse && !reduceMotion ? 240 : 170,
+                        height: waitingPulse && !reduceMotion ? 240 : 170
                     )
 
                 Circle()
@@ -153,17 +154,17 @@ struct ColorFlashGameView: View {
                     .foregroundStyle(viewModel.isDecoyFlashVisible ? Color.black : Color.waiting)
             }
             .animation(
-                .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+                reduceMotion ? nil : .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
                 value: waitingPulse
             )
 
             Text("Early tap triggers false start")
                 .font(.caption)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
 
             Text("Decoys spotted: \(viewModel.decoyFlashesShown)")
                 .font(.caption)
-                .foregroundStyle(.gray.opacity(0.9))
+                .foregroundStyle(Color.textSecondary.opacity(0.9))
         }
     }
 
@@ -171,11 +172,11 @@ struct ColorFlashGameView: View {
         VStack(spacing: 12) {
             Text("FLASH!")
                 .font(.system(size: 58, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
 
             Text("TAP NOW")
                 .font(.playerLabel)
-                .foregroundStyle(Color.white.opacity(0.9))
+                .foregroundStyle(Color.textPrimary.opacity(0.9))
                 .tracking(2)
         }
     }
@@ -188,36 +189,35 @@ struct ColorFlashGameView: View {
 
             Text("False Start")
                 .font(.resultTitle)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
 
             Text("Wait for the flash before tapping")
                 .font(.bodyLarge)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
 
             Button("Try Again") {
                 viewModel.startGame()
             }
-            .font(.bodyLarge)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
-            .background(Color.waiting)
-            .clipShape(Capsule())
+            .buttonStyle(PrimaryCTAButtonStyle(tint: .accentPrimary))
+            .padding(.horizontal, 28)
             .accessibleTapTarget()
         }
+        .padding(22)
+        .glassCard(cornerRadius: 24)
+        .padding(.horizontal, 16)
     }
 
     private var resultView: some View {
-        VStack(spacing: 26) {
+        VStack(spacing: 20) {
             Text("Precision Result")
                 .font(.gameTitle)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
 
             VStack(spacing: 8) {
                 Text(Formatters.reactionTime(viewModel.reactionTimeMs))
                     .font(.system(size: 72, weight: .bold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.textPrimary)
 
                 Text(speedTitle)
                     .font(.playerLabel)
@@ -225,37 +225,19 @@ struct ColorFlashGameView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
-            .background(Color.white.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 22))
+            .glassCard(cornerRadius: 22)
             .padding(.horizontal, 24)
 
             PercentileBar(percentile: viewModel.percentile)
                 .padding(.horizontal, 40)
 
-            HStack(spacing: 16) {
-                Button("Play Again") {
-                    viewModel.resetGame()
-                    viewModel.startGame()
-                }
-                .font(.bodyLarge)
-                .foregroundStyle(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.waiting)
-                .clipShape(Capsule())
-                .accessibleTapTarget()
-
-                Button("Menu") {
-                    dismiss()
-                }
-                .font(.bodyLarge)
-                .foregroundStyle(.gray)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.cardBackground)
-                .clipShape(Capsule())
-                .accessibleTapTarget()
+            GameActionButtons(primaryTint: .accentPrimary) {
+                viewModel.resetGame()
+                viewModel.startGame()
+            } onSecondary: {
+                dismiss()
             }
+            .padding(.horizontal, 24)
 
             Button("Share") {
                 ShareService.shareResult(
@@ -265,7 +247,7 @@ struct ColorFlashGameView: View {
                 )
             }
             .font(.caption)
-            .foregroundStyle(.gray)
+            .foregroundStyle(Color.textSecondary)
             .accessibleTapTarget()
         }
         .padding(.horizontal, 8)
@@ -287,11 +269,11 @@ struct ColorFlashGameView: View {
     private func updateAnimations(for state: GameState) {
         switch state {
         case .waiting:
-            waitingPulse = true
+            waitingPulse = !reduceMotion
             flashGlow = false
         case .active:
             waitingPulse = false
-            flashGlow = true
+            flashGlow = !reduceMotion
         default:
             waitingPulse = false
             flashGlow = false

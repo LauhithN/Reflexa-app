@@ -25,26 +25,37 @@ struct LeaderboardRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(rankLabel)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(rankColor)
-                .frame(width: 34, alignment: .leading)
+            ZStack {
+                Circle()
+                    .fill(rankColor.opacity(rank <= 3 ? 0.22 : 0.12))
+                    .frame(width: 34, height: 34)
+
+                Text(rankLabel)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(rankColor)
+            }
 
             Text(score)
                 .font(.playerLabel)
                 .monospacedDigit()
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
 
             Spacer()
 
             Text(shortDate)
                 .font(.caption)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textSecondary)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.cardBackground.opacity(0.8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
+                )
+        )
     }
 
     private var shortDate: String {

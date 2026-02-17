@@ -13,7 +13,7 @@ struct TwoPlayerSplitView<Content: View>: View {
 
             Divider()
                 .frame(height: 2)
-                .background(Color.gray.opacity(0.3))
+                .overlay(Color.strokeSubtle)
 
             // Player 2 (bottom, rotated 180)
             content(1)

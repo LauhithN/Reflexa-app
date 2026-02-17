@@ -1,22 +1,50 @@
 import SwiftUI
 
 extension Color {
-    // MARK: - Backgrounds
-    static let appBackground = Color(hex: "1C1C1E")
-    static let cardBackground = Color(hex: "2C2C2E")
+    // MARK: - Surfaces
+    static let appBackground = Color(hex: "060A14")
+    static let appBackgroundSecondary = Color(hex: "0B1326")
+    static let cardBackground = Color(hex: "121C31")
+    static let elevatedCard = Color(hex: "192744")
+    static let strokeSubtle = Color.white.opacity(0.12)
+    static let textPrimary = Color.white
+    static let textSecondary = Color(hex: "9EABC8")
+
+    // MARK: - Brand Accent
+    static let accentPrimary = Color(hex: "5B8CFF")
+    static let accentSecondary = Color(hex: "2DD4BF")
+    static let accentHot = Color(hex: "FB7185")
+    static let accentSun = Color(hex: "F59E0B")
 
     // MARK: - Player Colors
-    static let player1 = Color(hex: "3B82F6")
-    static let player2 = Color(hex: "EF4444")
-    static let player3 = Color(hex: "22C55E")
-    static let player4 = Color(hex: "F97316")
+    static let player1 = Color(hex: "5B8CFF")
+    static let player2 = Color(hex: "F87171")
+    static let player3 = Color(hex: "34D399")
+    static let player4 = Color(hex: "F59E0B")
 
     // MARK: - States
-    static let success = Color(hex: "22C55E")
-    static let error = Color(hex: "F87171")
+    static let success = Color(hex: "34D399")
+    static let error = Color(hex: "FB7185")
     static let warning = Color(hex: "FBBF24")
-    static let waiting = Color(hex: "3B82F6")
-    static let unlockBadge = Color(hex: "F97316")
+    static let waiting = Color.accentPrimary
+    static let unlockBadge = Color.accentSun
+
+    // MARK: - Gradients
+    static var appGradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.appBackgroundSecondary, Color.appBackground],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static var heroGradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.accentPrimary, Color.accentSecondary],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 
     static func playerColor(for index: Int) -> Color {
         switch index {

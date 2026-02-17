@@ -5,31 +5,41 @@ struct PercentileBar: View {
     let percentile: Int // 0-100
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             Text(Formatters.percentile(percentile))
-                .font(.playerLabel)
-                .foregroundStyle(.white)
+                .font(.playerLabel.weight(.bold))
+                .foregroundStyle(Color.textPrimary)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.cardBackground)
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.cardBackground.opacity(0.72))
 
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(barColor)
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            LinearGradient(
+                                colors: [barColor, barColor.opacity(0.55)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                         .frame(width: geo.size.width * CGFloat(percentile) / 100)
                 }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
+                )
             }
-            .frame(height: 12)
+            .frame(height: 14)
 
             HStack {
                 Text("Slower")
                     .font(.caption)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
                 Spacer()
                 Text("Faster")
                     .font(.caption)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
             }
         }
         .accessibilityElement(children: .combine)

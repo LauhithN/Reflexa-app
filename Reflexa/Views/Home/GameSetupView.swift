@@ -5,6 +5,7 @@ struct GameSetupView: View {
 
     @State private var selectedMode: PlayerMode
     @State private var isPlaying = false
+    @State private var animateIn = false
 
     init(gameType: GameType) {
         self.gameType = gameType
@@ -12,66 +13,101 @@ struct GameSetupView: View {
     }
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        VStack(spacing: 24) {
+            VStack(spacing: 14) {
+                iconBadge
 
-            // MARK: - Icon
-            Image(systemName: gameType.iconName)
-                .font(.system(size: 56))
-                .foregroundStyle(Color.waiting)
-
-            // MARK: - Title and Description
-            VStack(spacing: 8) {
                 Text(gameType.displayName)
-                    .font(.gameTitle)
-                    .foregroundStyle(.white)
+                    .font(.resultTitle)
+                    .foregroundStyle(Color.textPrimary)
 
                 Text(gameType.description)
                     .font(.bodyLarge)
-                    .foregroundStyle(.gray)
-            }
+                    .foregroundStyle(Color.textSecondary)
+                    .multilineTextAlignment(.center)
 
-            // MARK: - Player Mode Selector
+                HStack(spacing: 8) {
+                    detailChip(text: "\(gameType.supportedModes.count) mode\(gameType.supportedModes.count == 1 ? "" : "s")", tint: Color.accentPrimary)
+                    detailChip(text: gameType.isPremium ? "Premium" : "Free", tint: gameType.isPremium ? Color.accentSun : Color.accentSecondary)
+                }
+            }
+            .padding(20)
+            .glassCard(cornerRadius: 24)
+
             if gameType.supportedModes.count > 1 {
-                VStack(spacing: 12) {
-                    Text("Players")
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Player Mode")
                         .font(.caption)
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(Color.textSecondary)
 
                     PlayerModeSelector(
                         modes: gameType.supportedModes,
                         selected: $selectedMode
                     )
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(18)
+                .glassCard(cornerRadius: 18)
             }
 
             Spacer()
 
-            // MARK: - Start Button
             Button {
                 isPlaying = true
             } label: {
-                Text("Start Game")
-                    .font(.bodyLarge)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: 56)
-                    .background(Color.waiting)
-                    .clipShape(Capsule())
+                HStack(spacing: 8) {
+                    Image(systemName: "play.fill")
+                    Text("Start Game")
+                }
             }
+            .buttonStyle(PrimaryCTAButtonStyle(tint: Color.accentPrimary))
             .accessibleTapTarget()
-            .padding(.horizontal, 24)
-            .padding(.bottom, 32)
         }
         .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
+        .background(AmbientBackground())
         .navigationBarTitleDisplayMode(.inline)
+        .opacity(animateIn ? 1 : 0)
+        .offset(y: animateIn ? 0 : 12)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.35)) {
+                animateIn = true
+            }
+        }
         .fullScreenCover(isPresented: $isPlaying) {
             gameView
                 .howToPlayOverlay(for: gameType)
         }
+    }
+
+    private var iconBadge: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color.accentPrimary.opacity(0.95), Color.accentSecondary.opacity(0.75)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 94, height: 94)
+
+            Image(systemName: gameType.iconName)
+                .font(.system(size: 36, weight: .bold))
+                .foregroundStyle(.white)
+        }
+    }
+
+    private func detailChip(text: String, tint: Color) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(tint.opacity(0.16))
+            .clipShape(Capsule())
     }
 
     // MARK: - Game View Router

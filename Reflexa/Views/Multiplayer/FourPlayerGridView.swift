@@ -14,7 +14,7 @@ struct FourPlayerGridView<Content: View>: View {
 
                 Divider()
                     .frame(width: 2)
-                    .background(Color.gray.opacity(0.3))
+                    .overlay(Color.strokeSubtle)
 
                 content(1)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -22,7 +22,7 @@ struct FourPlayerGridView<Content: View>: View {
 
             Divider()
                 .frame(height: 2)
-                .background(Color.gray.opacity(0.3))
+                .overlay(Color.strokeSubtle)
 
             // Bottom row (rotated 180)
             HStack(spacing: 0) {
@@ -32,7 +32,7 @@ struct FourPlayerGridView<Content: View>: View {
 
                 Divider()
                     .frame(width: 2)
-                    .background(Color.gray.opacity(0.3))
+                    .overlay(Color.strokeSubtle)
 
                 content(3)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -6,8 +6,11 @@ struct WaitingOverlay: View {
 
     var body: some View {
         ZStack {
-            (isDark ? Color.black : Color.appBackground)
-                .ignoresSafeArea()
+            if isDark {
+                Color.black.ignoresSafeArea()
+            } else {
+                AmbientBackground()
+            }
 
             if !isDark {
                 PulsingText(text: "Wait...", color: .waiting)

@@ -4,128 +4,161 @@ struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var currentPage = 0
 
+    private let totalPages = 3
+
     var body: some View {
-        ZStack {
-            Color.appBackground.ignoresSafeArea()
+        VStack(spacing: 0) {
+            topBar
 
             TabView(selection: $currentPage) {
-                welcomePage.tag(0)
-                gamesPage.tag(1)
-                getStartedPage.tag(2)
+                page(
+                    icon: "bolt.fill",
+                    title: "Welcome to Reflexa",
+                    subtitle: "Modern reflex training in short, addictive rounds.",
+                    accent: Color.accentPrimary
+                ) {
+                    featureRow(icon: "sparkles", text: "Fast startup, instant play")
+                    featureRow(icon: "person.2.fill", text: "Solo and local multiplayer")
+                    featureRow(icon: "chart.line.uptrend.xyaxis", text: "Track progress over time")
+                }
+                .tag(0)
+
+                page(
+                    icon: "scope",
+                    title: "Challenge Modes",
+                    subtitle: "Precision, speed, and pressure with unique mechanics.",
+                    accent: Color.accentSecondary
+                ) {
+                    featureRow(icon: "clock", text: "Stopwatch precision")
+                    featureRow(icon: "eye.fill", text: "Color Flash decoy reaction")
+                    featureRow(icon: "hand.tap.fill", text: "Quick Tap speed sprint")
+                    featureRow(icon: "square.grid.3x3.fill", text: "Grid Reaction focus test")
+                }
+                .tag(1)
+
+                page(
+                    icon: "trophy.fill",
+                    title: "Set New Bests",
+                    subtitle: "Compete against yourself daily and climb your local leaderboard.",
+                    accent: Color.accentHot
+                ) {
+                    featureRow(icon: "calendar", text: "Daily challenge streaks")
+                    featureRow(icon: "medal.fill", text: "Personal best tracking")
+                    featureRow(icon: "gamecontroller.fill", text: "Game Center integration")
+                }
+                .tag(2)
             }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
+            .tabViewStyle(.page(indexDisplayMode: .never))
+
+            bottomControls
         }
+        .background(AmbientBackground())
         .preferredColorScheme(.dark)
     }
 
-    // MARK: - Page 1: Welcome
-
-    private var welcomePage: some View {
-        VStack(spacing: 24) {
+    private var topBar: some View {
+        HStack {
             Spacer()
 
-            Image(systemName: "bolt.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(Color.waiting)
-
-            Text("Reflexa")
-                .font(.system(size: 42, weight: .bold))
-                .foregroundStyle(.white)
-
-            Text("Test your reflexes.\nChallenge your friends.")
-                .font(.bodyLarge)
-                .foregroundStyle(.gray)
-                .multilineTextAlignment(.center)
-
-            Spacer()
-            Spacer()
-        }
-        .padding()
-    }
-
-    // MARK: - Page 2: Game Types
-
-    private var gamesPage: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Text("9 Game Modes")
-                .font(.gameTitle)
-                .foregroundStyle(.white)
-
-            VStack(alignment: .leading, spacing: 16) {
-                gameRow(icon: "stopwatch", title: "Reaction Games", desc: "Color Flash, Sound Reflex, Vibration Reflex")
-                gameRow(icon: "hand.tap.fill", title: "Speed Games", desc: "Quick Tap, Grid Reaction, Stopwatch")
-                gameRow(icon: "person.2.fill", title: "Multiplayer", desc: "Color Battle, Charge & Release — up to 4 players")
-                gameRow(icon: "calendar", title: "Daily Challenge", desc: "One shot per day — beat your best")
+            if currentPage < totalPages - 1 {
+                Button("Skip") {
+                    hasCompletedOnboarding = true
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.textSecondary)
             }
-            .padding(.horizontal)
-
-            Spacer()
-            Spacer()
         }
-        .padding()
+        .padding(.horizontal, 20)
+        .padding(.top, 18)
     }
 
-    // MARK: - Page 3: Get Started
-
-    private var getStartedPage: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "hand.tap.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(Color.success)
-
-            Text("Ready?")
-                .font(.system(size: 42, weight: .bold))
-                .foregroundStyle(.white)
-
-            Text("Your reflexes won't test themselves.")
-                .font(.bodyLarge)
-                .foregroundStyle(.gray)
-
-            Spacer()
+    private var bottomControls: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 8) {
+                ForEach(0..<totalPages, id: \.self) { index in
+                    Capsule()
+                        .fill(index == currentPage ? Color.accentPrimary : Color.white.opacity(0.2))
+                        .frame(width: index == currentPage ? 26 : 8, height: 8)
+                        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: currentPage)
+                }
+            }
 
             Button {
-                hasCompletedOnboarding = true
+                if currentPage == totalPages - 1 {
+                    hasCompletedOnboarding = true
+                } else {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                        currentPage += 1
+                    }
+                }
             } label: {
-                Text("Let's Go")
-                    .font(.bodyLarge)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: 56)
-                    .background(Color.waiting)
-                    .clipShape(Capsule())
+                Text(currentPage == totalPages - 1 ? "Start Playing" : "Continue")
             }
+            .buttonStyle(PrimaryCTAButtonStyle(tint: Color.accentPrimary))
             .accessibleTapTarget()
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
         }
-        .padding()
+        .padding(.horizontal, 20)
+        .padding(.bottom, 26)
     }
 
-    // MARK: - Helper
+    private func page<Content: View>(
+        icon: String,
+        title: String,
+        subtitle: String,
+        accent: Color,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(spacing: 20) {
+            Spacer(minLength: 16)
 
-    private func gameRow(icon: String, title: String, desc: String) -> some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundStyle(Color.waiting)
-                .frame(width: 44, height: 44)
-                .background(Color.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [accent, accent.opacity(0.65)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 88, height: 88)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.playerLabel)
+                Image(systemName: icon)
+                    .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(.white)
-                Text(desc)
-                    .font(.caption)
-                    .foregroundStyle(.gray)
             }
+
+            Text(title)
+                .font(.resultTitle)
+                .foregroundStyle(Color.textPrimary)
+                .multilineTextAlignment(.center)
+
+            Text(subtitle)
+                .font(.bodyLarge)
+                .foregroundStyle(Color.textSecondary)
+                .multilineTextAlignment(.center)
+
+            VStack(alignment: .leading, spacing: 12) {
+                content()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(18)
+            .glassCard(cornerRadius: 20)
+
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+    }
+
+    private func featureRow(icon: String, text: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Color.accentPrimary)
+                .frame(width: 22)
+
+            Text(text)
+                .font(.playerLabel)
+                .foregroundStyle(Color.textPrimary)
         }
     }
 }

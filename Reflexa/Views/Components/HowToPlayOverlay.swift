@@ -4,6 +4,7 @@ import SwiftUI
 struct HowToPlayOverlay: View {
     let gameType: GameType
     let onDismiss: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var instructions: String {
         switch gameType {
@@ -30,7 +31,8 @@ struct HowToPlayOverlay: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.85).ignoresSafeArea()
+            AmbientBackground()
+                .overlay(Color.black.opacity(0.5))
 
             VStack(spacing: 24) {
                 Image(systemName: gameType.iconName)
@@ -39,7 +41,7 @@ struct HowToPlayOverlay: View {
 
                 Text("How to Play")
                     .font(.gameTitle)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.textPrimary)
 
                 Text(gameType.displayName)
                     .font(.playerLabel)
@@ -47,7 +49,7 @@ struct HowToPlayOverlay: View {
 
                 Text(instructions)
                     .font(.bodyLarge)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
 
@@ -55,19 +57,16 @@ struct HowToPlayOverlay: View {
                     onDismiss()
                 } label: {
                     Text("Got it!")
-                        .font(.bodyLarge)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
                         .frame(minWidth: 200)
-                        .padding(.vertical, 14)
-                        .background(Color.waiting)
-                        .clipShape(Capsule())
                 }
+                .buttonStyle(PrimaryCTAButtonStyle(tint: .accentPrimary))
                 .accessibleTapTarget()
             }
-            .padding()
+            .padding(20)
+            .glassCard(cornerRadius: 24)
+            .padding(.horizontal, 18)
         }
-        .transition(.opacity)
+        .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
     }
 }
 
@@ -76,6 +75,7 @@ struct HowToPlayModifier: ViewModifier {
     let gameType: GameType
     @AppStorage private var hasSeenInstructions: Bool
     @State private var showOverlay: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(gameType: GameType) {
         self.gameType = gameType
@@ -90,7 +90,7 @@ struct HowToPlayModifier: ViewModifier {
 
             if showOverlay {
                 HowToPlayOverlay(gameType: gameType) {
-                    withAnimation(.easeOut(duration: 0.3)) {
+                    withAnimation(reduceMotion ? .linear(duration: 0.1) : .easeOut(duration: 0.3)) {
                         showOverlay = false
                     }
                     hasSeenInstructions = true

@@ -156,8 +156,14 @@ struct ColorBattleGameView: View {
             scoreStrip
         }
         .padding(14)
-        .background(Color.black.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.black.opacity(0.3))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
+                )
+        )
         .padding(.horizontal, 16)
     }
 
@@ -386,30 +392,13 @@ struct ColorBattleGameView: View {
                 }
                 .padding(.horizontal, 22)
 
-                HStack(spacing: 16) {
-                    Button("Play Again") {
-                        viewModel.resetGame()
-                        viewModel.startGame()
-                    }
-                    .font(.bodyLarge)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.waiting)
-                    .clipShape(Capsule())
-                    .accessibleTapTarget()
-
-                    Button("Menu") {
-                        dismiss()
-                    }
-                    .font(.bodyLarge)
-                    .foregroundStyle(.gray)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.cardBackground)
-                    .clipShape(Capsule())
-                    .accessibleTapTarget()
+                GameActionButtons(primaryTint: .accentPrimary) {
+                    viewModel.resetGame()
+                    viewModel.startGame()
+                } onSecondary: {
+                    dismiss()
                 }
+                .padding(.horizontal, 22)
             }
             .padding(.top, 24)
         }

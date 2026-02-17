@@ -345,29 +345,11 @@ struct ReactionDuelGameView: View {
     }
 
     private var resultActions: some View {
-        HStack(spacing: 16) {
-            Button("Play Again") {
-                viewModel.resetGame()
-                viewModel.startGame()
-            }
-            .font(.bodyLarge)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
-            .background(Color.waiting)
-            .clipShape(Capsule())
-            .accessibleTapTarget()
-
-            Button("Menu") {
-                dismiss()
-            }
-            .font(.bodyLarge)
-            .foregroundStyle(.gray)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
-            .background(Color.cardBackground)
-            .clipShape(Capsule())
-            .accessibleTapTarget()
+        GameActionButtons(primaryTint: .accentPrimary) {
+            viewModel.resetGame()
+            viewModel.startGame()
+        } onSecondary: {
+            dismiss()
         }
     }
 
@@ -399,8 +381,14 @@ struct ReactionDuelGameView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Color.cardBackground.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.cardBackground.opacity(0.86))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Helpers

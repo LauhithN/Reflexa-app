@@ -50,6 +50,7 @@ struct LeaderboardView: View {
 
     private var personalBestText: String {
         guard let stats else { return "--" }
+
         switch selectedGame {
         case .stopwatch:
             return stats.bestStopwatchScore.map { selectedGame.formatScore($0) } ?? "--"
@@ -63,8 +64,8 @@ struct LeaderboardView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 18) {
                 gameModePicker
                 timeScopePicker
                 personalBestCard
@@ -76,9 +77,10 @@ struct LeaderboardView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 32)
+            .padding(.top, 14)
+            .padding(.bottom, 30)
         }
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(AmbientBackground())
         .navigationTitle("Leaderboard")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
@@ -95,16 +97,24 @@ struct LeaderboardView: View {
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: game.iconName)
-                                .font(.system(size: 12))
+                                .font(.system(size: 12, weight: .bold))
+
                             Text(game.displayName)
-                                .font(.caption.weight(.medium))
+                                .font(.caption.weight(.semibold))
                         }
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(selectedGame == game ? Color.waiting : Color.cardBackground)
-                        .foregroundStyle(selectedGame == game ? .white : .gray)
-                        .clipShape(Capsule())
+                        .padding(.vertical, 9)
+                        .foregroundStyle(selectedGame == game ? Color.textPrimary : Color.textSecondary)
+                        .background(
+                            Capsule()
+                                .fill(selectedGame == game ? Color.accentPrimary : Color.cardBackground.opacity(0.82))
+                                .overlay(
+                                    Capsule()
+                                        .stroke(selectedGame == game ? .white.opacity(0.18) : Color.strokeSubtle, lineWidth: 1)
+                                )
+                        )
                     }
+                    .buttonStyle(CardButtonStyle())
                 }
             }
             .padding(.horizontal, 2)
@@ -120,37 +130,45 @@ struct LeaderboardView: View {
             }
         }
         .pickerStyle(.segmented)
+        .padding(10)
+        .background(Color.cardBackground.opacity(0.7))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.strokeSubtle, lineWidth: 1)
+        )
     }
 
     // MARK: - Personal Best
 
     private var personalBestCard: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("Personal Best")
                     .font(.caption)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
+
                 Text(personalBestText)
                     .font(.resultTitle)
                     .monospacedDigit()
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.textPrimary)
             }
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("Games Played")
+            VStack(alignment: .trailing, spacing: 6) {
+                Text("Entries")
                     .font(.caption)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.textSecondary)
+
                 Text("\(filteredResults.count)")
-                    .font(.playerLabel)
+                    .font(.playerLabel.weight(.bold))
                     .monospacedDigit()
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.textPrimary)
             }
         }
         .padding(16)
-        .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .glassCard(cornerRadius: 18)
     }
 
     // MARK: - Entries
@@ -172,19 +190,20 @@ struct LeaderboardView: View {
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "trophy")
-                .font(.system(size: 40))
-                .foregroundStyle(.gray.opacity(0.5))
+                .font(.system(size: 40, weight: .bold))
+                .foregroundStyle(Color.textSecondary.opacity(0.7))
 
             Text("No scores yet")
                 .font(.playerLabel)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.textPrimary)
 
-            Text("Play \(selectedGame.displayName) to see your scores here!")
+            Text("Play \(selectedGame.displayName) to create your first leaderboard entry.")
                 .font(.caption)
-                .foregroundStyle(.gray.opacity(0.8))
+                .foregroundStyle(Color.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .padding(.vertical, 36)
+        .glassCard(cornerRadius: 18)
     }
 }

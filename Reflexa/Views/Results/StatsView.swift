@@ -15,14 +15,16 @@ struct StatsView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 20) {
                 lifetimeStatsSection
                 recentGamesSection
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 30)
         }
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(AmbientBackground())
         .navigationTitle("Stats")
     }
 
@@ -31,38 +33,50 @@ struct StatsView: View {
     @ViewBuilder
     private var lifetimeStatsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Lifetime Stats")
-                .font(.gameTitle)
-                .foregroundStyle(.white)
+            Text("Lifetime")
+                .font(.sectionTitle)
+                .foregroundStyle(Color.textPrimary)
 
             if let stats {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        StatBadge(
-                            label: "Games Played",
-                            value: "\(stats.totalGamesPlayed)"
-                        )
-                        StatBadge(
-                            label: "Total Wins",
-                            value: "\(stats.totalWins)"
-                        )
-                        StatBadge(
-                            label: "Best Reaction",
-                            value: stats.bestReactionTimeMs.map { Formatters.reactionTime($0) } ?? "--"
-                        )
-                        StatBadge(
-                            label: "Best Stopwatch",
-                            value: stats.bestStopwatchScore.map { Formatters.stopwatchValue($0) } ?? "--"
-                        )
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        summaryValue(title: "Games", value: "\(stats.totalGamesPlayed)")
+                        Spacer()
+                        summaryValue(title: "Wins", value: "\(stats.totalWins)")
+                    }
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            StatBadge(label: "Best Reaction", value: stats.bestReactionTimeMs.map { Formatters.reactionTime($0) } ?? "--")
+                            StatBadge(label: "Best Stopwatch", value: stats.bestStopwatchScore.map { Formatters.stopwatchValue($0) } ?? "--")
+                            StatBadge(label: "Best Grid", value: stats.bestGridReactionMs.map { Formatters.reactionTime($0) } ?? "--")
+                            StatBadge(label: "Best Quick Tap", value: stats.bestQuickTapCount.map { Formatters.tapCount($0) } ?? "--")
+                        }
                     }
                 }
+                .padding(16)
+                .glassCard(cornerRadius: 18)
             } else {
-                Text("Play your first game!")
+                Text("Play your first game to generate stats.")
                     .font(.bodyLarge)
-                    .foregroundStyle(.gray)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
+                    .foregroundStyle(Color.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .glassCard(cornerRadius: 18)
             }
+        }
+    }
+
+    private func summaryValue(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(Color.textSecondary)
+
+            Text(value)
+                .font(.resultScore)
+                .monospacedDigit()
+                .foregroundStyle(Color.textPrimary)
         }
     }
 
@@ -71,18 +85,19 @@ struct StatsView: View {
     @ViewBuilder
     private var recentGamesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent Games")
-                .font(.gameTitle)
-                .foregroundStyle(.white)
+            Text("Recent Sessions")
+                .font(.sectionTitle)
+                .foregroundStyle(Color.textPrimary)
 
             if recentGames.isEmpty {
                 Text("No games played yet")
                     .font(.bodyLarge)
-                    .foregroundStyle(.gray)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
+                    .foregroundStyle(Color.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .glassCard(cornerRadius: 18)
             } else {
-                LazyVStack(spacing: 8) {
+                LazyVStack(spacing: 10) {
                     ForEach(recentGames) { result in
                         gameResultRow(result)
                     }
@@ -94,21 +109,19 @@ struct StatsView: View {
     // MARK: - Game Result Row
 
     private func gameResultRow(_ result: GameResult) -> some View {
-        HStack {
+        HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(result.gameTypeEnum?.displayName ?? result.gameType)
-                    .font(.bodyLarge)
-                    .foregroundStyle(.white)
+                    .font(.playerLabel)
+                    .foregroundStyle(Color.textPrimary)
 
                 HStack(spacing: 8) {
                     Text(result.playerModeEnum?.displayName ?? result.playerMode)
-                        .font(.caption)
-                        .foregroundStyle(.gray)
-
+                    Text("•")
                     Text(Formatters.displayDate(result.timestamp))
-                        .font(.caption)
-                        .foregroundStyle(.gray)
                 }
+                .font(.caption)
+                .foregroundStyle(Color.textSecondary)
             }
 
             Spacer()
@@ -119,14 +132,20 @@ struct StatsView: View {
                     .foregroundStyle(Color.error)
             } else if let score = result.scores.first {
                 Text(formattedScore(score, gameType: result.gameTypeEnum))
-                    .font(.playerLabel)
+                    .font(.playerLabel.weight(.bold))
                     .monospacedDigit()
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.textPrimary)
             }
         }
-        .padding(12)
-        .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.cardBackground.opacity(0.8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Score Formatting
@@ -135,6 +154,7 @@ struct StatsView: View {
         guard let gameType else {
             return String(format: "%.0f", score)
         }
+
         switch gameType {
         case .stopwatch:
             return Formatters.stopwatchValue(score)
