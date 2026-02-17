@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct ReflexlyApp: App {
+struct ReflexaApp: App {
     private let modelContainer: ModelContainer
     private let didFailToLoadData: Bool
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false

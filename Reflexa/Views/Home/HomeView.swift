@@ -22,7 +22,7 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 24) {
                 // MARK: - Header
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Reflexy")
+                    Text("Reflexa")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundStyle(.white)
 
@@ -42,7 +42,7 @@ struct HomeView: View {
                         } label: {
                             GameCard(gameType: game, isLocked: false)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(CardButtonStyle())
                     }
                 }
 
@@ -64,7 +64,7 @@ struct HomeView: View {
                             } label: {
                                 GameCard(gameType: game, isLocked: false)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(CardButtonStyle())
                         }
                     }
                 }
@@ -98,9 +98,10 @@ struct HomeView: View {
                     GameCenterService.shared.showDashboard()
                 } label: {
                     Image(systemName: "gamecontroller.fill")
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(GameCenterService.shared.isAuthenticated ? .gray : .gray.opacity(0.3))
                         .accessibleTapTarget()
                 }
+                .disabled(!GameCenterService.shared.isAuthenticated)
                 .accessibilityLabel("Game Center")
             }
             ToolbarItem(placement: .topBarTrailing) {

@@ -112,12 +112,15 @@ struct StopwatchGameView: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 24)
-        .contentShape(Rectangle())
-        .simultaneousGesture(
-            TapGesture().onEnded {
-                viewModel.playerTapped(index: 0)
+        .overlay {
+            if viewModel.state == .active {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewModel.playerTapped(index: 0)
+                    }
             }
-        )
+        }
         .ignoresSafeArea()
     }
 

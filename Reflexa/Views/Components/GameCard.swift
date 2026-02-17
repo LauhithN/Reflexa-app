@@ -73,6 +73,7 @@ struct GameCard: View {
         .padding()
         .background(Color.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .contentShape(RoundedRectangle(cornerRadius: 16))
     }
 
     private var accessibilityText: String {

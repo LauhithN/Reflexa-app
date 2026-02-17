@@ -39,13 +39,13 @@ final class GameCenterService {
 
     /// Leaderboard IDs for each solo game mode
     enum LeaderboardID {
-        static let stopwatchBest = "reflexy.stopwatch.best"
-        static let colorFlashBest = "reflexy.colorflash.best"
-        static let quickTapBest = "reflexy.quicktap.best"
-        static let soundReflexBest = "reflexy.soundreflex.best"
-        static let vibrationReflexBest = "reflexy.vibrationreflex.best"
-        static let gridReactionBest = "reflexy.gridreaction.best"
-        static let dailyChallengeBest = "reflexy.dailychallenge.best"
+        static let stopwatchBest = "reflexa.stopwatch.best"
+        static let colorFlashBest = "reflexa.colorflash.best"
+        static let quickTapBest = "reflexa.quicktap.best"
+        static let soundReflexBest = "reflexa.soundreflex.best"
+        static let vibrationReflexBest = "reflexa.vibrationreflex.best"
+        static let gridReactionBest = "reflexa.gridreaction.best"
+        static let dailyChallengeBest = "reflexa.dailychallenge.best"
     }
 
     /// Returns the leaderboard ID for a given game type (nil for multiplayer-only games)
@@ -80,16 +80,16 @@ final class GameCenterService {
     // MARK: - Achievements
 
     enum AchievementID {
-        static let firstGame = "reflexy.first_game"
-        static let tenGames = "reflexy.ten_games"
-        static let hundredGames = "reflexy.hundred_games"
-        static let sub200ms = "reflexy.sub_200ms"
-        static let sub150ms = "reflexy.sub_150ms"
-        static let perfectStopwatch = "reflexy.perfect_stopwatch"
-        static let dailyStreak7 = "reflexy.daily_streak_7"
-        static let dailyStreak30 = "reflexy.daily_streak_30"
-        static let allGamesPlayed = "reflexy.all_games_played"
-        static let quickTap100 = "reflexy.quick_tap_100"
+        static let firstGame = "reflexa.first_game"
+        static let tenGames = "reflexa.ten_games"
+        static let hundredGames = "reflexa.hundred_games"
+        static let sub200ms = "reflexa.sub_200ms"
+        static let sub150ms = "reflexa.sub_150ms"
+        static let perfectStopwatch = "reflexa.perfect_stopwatch"
+        static let dailyStreak7 = "reflexa.daily_streak_7"
+        static let dailyStreak30 = "reflexa.daily_streak_30"
+        static let allGamesPlayed = "reflexa.all_games_played"
+        static let quickTap100 = "reflexa.quick_tap_100"
     }
 
     /// Report an achievement as fully completed
@@ -166,8 +166,9 @@ final class GameCenterService {
 
     // MARK: - UI
 
-    /// Show Game Center dashboard
+    /// Show Game Center dashboard (only when authenticated)
     func showDashboard(state: GKGameCenterViewControllerState = .default) {
+        guard isAuthenticated else { return }
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootVC = windowScene.windows.first?.rootViewController else { return }
 

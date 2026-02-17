@@ -1,5 +1,15 @@
 import SwiftUI
 
+/// Button style with subtle press feedback for card-based navigation
+struct CardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.7 : 1.0)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
 extension View {
     /// Applies 180-degree rotation for bottom players in multiplayer
     func rotatedForPlayer(_ playerIndex: Int, mode: PlayerMode) -> some View {

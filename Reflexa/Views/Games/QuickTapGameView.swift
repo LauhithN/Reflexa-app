@@ -37,24 +37,27 @@ struct QuickTapGameView: View {
                 EmptyView()
             }
         }
-        .contentShape(Rectangle())
-        .simultaneousGesture(
-            TapGesture().onEnded {
-                if case .active = viewModel.state {
-                    withAnimation(.spring(response: 0.15, dampingFraction: 0.4)) {
-                        tapBounce = true
+        .overlay {
+            if viewModel.state == .waiting || viewModel.state == .active {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if case .active = viewModel.state {
+                            withAnimation(.spring(response: 0.15, dampingFraction: 0.4)) {
+                                tapBounce = true
+                            }
+                            ringPulse = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                tapBounce = false
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                ringPulse = false
+                            }
+                        }
+                        viewModel.playerTapped(index: 0)
                     }
-                    ringPulse = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        tapBounce = false
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        ringPulse = false
-                    }
-                }
-                viewModel.playerTapped(index: 0)
             }
-        )
+        }
         .onAppear {
             viewModel.startGame()
         }

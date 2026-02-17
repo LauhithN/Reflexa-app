@@ -3,7 +3,7 @@ import UIKit
 /// Service for sharing game results
 enum ShareService {
     static func shareResult(gameType: GameType, score: String, percentile: Int?) {
-        var text = "Reflexy - \(gameType.displayName)\nScore: \(score)"
+        var text = "Reflexa - \(gameType.displayName)\nScore: \(score)"
         if let percentile {
             text += "\n\(Formatters.percentile(percentile))"
         }

@@ -2,13 +2,13 @@ import Foundation
 
 enum Constants {
     // MARK: - Store
-    static let productID = "com.reflexy.app.unlockall"
+    static let productID = "com.reflexa.app.unlockall"
     static let unlockPrice = "$9.99"
     static let forceUnlockAllGames = false
 
     // MARK: - Legal
-    static let privacyPolicyURL = "https://lauhithn.github.io/Reflexy-app/privacy.html"
-    static let termsOfUseURL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+    static let privacyPolicyURL = "https://lauhithn.github.io/reflexa-legal-pages/privacy.html"
+    static let termsOfUseURL = "https://lauhithn.github.io/reflexa-legal-pages/terms.html"
 
     // MARK: - Timing
     static let countdownDuration: Int = 3

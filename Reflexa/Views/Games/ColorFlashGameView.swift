@@ -37,12 +37,15 @@ struct ColorFlashGameView: View {
                 EmptyView()
             }
         }
-        .contentShape(Rectangle())
-        .simultaneousGesture(
-            TapGesture().onEnded {
-                viewModel.playerTapped(index: 0)
+        .overlay {
+            if viewModel.state == .waiting || viewModel.state == .active {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewModel.playerTapped(index: 0)
+                    }
             }
-        )
+        }
         .onAppear {
             viewModel.startGame()
             updateAnimations(for: viewModel.state)

@@ -29,7 +29,7 @@ struct OnboardingView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(Color.waiting)
 
-            Text("Reflexy")
+            Text("Reflexa")
                 .font(.system(size: 42, weight: .bold))
                 .foregroundStyle(.white)
 

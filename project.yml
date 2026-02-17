@@ -1,6 +1,6 @@
-name: Reflexy
+name: Reflexa
 options:
-  bundleIdPrefix: com.reflexy
+  bundleIdPrefix: com.reflexa
   deploymentTarget:
     iOS: "17.0"
   xcodeVersion: "16.0"
@@ -14,27 +14,27 @@ settings:
     INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
 
 targets:
-  Reflexy:
+  Reflexa:
     type: application
     platform: iOS
     sources:
-      - path: Reflexy
+      - path: Reflexa
         excludes:
           - "**/.DS_Store"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.reflexy.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.reflexa.app
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: true
-        INFOPLIST_KEY_CFBundleDisplayName: Reflexy
+        INFOPLIST_KEY_CFBundleDisplayName: Reflexa
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         SWIFT_EMIT_LOC_STRINGS: true
         CODE_SIGN_STYLE: Automatic
-        CODE_SIGN_ENTITLEMENTS: Reflexy/Reflexy.entitlements
+        CODE_SIGN_ENTITLEMENTS: Reflexa/Reflexa.entitlements
     dependencies:
       - sdk: AVFoundation.framework
       - sdk: CoreHaptics.framework
