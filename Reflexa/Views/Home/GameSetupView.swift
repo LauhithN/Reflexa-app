@@ -9,7 +9,7 @@ struct GameSetupView: View {
 
     init(gameType: GameType) {
         self.gameType = gameType
-        _selectedMode = State(initialValue: gameType.supportedModes.first!)
+        _selectedMode = State(initialValue: gameType.supportedModes.first ?? .solo)
     }
 
     var body: some View {

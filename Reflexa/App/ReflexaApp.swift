@@ -26,11 +26,16 @@ struct ReflexaApp: App {
             didFailToLoadData = false
         } catch {
             // Fallback to in-memory storage so the app doesn't crash
-            let fallback = try! ModelContainer(
-                for: schema,
-                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
-            )
-            modelContainer = fallback
+            do {
+                let fallback = try ModelContainer(
+                    for: schema,
+                    configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
+                )
+                modelContainer = fallback
+            } catch {
+                // Last resort: bare minimum container
+                modelContainer = try! ModelContainer(for: schema)
+            }
             didFailToLoadData = true
         }
     }

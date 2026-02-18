@@ -44,7 +44,7 @@ struct OnboardingView: View {
                 ) {
                     featureRow(icon: "calendar", text: "Daily challenge streaks")
                     featureRow(icon: "medal.fill", text: "Personal best tracking")
-                    featureRow(icon: "gamecontroller.fill", text: "Game Center integration")
+                    featureRow(icon: "gamecontroller.fill", text: "9 unique game modes")
                 }
                 .tag(2)
             }
