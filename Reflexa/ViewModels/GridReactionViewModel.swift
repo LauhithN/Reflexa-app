@@ -84,7 +84,6 @@ final class GridReactionViewModel: GameViewModelProtocol {
                 averageTimeMs = roundTimes.reduce(0, +) / roundTimes.count
                 percentile = Constants.percentile(forReactionMs: averageTimeMs)
                 haptic.success()
-                GameCenterService.shared.submitScore(averageTimeMs, for: .gridReaction)
                 state = .result
             } else {
                 // Brief pause then next round

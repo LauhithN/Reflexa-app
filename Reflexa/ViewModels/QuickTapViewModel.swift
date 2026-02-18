@@ -89,7 +89,6 @@ final class QuickTapViewModel: GameViewModelProtocol {
                 self.timing.stop()
                 self.isFinished = true
                 self.haptic.success()
-                GameCenterService.shared.submitScore(self.tapCount, for: .quickTap)
                 self.state = .result
             } else {
                 self.timeRemaining = remaining

@@ -60,9 +60,6 @@ struct ReflexaApp: App {
                 }
                 .background(Color.appBackground)
                 .preferredColorScheme(.dark)
-                .task {
-                    // GameCenterService.shared.authenticate()
-                }
             } else {
                 OnboardingView()
             }

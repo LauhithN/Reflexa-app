@@ -116,7 +116,6 @@ final class ColorSortViewModel: GameViewModelProtocol {
                 self.timeRemaining = 0
                 self.timing.stop()
                 self.haptic.success()
-                GameCenterService.shared.submitScore(self.correctCount, for: .colorSort)
                 self.state = .result
             } else {
                 self.timeRemaining = remaining

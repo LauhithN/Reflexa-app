@@ -69,19 +69,6 @@ final class PlayerStats {
         if gameType == .dailyChallenge {
             updateDailyStreak()
         }
-
-        // Report achievements to Game Center
-        let playedTypesDict = Dictionary(uniqueKeysWithValues: gamesPlayedTypes.compactMap { raw in
-            GameType(rawValue: raw).map { ($0, true) }
-        })
-        GameCenterService.shared.checkAchievements(
-            gameType: gameType,
-            score: score,
-            totalGamesPlayed: totalGamesPlayed,
-            gamesPlayedByType: playedTypesDict,
-            dailyStreak: currentDailyStreak,
-            isFalseStart: false
-        )
     }
 
     private func updateDailyStreak() {

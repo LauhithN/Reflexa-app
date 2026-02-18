@@ -72,7 +72,6 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 guard let self else { return }
                 self.wrongTapIndex = nil
-                GameCenterService.shared.submitScore(self.finalLevel, for: .sequenceMemory)
                 self.state = .result
             }
         }

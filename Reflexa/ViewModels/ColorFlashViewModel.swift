@@ -49,7 +49,6 @@ final class ColorFlashViewModel: GameViewModelProtocol {
             reactionTimeMs = TimingService.reactionMs(from: stimulusTime, to: now)
             percentile = Constants.percentile(forReactionMs: reactionTimeMs)
             haptic.success()
-            GameCenterService.shared.submitScore(reactionTimeMs, for: .colorFlash)
             state = .result
 
         default:

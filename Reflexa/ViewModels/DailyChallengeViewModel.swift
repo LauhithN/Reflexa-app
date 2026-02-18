@@ -80,7 +80,6 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
             reactionTimeMs = TimingService.reactionMs(from: stimulusTime, to: now)
             percentile = Constants.percentile(forReactionMs: reactionTimeMs)
             haptic.success()
-            GameCenterService.shared.submitScore(reactionTimeMs, for: .dailyChallenge)
             recordResult(reactionTimeMs: reactionTimeMs)
             state = .result
 

@@ -51,10 +51,6 @@ final class StopwatchViewModel: GameViewModelProtocol {
         if playerStopped.allSatisfy({ $0 }) {
             timing.stop()
             haptic.success()
-            if config.playerMode == .solo {
-                let scoreMs = Int(scoreFor(player: 0) * 1000)
-                GameCenterService.shared.submitScore(scoreMs, for: .stopwatch)
-            }
             state = .result
         }
     }

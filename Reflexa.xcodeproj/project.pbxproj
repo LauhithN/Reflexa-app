@@ -22,6 +22,7 @@
 		2AB1F7CDBC664DC651927FF3 /* ColorBattleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954FE97D0F732BE953F1F8A6 /* ColorBattleViewModel.swift */; };
 		320B0056270372DBD5C46446 /* FourPlayerGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F00F4532E82DC9972008F5D /* FourPlayerGridView.swift */; };
 		387BFC6CDB99028029C66F91 /* GameSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141850E27BCE0A4BB6039E40 /* GameSetupView.swift */; };
+		3C9372529A4D8FE21E36C989 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = DEE55A2C25A3EA85AEE749DB /* PrivacyInfo.xcprivacy */; };
 		43E7061C4C933133A136F29B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AFD93DD7F3B916A5D8863BB5 /* AVFoundation.framework */; };
 		4702BDD7C4AEA22812093BCB /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5F866B0EFBF0185F888463 /* ShareService.swift */; };
 		47AA8D5789C78920BE7CA938 /* ReactionDuelGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C369B8C1327A62D4F9A0F9 /* ReactionDuelGameView.swift */; };
@@ -58,14 +59,12 @@
 		DBE792A53CA4E170E2911B17 /* View+Modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02FD4570336BD7D32C4C75CC /* View+Modifiers.swift */; };
 		E1BD4033E0FB0100FFB3CDBB /* DailyChallengeGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B5ED74E40728C3730CF8C06 /* DailyChallengeGameView.swift */; };
 		E94CC39DEFA7FAB26709DB76 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14C34F330E7CBE3CF53041F3 /* CoreHaptics.framework */; };
-		ED0690E9CF694B9DF7A3F6C1 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839F4C8AF5C6BEFFB703CAE5 /* GameKit.framework */; };
 		EDEC63E2BF2F9AE3F67A7898 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859458F518D1FDD29AAA102 /* StatsView.swift */; };
 		EECC9F525DEC8C75D22F4DD2 /* PlayerMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54755585D7C70FA0CDE6590 /* PlayerMode.swift */; };
 		F012B37E11E5A6A7564F01BF /* LeaderboardRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEADDEC865AEA85314777F11 /* LeaderboardRowView.swift */; };
 		F0527EDB9602DF27FEBCC655 /* ColorSortViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE6E15175A98598E3832B36 /* ColorSortViewModel.swift */; };
 		F1068D4EBF4E4E1D7547134F /* AmbientBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25980C2EE69654DE45FA528C /* AmbientBackground.swift */; };
 		F3A53096465959591B82759B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5DBD661B437CA591D75BABA /* OnboardingView.swift */; };
-		FCA9719CD67A3419A6A00AC6 /* GameCenterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA83A9B9557F607D7AB27B64 /* GameCenterService.swift */; };
 		FF088B7FD79A0B8DCDC6C8F0 /* ReactionDuelViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E77D3D480876E9ABC4FC024 /* ReactionDuelViewModel.swift */; };
 /* End PBXBuildFile section */
 
@@ -103,7 +102,6 @@
 		74B8FCFD7D8E39038639B33F /* GameViewModelProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewModelProtocol.swift; sourceTree = "<group>"; };
 		7AEE9A5F1EF3C368BC651422 /* ReflexaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflexaApp.swift; sourceTree = "<group>"; };
 		837FA9FD7D7B57DA9F210AAF /* Color+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+App.swift"; sourceTree = "<group>"; };
-		839F4C8AF5C6BEFFB703CAE5 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 		90A1AD58A1A25A326D2B4E0C /* DailyChallengeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyChallengeViewModel.swift; sourceTree = "<group>"; };
 		954FE97D0F732BE953F1F8A6 /* ColorBattleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorBattleViewModel.swift; sourceTree = "<group>"; };
 		9A17B459CAA047DDAE8AC19C /* TwoPlayerSplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoPlayerSplitView.swift; sourceTree = "<group>"; };
@@ -123,9 +121,9 @@
 		D6283F0B4368F8A292DBE105 /* CountdownOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownOverlay.swift; sourceTree = "<group>"; };
 		DA54CFD698869EFB7FEC73ED /* SoundService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundService.swift; sourceTree = "<group>"; };
 		DA6BB95D3EBE4B0D628F9E12 /* QuickTapGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickTapGameView.swift; sourceTree = "<group>"; };
-		DA83A9B9557F607D7AB27B64 /* GameCenterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterService.swift; sourceTree = "<group>"; };
 		DC2AE3EF92BEFF36EFF8AF42 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
 		DC47BD206DBAC39C1F1A511B /* PlayerModeSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerModeSelector.swift; sourceTree = "<group>"; };
+		DEE55A2C25A3EA85AEE749DB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E1C369B8C1327A62D4F9A0F9 /* ReactionDuelGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionDuelGameView.swift; sourceTree = "<group>"; };
 		E8BCF6663BC5E5AB08FE4C05 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F54755585D7C70FA0CDE6590 /* PlayerMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerMode.swift; sourceTree = "<group>"; };
@@ -141,7 +139,6 @@
 			files = (
 				43E7061C4C933133A136F29B /* AVFoundation.framework in Frameworks */,
 				E94CC39DEFA7FAB26709DB76 /* CoreHaptics.framework in Frameworks */,
-				ED0690E9CF694B9DF7A3F6C1 /* GameKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,7 +283,6 @@
 			children = (
 				AFD93DD7F3B916A5D8863BB5 /* AVFoundation.framework */,
 				14C34F330E7CBE3CF53041F3 /* CoreHaptics.framework */,
-				839F4C8AF5C6BEFFB703CAE5 /* GameKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -337,6 +333,7 @@
 			isa = PBXGroup;
 			children = (
 				E8BCF6663BC5E5AB08FE4C05 /* Assets.xcassets */,
+				DEE55A2C25A3EA85AEE749DB /* PrivacyInfo.xcprivacy */,
 				7183F13A1B6041FF882DDE60 /* Reflexa.entitlements */,
 				256D5E578E40374991EB8884 /* App */,
 				33F3316934176F65F76D1173 /* Models */,
@@ -351,7 +348,6 @@
 		FF694F37101DCDE2AD2A0B5B /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				DA83A9B9557F607D7AB27B64 /* GameCenterService.swift */,
 				DC2AE3EF92BEFF36EFF8AF42 /* HapticService.swift */,
 				CB5F866B0EFBF0185F888463 /* ShareService.swift */,
 				DA54CFD698869EFB7FEC73ED /* SoundService.swift */,
@@ -421,6 +417,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8A471451350D4A2E8CEB0C00 /* Assets.xcassets in Resources */,
+				3C9372529A4D8FE21E36C989 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -450,7 +447,6 @@
 				320B0056270372DBD5C46446 /* FourPlayerGridView.swift in Sources */,
 				DA370FEFBD880DBEA0B3A6E1 /* GameActionButtons.swift in Sources */,
 				B97830A353464D1968E324B8 /* GameCard.swift in Sources */,
-				FCA9719CD67A3419A6A00AC6 /* GameCenterService.swift in Sources */,
 				28AE17AD1F9641C9E02551A6 /* GameConfiguration.swift in Sources */,
 				5BBD895F076BED91C0295827 /* GameResult.swift in Sources */,
 				387BFC6CDB99028029C66F91 /* GameSetupView.swift in Sources */,
@@ -571,7 +567,6 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -631,7 +626,6 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
