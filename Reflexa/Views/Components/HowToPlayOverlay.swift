@@ -20,10 +20,10 @@ struct HowToPlayOverlay: View {
             return "You get one attempt per day. Wait for the color change and tap. Try to beat your all-time best!"
         case .quickTap:
             return "Tap the screen as many times as you can in 10 seconds. Every tap counts!"
-        case .soundReflex:
-            return "The screen stays dark. Listen for the BEEP, then tap as fast as you can. No visual cues!"
-        case .vibrationReflex:
-            return "The screen stays dark. Feel for the VIBRATION, then tap as fast as you can. No visual or audio cues!"
+        case .sequenceMemory:
+            return "Watch the colored cells flash in sequence, then tap them back in the same order. Each level adds one more step. One wrong tap and it's game over!"
+        case .colorSort:
+            return "A color word appears in a different ink color. Tap the button matching the INK COLOR, not the word itself. Score as many as you can in 15 seconds!"
         case .gridReaction:
             return "A 4x4 grid of squares. When one lights up, tap it as fast as you can. 10 rounds — your score is the average time."
         }

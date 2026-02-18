@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @State private var storeVM = StoreViewModel()
     @AppStorage("soundEnabled") private var soundEnabled = true
     @AppStorage("hapticsEnabled") private var hapticsEnabled = true
     @Environment(\.dismiss) private var dismiss
@@ -11,17 +10,8 @@ struct SettingsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
                     preferencesSection
-                    premiumSection
                     aboutSection
                     legalSection
-
-                    if let error = storeVM.errorMessage {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(Color.error)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 4)
-                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
@@ -64,28 +54,6 @@ struct SettingsView: View {
                 )
             }
             .tint(Color.accentPrimary)
-        }
-    }
-
-    private var premiumSection: some View {
-        settingsSection(title: "Premium") {
-            if storeVM.isUnlocked {
-                HStack {
-                    rowLabel(icon: "checkmark.seal.fill", title: "All games unlocked", tint: Color.success)
-                    Spacer()
-                }
-            } else {
-                Button {
-                    Task { await storeVM.restorePurchases() }
-                } label: {
-                    HStack {
-                        rowLabel(icon: "arrow.clockwise", title: "Restore Purchases", tint: Color.accentPrimary)
-                        Spacer()
-                    }
-                }
-                .buttonStyle(.plain)
-                .accessibleTapTarget()
-            }
         }
     }
 

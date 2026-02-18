@@ -1,22 +1,14 @@
 import SwiftUI
-import GameKit
 
 struct HomeView: View {
-    @State private var showStore = false
     @State private var showSettings = false
     @State private var animateIn = false
 
-    private let freeGames: [GameType] = [
-        .stopwatch, .colorFlash, .colorBattle, .reactionDuel, .dailyChallenge
+    private let allGames: [GameType] = [
+        .stopwatch, .colorFlash, .quickTap, .sequenceMemory,
+        .colorBattle, .reactionDuel, .colorSort, .gridReaction,
+        .dailyChallenge
     ]
-
-    private let premiumGames: [GameType] = [
-        .quickTap, .soundReflex, .vibrationReflex, .gridReaction
-    ]
-
-    private var isLocked: Bool {
-        !StoreService.shared.isUnlocked
-    }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -25,23 +17,7 @@ struct HomeView: View {
                     .opacity(animateIn ? 1 : 0)
                     .offset(y: animateIn ? 0 : 10)
 
-                quickActions
-                    .opacity(animateIn ? 1 : 0)
-                    .offset(y: animateIn ? 0 : 10)
-
-                gamesSection(
-                    title: "Core Modes",
-                    subtitle: "Play instantly. Improve reaction speed every session.",
-                    games: freeGames,
-                    premiumSection: false
-                )
-
-                gamesSection(
-                    title: "Premium Lab",
-                    subtitle: isLocked ? "Unlock advanced challenge modes." : "All premium modes unlocked.",
-                    games: premiumGames,
-                    premiumSection: true
-                )
+                gamesSection
             }
             .padding(.horizontal, 16)
             .padding(.top, 12)
@@ -50,47 +26,16 @@ struct HomeView: View {
         .background(AmbientBackground())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    GameCenterService.shared.showDashboard()
-                } label: {
-                    Image(systemName: "gamecontroller.fill")
-                        .foregroundStyle(
-                            GameCenterService.shared.isAuthenticated
-                                ? Color.textPrimary
-                                : Color.textSecondary.opacity(0.35)
-                        )
-                        .padding(10)
-                        .background(Color.cardBackground.opacity(0.85))
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.strokeSubtle, lineWidth: 1)
-                        )
-                }
-                .disabled(!GameCenterService.shared.isAuthenticated)
-                .accessibilityLabel("Game Center")
-            }
-
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showSettings = true
                 } label: {
-                    Image(systemName: "slider.horizontal.3")
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(Color.textPrimary)
-                        .padding(10)
-                        .background(Color.cardBackground.opacity(0.85))
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.strokeSubtle, lineWidth: 1)
-                        )
                 }
                 .accessibilityLabel("Settings")
             }
-        }
-        .sheet(isPresented: $showStore) {
-            StoreView()
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()
@@ -104,17 +49,23 @@ struct HomeView: View {
 
     private var heroHeader: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Reflexa")
-                .font(.heroTitle)
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color.textPrimary, Color.accentSecondary.opacity(0.9)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+            HStack(spacing: 10) {
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 28, weight: .black))
+                    .foregroundStyle(Color.heroGradient)
 
-            Text("Train reflexes with fast rounds, ranked progress, and multiplayer pressure.")
+                Text("Reflexa")
+                    .font(.heroTitle)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.textPrimary, Color.accentSecondary.opacity(0.9)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+
+            Text("Test your reaction time with fast-paced rounds.")
                 .font(.caption)
                 .foregroundStyle(Color.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -122,9 +73,6 @@ struct HomeView: View {
             HStack(spacing: 8) {
                 pill(text: "9 modes", tint: Color.accentPrimary)
                 pill(text: "Solo + Multiplayer", tint: Color.accentSecondary)
-                if isLocked {
-                    pill(text: "Premium Available", tint: Color.accentSun)
-                }
             }
         }
         .padding(18)
@@ -144,97 +92,24 @@ struct HomeView: View {
         )
     }
 
-    private var quickActions: some View {
-        HStack(spacing: 10) {
-            NavigationLink {
-                StatsView()
-            } label: {
-                actionTile(icon: "chart.bar.fill", title: "Stats", subtitle: "Track your best")
-            }
-            .buttonStyle(CardButtonStyle())
-
-            NavigationLink {
-                LeaderboardView()
-            } label: {
-                actionTile(icon: "trophy.fill", title: "Leaderboard", subtitle: "Personal bests")
-            }
-            .buttonStyle(CardButtonStyle())
-
-            if isLocked {
-                Button {
-                    showStore = true
-                } label: {
-                    actionTile(icon: "sparkles", title: "Unlock", subtitle: "Premium")
-                }
-                .buttonStyle(CardButtonStyle())
-            }
-        }
-    }
-
-    private func actionTile(icon: String, title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(Color.textPrimary)
-
-            Text(title)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.textPrimary)
-
-            Text(subtitle)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(Color.textSecondary)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.cardBackground.opacity(0.8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.strokeSubtle, lineWidth: 1)
-                )
-        )
-    }
-
-    private func gamesSection(
-        title: String,
-        subtitle: String,
-        games: [GameType],
-        premiumSection: Bool
-    ) -> some View {
+    private var gamesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Text(title)
-                    .font(.sectionTitle)
-                    .foregroundStyle(Color.textPrimary)
+            Text("Game Modes")
+                .font(.sectionTitle)
+                .foregroundStyle(Color.textPrimary)
 
-                if premiumSection {
-                    UnlockBadge()
-                }
-            }
-
-            Text(subtitle)
+            Text("Pick a mode and start training.")
                 .font(.caption)
                 .foregroundStyle(Color.textSecondary)
 
             VStack(spacing: 12) {
-                ForEach(Array(games.enumerated()), id: \.element.id) { index, game in
-                    Group {
-                        if premiumSection, isLocked {
-                            GameCard(gameType: game, isLocked: true) {
-                                showStore = true
-                            }
-                        } else {
-                            NavigationLink {
-                                GameSetupView(gameType: game)
-                            } label: {
-                                GameCard(gameType: game, isLocked: false)
-                            }
-                            .buttonStyle(CardButtonStyle())
-                        }
+                ForEach(Array(allGames.enumerated()), id: \.element.id) { index, game in
+                    NavigationLink {
+                        GameSetupView(gameType: game)
+                    } label: {
+                        GameCard(gameType: game)
                     }
+                    .buttonStyle(CardButtonStyle())
                     .opacity(animateIn ? 1 : 0)
                     .offset(y: animateIn ? 0 : 14)
                     .animation(

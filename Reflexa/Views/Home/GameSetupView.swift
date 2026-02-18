@@ -28,25 +28,25 @@ struct GameSetupView: View {
 
                 HStack(spacing: 8) {
                     detailChip(text: "\(gameType.supportedModes.count) mode\(gameType.supportedModes.count == 1 ? "" : "s")", tint: Color.accentPrimary)
-                    detailChip(text: gameType.isPremium ? "Premium" : "Free", tint: gameType.isPremium ? Color.accentSun : Color.accentSecondary)
                 }
             }
             .padding(20)
             .glassCard(cornerRadius: 24)
 
             if gameType.supportedModes.count > 1 {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(spacing: 12) {
                     Text("Player Mode")
                         .font(.caption)
                         .foregroundStyle(Color.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
 
                     PlayerModeSelector(
                         modes: gameType.supportedModes,
                         selected: $selectedMode
                     )
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 14)
                 .glassCard(cornerRadius: 18)
             }
 
@@ -129,10 +129,10 @@ struct GameSetupView: View {
             DailyChallengeGameView()
         case .quickTap:
             QuickTapGameView(config: config)
-        case .soundReflex:
-            SoundReflexGameView(config: config)
-        case .vibrationReflex:
-            VibrationReflexGameView(config: config)
+        case .sequenceMemory:
+            SequenceMemoryGameView(config: config)
+        case .colorSort:
+            ColorSortGameView(config: config)
         case .gridReaction:
             GridReactionGameView(config: config)
         }

@@ -1,11 +1,6 @@
 import Foundation
 
 enum Constants {
-    // MARK: - Store
-    static let productID = "com.reflexa.app.unlockall"
-    static let unlockPrice = "$9.99"
-    static let forceUnlockAllGames = false
-
     // MARK: - Legal
     static let privacyPolicyURL = "https://lauhithn.github.io/reflexa-legal-pages/privacy.html"
     static let termsOfUseURL = "https://lauhithn.github.io/reflexa-legal-pages/terms.html"
@@ -18,6 +13,14 @@ enum Constants {
     static let quickTapDuration: TimeInterval = 10.0
     static let gridReactionRounds: Int = 10
     static let stopwatchStartValue: Double = 100.0
+
+    // MARK: - Sequence Memory
+    static let sequenceMemoryFlashDuration: TimeInterval = 0.55
+    static let sequenceMemoryFlashGap: TimeInterval = 0.18
+
+    // MARK: - Color Sort
+    static let colorSortDuration: TimeInterval = 15.0
+    static let colorSortPenaltyFlashDuration: TimeInterval = 0.35
 
     // MARK: - Multiplayer
     static let colorBattle2PRounds: Int = 5
@@ -39,6 +42,4 @@ enum Constants {
         }
     }
 
-    // MARK: - UserDefaults Keys
-    static let hasPurchasedUnlockKey = "hasPurchasedUnlock"
 }

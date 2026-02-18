@@ -42,8 +42,8 @@ final class GameCenterService {
         static let stopwatchBest = "reflexa.stopwatch.best"
         static let colorFlashBest = "reflexa.colorflash.best"
         static let quickTapBest = "reflexa.quicktap.best"
-        static let soundReflexBest = "reflexa.soundreflex.best"
-        static let vibrationReflexBest = "reflexa.vibrationreflex.best"
+        static let sequenceMemoryBest = "reflexa.sequencememory.best"
+        static let colorSortBest = "reflexa.colorsort.best"
         static let gridReactionBest = "reflexa.gridreaction.best"
         static let dailyChallengeBest = "reflexa.dailychallenge.best"
     }
@@ -54,8 +54,8 @@ final class GameCenterService {
         case .stopwatch: return LeaderboardID.stopwatchBest
         case .colorFlash: return LeaderboardID.colorFlashBest
         case .quickTap: return LeaderboardID.quickTapBest
-        case .soundReflex: return LeaderboardID.soundReflexBest
-        case .vibrationReflex: return LeaderboardID.vibrationReflexBest
+        case .sequenceMemory: return LeaderboardID.sequenceMemoryBest
+        case .colorSort: return LeaderboardID.colorSortBest
         case .gridReaction: return LeaderboardID.gridReactionBest
         case .dailyChallenge: return LeaderboardID.dailyChallengeBest
         case .colorBattle, .reactionDuel: return nil
@@ -129,7 +129,7 @@ final class GameCenterService {
         // Reaction time achievements (for reaction-based games)
         let reactionMs = Int(score)
         switch gameType {
-        case .colorFlash, .soundReflex, .vibrationReflex, .dailyChallenge:
+        case .colorFlash, .dailyChallenge:
             if reactionMs < 200 {
                 reportAchievement(id: AchievementID.sub200ms)
             }

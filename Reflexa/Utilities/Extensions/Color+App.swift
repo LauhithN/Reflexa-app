@@ -15,7 +15,6 @@ extension Color {
     static let accentSecondary = Color(hex: "2DD4BF")
     static let accentHot = Color(hex: "FB7185")
     static let accentSun = Color(hex: "F59E0B")
-
     // MARK: - Player Colors
     static let player1 = Color(hex: "5B8CFF")
     static let player2 = Color(hex: "F87171")
@@ -27,8 +26,6 @@ extension Color {
     static let error = Color(hex: "FB7185")
     static let warning = Color(hex: "FBBF24")
     static let waiting = Color.accentPrimary
-    static let unlockBadge = Color.accentSun
-
     // MARK: - Gradients
     static var appGradient: LinearGradient {
         LinearGradient(

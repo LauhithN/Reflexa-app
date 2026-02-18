@@ -29,6 +29,7 @@ targets:
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_CFBundleDisplayName: Reflexa
         INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UILaunchScreen_UIColorName: LaunchBackground
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -39,4 +40,3 @@ targets:
       - sdk: AVFoundation.framework
       - sdk: CoreHaptics.framework
       - sdk: GameKit.framework
-      - sdk: StoreKit.framework

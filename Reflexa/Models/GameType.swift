@@ -1,17 +1,14 @@
 import Foundation
 
 enum GameType: String, CaseIterable, Identifiable, Codable {
-    // Free games
     case stopwatch
     case colorFlash
     case colorBattle
     case reactionDuel
     case dailyChallenge
-
-    // Premium games
     case quickTap
-    case soundReflex
-    case vibrationReflex
+    case sequenceMemory
+    case colorSort
     case gridReaction
 
     var id: String { rawValue }
@@ -24,8 +21,8 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .reactionDuel: return "Charge & Release"
         case .dailyChallenge: return "Daily Challenge"
         case .quickTap: return "Quick Tap"
-        case .soundReflex: return "Sound Reflex"
-        case .vibrationReflex: return "Vibration Reflex"
+        case .sequenceMemory: return "Sequence Memory"
+        case .colorSort: return "Color Sort"
         case .gridReaction: return "Grid Reaction"
         }
     }
@@ -38,18 +35,9 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .reactionDuel: return "Hold, charge, release on target"
         case .dailyChallenge: return "One shot per day"
         case .quickTap: return "Tap as fast as you can"
-        case .soundReflex: return "React to the beep"
-        case .vibrationReflex: return "React to the buzz"
+        case .sequenceMemory: return "Repeat the sequence"
+        case .colorSort: return "Tap the color, not the word"
         case .gridReaction: return "Tap the lit square"
-        }
-    }
-
-    var isPremium: Bool {
-        switch self {
-        case .quickTap, .soundReflex, .vibrationReflex, .gridReaction:
-            return true
-        default:
-            return false
         }
     }
 
@@ -61,8 +49,8 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .reactionDuel: return [.solo, .twoPlayer, .fourPlayer]
         case .dailyChallenge: return [.solo]
         case .quickTap: return [.solo]
-        case .soundReflex: return [.solo, .twoPlayer, .fourPlayer]
-        case .vibrationReflex: return [.solo, .twoPlayer, .fourPlayer]
+        case .sequenceMemory: return [.solo]
+        case .colorSort: return [.solo]
         case .gridReaction: return [.solo]
         }
     }
@@ -70,7 +58,7 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
     /// Whether lower score is better for this game type
     var lowerIsBetter: Bool {
         switch self {
-        case .quickTap: return false
+        case .quickTap, .sequenceMemory, .colorSort: return false
         default: return true
         }
     }
@@ -82,6 +70,10 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
             return Formatters.stopwatchValue(score)
         case .quickTap:
             return Formatters.tapCount(Int(score))
+        case .sequenceMemory:
+            return "Level \(Int(score))"
+        case .colorSort:
+            return "\(Int(score)) correct"
         default:
             return Formatters.reactionTime(Int(score))
         }
@@ -95,8 +87,8 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .reactionDuel: return "bolt.ring.closed"
         case .dailyChallenge: return "bolt.shield.fill"
         case .quickTap: return "bolt.heart.fill"
-        case .soundReflex: return "ear.fill"
-        case .vibrationReflex: return "hand.point.up.fill"
+        case .sequenceMemory: return "square.grid.2x2.fill"
+        case .colorSort: return "paintpalette.fill"
         case .gridReaction: return "bolt.square.fill"
         }
     }

@@ -3,12 +3,10 @@ import SwiftUI
 /// Card for displaying a game option on the home screen
 struct GameCard: View {
     let gameType: GameType
-    let isLocked: Bool
     let action: (() -> Void)?
 
-    init(gameType: GameType, isLocked: Bool, action: (() -> Void)? = nil) {
+    init(gameType: GameType, action: (() -> Void)? = nil) {
         self.gameType = gameType
-        self.isLocked = isLocked
         self.action = action
     }
 
@@ -48,15 +46,9 @@ struct GameCard: View {
             .frame(width: 50, height: 50)
 
             VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    Text(gameType.displayName)
-                        .font(.playerLabel.weight(.bold))
-                        .foregroundStyle(Color.textPrimary)
-
-                    if isLocked {
-                        UnlockBadge()
-                    }
-                }
+                Text(gameType.displayName)
+                    .font(.playerLabel.weight(.bold))
+                    .foregroundStyle(Color.textPrimary)
 
                 Text(gameType.description)
                     .font(.caption)
@@ -107,13 +99,7 @@ struct GameCard: View {
     }
 
     private var cardTint: Color {
-        if isLocked {
-            return Color.accentSun
-        }
-
         switch gameType {
-        case .quickTap, .soundReflex, .vibrationReflex, .gridReaction:
-            return Color.accentHot
         case .dailyChallenge:
             return Color.accentSecondary
         default:
@@ -122,6 +108,6 @@ struct GameCard: View {
     }
 
     private var accessibilityText: String {
-        "\(gameType.displayName). \(gameType.description). \(isLocked ? "Premium, locked" : "")"
+        "\(gameType.displayName). \(gameType.description)."
     }
 }

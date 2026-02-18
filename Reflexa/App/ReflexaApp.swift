@@ -61,8 +61,7 @@ struct ReflexaApp: App {
                 .background(Color.appBackground)
                 .preferredColorScheme(.dark)
                 .task {
-                    await StoreService.shared.checkEntitlements()
-                    GameCenterService.shared.authenticate()
+                    // GameCenterService.shared.authenticate()
                 }
             } else {
                 OnboardingView()

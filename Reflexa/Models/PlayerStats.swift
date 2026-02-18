@@ -34,7 +34,7 @@ final class PlayerStats {
         }
 
         switch gameType {
-        case .colorFlash, .colorBattle, .reactionDuel, .soundReflex, .vibrationReflex, .dailyChallenge:
+        case .colorFlash, .colorBattle, .reactionDuel, .dailyChallenge:
             let ms = Int(score)
             if let current = bestReactionTimeMs {
                 bestReactionTimeMs = min(current, ms)
@@ -61,6 +61,8 @@ final class PlayerStats {
             } else {
                 bestGridReactionMs = ms
             }
+        case .sequenceMemory, .colorSort:
+            break
         }
 
         // Update daily streak if this is a daily challenge
