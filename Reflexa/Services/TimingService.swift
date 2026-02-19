@@ -6,7 +6,20 @@ import UIKit
 /// NEVER use Timer for gameplay — CADisplayLink syncs with display refresh for smooth updates.
 @Observable
 final class TimingService {
+    private final class DisplayLinkProxy {
+        weak var owner: TimingService?
+
+        init(owner: TimingService) {
+            self.owner = owner
+        }
+
+        @objc func tick() {
+            owner?.tick()
+        }
+    }
+
     private var displayLink: CADisplayLink?
+    private var displayLinkProxy: DisplayLinkProxy?
     private var startTime: CFTimeInterval = 0
     private var onTick: ((CFTimeInterval) -> Void)?
     private var isPaused = false
@@ -21,16 +34,20 @@ final class TimingService {
         self.startTime = CACurrentMediaTime()
         self.elapsed = 0
 
-        let link = CADisplayLink(target: self, selector: #selector(tick))
+        let proxy = DisplayLinkProxy(owner: self)
+        let link = CADisplayLink(target: proxy, selector: #selector(DisplayLinkProxy.tick))
         link.add(to: .main, forMode: .common)
         self.displayLink = link
+        self.displayLinkProxy = proxy
     }
 
     /// Stop and clean up the display link
     func stop() {
         displayLink?.invalidate()
         displayLink = nil
+        displayLinkProxy = nil
         onTick = nil
+        isPaused = false
     }
 
     func pause() {

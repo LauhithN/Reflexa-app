@@ -13,43 +13,63 @@ final class SoundService {
 
     private var isEnabled: Bool { soundEnabled }
 
+    private func performOnMain(_ action: @escaping () -> Void) {
+        if Thread.isMainThread {
+            action()
+        } else {
+            DispatchQueue.main.async(execute: action)
+        }
+    }
+
     private init() {
         configureAudioSession()
     }
 
     private func configureAudioSession() {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Audio session configuration failed: \(error)")
+        performOnMain {
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+                try AVAudioSession.sharedInstance().setActive(true)
+            } catch {
+                print("Audio session configuration failed: \(error)")
+            }
         }
     }
 
     /// Pre-load the beep sound (call during .ready state)
     func preloadBeep() {
-        beepPlayer = createTonePlayer(frequency: 880, duration: 0.15)
-        beepPlayer?.prepareToPlay()
+        performOnMain { [weak self] in
+            guard let self else { return }
+            self.beepPlayer = self.createTonePlayer(frequency: 880, duration: 0.15)
+            self.beepPlayer?.prepareToPlay()
+        }
     }
 
     /// Pre-load countdown tick sound
     func preloadCountdown() {
-        countdownPlayer = createTonePlayer(frequency: 440, duration: 0.1)
-        countdownPlayer?.prepareToPlay()
+        performOnMain { [weak self] in
+            guard let self else { return }
+            self.countdownPlayer = self.createTonePlayer(frequency: 440, duration: 0.1)
+            self.countdownPlayer?.prepareToPlay()
+        }
     }
 
     /// Play the beep stimulus for Sound Reflex
     func playBeep() {
-        guard isEnabled else { return }
-        beepPlayer?.currentTime = 0
-        beepPlayer?.play()
+        performOnMain { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.beepPlayer?.currentTime = 0
+            self.beepPlayer?.play()
+        }
     }
 
     /// Play countdown tick
     func playCountdownTick() {
-        guard isEnabled else { return }
-        countdownPlayer?.currentTime = 0
-        countdownPlayer?.play()
+        performOnMain { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.countdownPlayer?.currentTime = 0
+            self.countdownPlayer?.play()
+        }
     }
 
     /// Generate a sine wave tone programmatically (no asset files needed)
@@ -79,10 +99,10 @@ final class SoundService {
         var wavData = Data(count: headerSize + dataSize)
 
         // WAV header
-        wavData.replaceSubrange(0..<4, with: "RIFF".data(using: .ascii)!)
+        wavData.replaceSubrange(0..<4, with: "RIFF".data(using: .ascii) ?? Data())
         withUnsafeBytes(of: UInt32(headerSize + dataSize - 8).littleEndian) { wavData.replaceSubrange(4..<8, with: $0) }
-        wavData.replaceSubrange(8..<12, with: "WAVE".data(using: .ascii)!)
-        wavData.replaceSubrange(12..<16, with: "fmt ".data(using: .ascii)!)
+        wavData.replaceSubrange(8..<12, with: "WAVE".data(using: .ascii) ?? Data())
+        wavData.replaceSubrange(12..<16, with: "fmt ".data(using: .ascii) ?? Data())
         withUnsafeBytes(of: UInt32(16).littleEndian) { wavData.replaceSubrange(16..<20, with: $0) }
         withUnsafeBytes(of: UInt16(1).littleEndian) { wavData.replaceSubrange(20..<22, with: $0) } // PCM
         withUnsafeBytes(of: UInt16(1).littleEndian) { wavData.replaceSubrange(22..<24, with: $0) } // Mono
@@ -90,7 +110,7 @@ final class SoundService {
         withUnsafeBytes(of: UInt32(88200).littleEndian) { wavData.replaceSubrange(28..<32, with: $0) }
         withUnsafeBytes(of: UInt16(2).littleEndian) { wavData.replaceSubrange(32..<34, with: $0) }
         withUnsafeBytes(of: UInt16(16).littleEndian) { wavData.replaceSubrange(34..<36, with: $0) }
-        wavData.replaceSubrange(36..<40, with: "data".data(using: .ascii)!)
+        wavData.replaceSubrange(36..<40, with: "data".data(using: .ascii) ?? Data())
         withUnsafeBytes(of: UInt32(dataSize).littleEndian) { wavData.replaceSubrange(40..<44, with: $0) }
 
         // Audio samples (16-bit)

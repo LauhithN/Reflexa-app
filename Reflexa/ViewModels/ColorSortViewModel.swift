@@ -34,6 +34,8 @@ final class ColorSortViewModel: GameViewModelProtocol {
 
     private let timing = TimingService()
     private let haptic = HapticService.shared
+    private var countdownTask: Task<Void, Never>?
+    private var penaltyFlashTask: Task<Void, Never>?
 
     init(config: GameConfiguration) {
         self.config = config
@@ -47,12 +49,15 @@ final class ColorSortViewModel: GameViewModelProtocol {
     }
 
     func resetGame() {
+        countdownTask?.cancel()
+        penaltyFlashTask?.cancel()
         timing.stop()
         resetValues()
         state = .ready
     }
 
     func playerTapped(index: Int) {
+        guard (0..<4).contains(index) else { return }
         guard case .active = state, !showPenaltyFlash else { return }
 
         if index == currentInkIndex {
@@ -66,7 +71,10 @@ final class ColorSortViewModel: GameViewModelProtocol {
             wrongCount += 1
             showPenaltyFlash = true
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + Constants.colorSortPenaltyFlashDuration) { [weak self] in
+            penaltyFlashTask?.cancel()
+            penaltyFlashTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(Int(Constants.colorSortPenaltyFlashDuration * 1000)))
+                guard !Task.isCancelled else { return }
                 self?.showPenaltyFlash = false
             }
         }
@@ -79,6 +87,8 @@ final class ColorSortViewModel: GameViewModelProtocol {
         wrongCount = 0
         timeRemaining = Constants.colorSortDuration
         showPenaltyFlash = false
+        countdownTask?.cancel()
+        penaltyFlashTask?.cancel()
         generateTrial()
     }
 
@@ -101,7 +111,10 @@ final class ColorSortViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -124,6 +137,8 @@ final class ColorSortViewModel: GameViewModelProtocol {
     }
 
     deinit {
+        countdownTask?.cancel()
+        penaltyFlashTask?.cancel()
         timing.stop()
     }
 }

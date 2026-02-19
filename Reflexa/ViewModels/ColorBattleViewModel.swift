@@ -28,6 +28,7 @@ final class ColorBattleViewModel: GameViewModelProtocol {
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
     private var roundResetTask: Task<Void, Never>?
+    private var countdownTask: Task<Void, Never>?
     private let haptic = HapticService.shared
     private var roundHandled = false
 
@@ -44,6 +45,7 @@ final class ColorBattleViewModel: GameViewModelProtocol {
     }
 
     func resetGame() {
+        countdownTask?.cancel()
         waitTask?.cancel()
         roundResetTask?.cancel()
         resetValues()
@@ -51,6 +53,7 @@ final class ColorBattleViewModel: GameViewModelProtocol {
     }
 
     func playerTapped(index: Int) {
+        guard scores.indices.contains(index) else { return }
         guard !roundHandled else { return }
 
         switch state {
@@ -94,6 +97,7 @@ final class ColorBattleViewModel: GameViewModelProtocol {
         tieBreakUsed = false
         tiedPlayers = []
         roundHandled = false
+        countdownTask?.cancel()
         waitTask?.cancel()
         roundResetTask?.cancel()
     }
@@ -108,7 +112,10 @@ final class ColorBattleViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -174,6 +181,7 @@ final class ColorBattleViewModel: GameViewModelProtocol {
     }
 
     deinit {
+        countdownTask?.cancel()
         waitTask?.cancel()
         roundResetTask?.cancel()
     }

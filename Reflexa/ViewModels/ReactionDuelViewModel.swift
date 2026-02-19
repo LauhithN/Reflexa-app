@@ -25,6 +25,7 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
     private var chargeStartTimes: [CFTimeInterval?]
     private var waitTask: Task<Void, Never>?
     private var delayedResultTask: Task<Void, Never>?
+    private var countdownTask: Task<Void, Never>?
     private var hasFalseStart = false
 
     private let chargeRatePerSecond = 68.0
@@ -44,6 +45,10 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
     func startGame() {
         switch state {
         case .ready, .result, .falseStart:
+            timing.stop()
+            countdownTask?.cancel()
+            waitTask?.cancel()
+            delayedResultTask?.cancel()
             resetValues()
             state = .countdown(3)
             runCountdown(from: 3)
@@ -53,6 +58,7 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
     }
 
     func resetGame() {
+        countdownTask?.cancel()
         timing.stop()
         waitTask?.cancel()
         delayedResultTask?.cancel()
@@ -114,6 +120,7 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
         falseStartPlayer = nil
         hasFalseStart = false
         signalTime = 0
+        countdownTask?.cancel()
     }
 
     private func runCountdown(from value: Int) {
@@ -126,7 +133,10 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -239,6 +249,7 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
     }
 
     deinit {
+        countdownTask?.cancel()
         timing.stop()
         waitTask?.cancel()
         delayedResultTask?.cancel()

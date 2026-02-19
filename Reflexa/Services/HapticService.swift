@@ -15,6 +15,14 @@ final class HapticService {
 
     private var isEnabled: Bool { hapticsEnabled }
 
+    private func performOnMain(_ action: @escaping () -> Void) {
+        if Thread.isMainThread {
+            action()
+        } else {
+            DispatchQueue.main.async(execute: action)
+        }
+    }
+
     private init() {
         // Pre-warm generators for zero-latency feedback
         lightImpact.prepare()
@@ -25,72 +33,87 @@ final class HapticService {
 
     /// Light tap feedback (button taps, game taps)
     func lightTap() {
-        guard isEnabled else { return }
-        lightImpact.impactOccurred()
-        lightImpact.prepare()
+        performOnMain { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.lightImpact.impactOccurred()
+            self.lightImpact.prepare()
+        }
     }
 
     /// Medium impact (countdown beats)
     func countdownBeat() {
-        guard isEnabled else { return }
-        mediumImpact.impactOccurred()
-        mediumImpact.prepare()
+        performOnMain { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.mediumImpact.impactOccurred()
+            self.mediumImpact.prepare()
+        }
     }
 
     /// Heavy impact (GO! moment)
     func goImpact() {
-        guard isEnabled else { return }
-        heavyImpact.impactOccurred()
-        heavyImpact.prepare()
+        performOnMain { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.heavyImpact.impactOccurred()
+            self.heavyImpact.prepare()
+        }
     }
 
     /// Success notification (wins)
     func success() {
-        guard isEnabled else { return }
-        notification.notificationOccurred(.success)
-        notification.prepare()
+        performOnMain { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.notification.notificationOccurred(.success)
+            self.notification.prepare()
+        }
     }
 
     /// Error notification (false starts)
     func error() {
-        guard isEnabled else { return }
-        notification.notificationOccurred(.error)
-        notification.prepare()
+        performOnMain { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.notification.notificationOccurred(.error)
+            self.notification.prepare()
+        }
     }
 
     /// Warning notification
     func warning() {
-        guard isEnabled else { return }
-        notification.notificationOccurred(.warning)
-        notification.prepare()
+        performOnMain { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.notification.notificationOccurred(.warning)
+            self.notification.prepare()
+        }
     }
 
     /// Vibration stimulus for Vibration Reflex game — always fires regardless of setting
     /// (this IS the game stimulus, not feedback)
     func vibrationStimulus() {
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
-            // Fallback to heavy impact
-            heavyImpact.impactOccurred()
-            return
-        }
+        performOnMain { [weak self] in
+            guard let self else { return }
+            guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
+                // Fallback to heavy impact
+                self.heavyImpact.impactOccurred()
+                return
+            }
 
-        do {
-            let engine = try CHHapticEngine()
-            try engine.start()
+            do {
+                let engine = try CHHapticEngine()
+                try engine.start()
 
-            let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0)
-            let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
-            let event = CHHapticEvent(
-                eventType: .hapticContinuous,
-                parameters: [intensity, sharpness],
-                relativeTime: 0,
-                duration: 0.3
-            )
-            let pattern = try CHHapticPattern(events: [event], parameters: [])
-            let player = try engine.makePlayer(with: pattern)
-            try player.start(atTime: 0)
-        } catch {
-            heavyImpact.impactOccurred()
+                let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0)
+                let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
+                let event = CHHapticEvent(
+                    eventType: .hapticContinuous,
+                    parameters: [intensity, sharpness],
+                    relativeTime: 0,
+                    duration: 0.3
+                )
+                let pattern = try CHHapticPattern(events: [event], parameters: [])
+                let player = try engine.makePlayer(with: pattern)
+                try player.start(atTime: 0)
+            } catch {
+                self.heavyImpact.impactOccurred()
+            }
         }
     }
 }

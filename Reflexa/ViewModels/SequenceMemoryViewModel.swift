@@ -28,6 +28,9 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
 
     private let haptic = HapticService.shared
     private var playbackTask: Task<Void, Never>?
+    private var countdownTask: Task<Void, Never>?
+    private var resultTransitionTask: Task<Void, Never>?
+    private var feedbackTask: Task<Void, Never>?
 
     init(config: GameConfiguration) {
         self.config = config
@@ -41,6 +44,9 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
     }
 
     func resetGame() {
+        countdownTask?.cancel()
+        resultTransitionTask?.cancel()
+        feedbackTask?.cancel()
         playbackTask?.cancel()
         resetValues()
         state = .ready
@@ -49,6 +55,7 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
     func playerTapped(index: Int) {
         guard case .active = state, !isShowingSequence else { return }
         guard index >= 0 && index < 4 else { return }
+        guard sequence.indices.contains(inputProgress) else { return }
 
         if sequence[inputProgress] == index {
             // Correct tap
@@ -66,13 +73,14 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
             // Wrong tap — game over
             haptic.error()
             wrongTapIndex = index
-            finalLevel = level
+            finalLevel = max(level - 1, 0)
             playbackTask?.cancel()
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self else { return }
-                self.wrongTapIndex = nil
-                self.state = .result
+            resultTransitionTask?.cancel()
+            resultTransitionTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled else { return }
+                self?.wrongTapIndex = nil
+                self?.state = .result
             }
         }
     }
@@ -88,6 +96,9 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
         wrongTapIndex = nil
         correctTapIndex = nil
         finalLevel = 0
+        countdownTask?.cancel()
+        resultTransitionTask?.cancel()
+        feedbackTask?.cancel()
         playbackTask?.cancel()
     }
 
@@ -101,7 +112,10 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -146,12 +160,18 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
     }
 
     private func clearFeedback(after delay: Double) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+        feedbackTask?.cancel()
+        feedbackTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(Int(delay * 1000)))
+            guard !Task.isCancelled else { return }
             self?.correctTapIndex = nil
         }
     }
 
     deinit {
+        countdownTask?.cancel()
+        resultTransitionTask?.cancel()
+        feedbackTask?.cancel()
         playbackTask?.cancel()
     }
 }

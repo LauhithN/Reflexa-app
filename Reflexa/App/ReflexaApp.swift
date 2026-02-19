@@ -33,8 +33,8 @@ struct ReflexaApp: App {
                 )
                 modelContainer = fallback
             } catch {
-                // Last resort: bare minimum container
-                modelContainer = try! ModelContainer(for: schema)
+                // Last resort: if even in-memory container fails, terminate with a clear diagnostic
+                fatalError("Failed to create in-memory SwiftData container. Device may have insufficient resources. Error: \(error)")
             }
             didFailToLoadData = true
         }

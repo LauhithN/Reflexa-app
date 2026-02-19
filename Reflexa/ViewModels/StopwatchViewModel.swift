@@ -17,7 +17,7 @@ final class StopwatchViewModel: GameViewModelProtocol {
 
     private let timing = TimingService()
     private let haptic = HapticService.shared
-    private var countdownTimer: TimingService?
+    private var countdownTask: Task<Void, Never>?
 
     init(config: GameConfiguration) {
         self.config = config
@@ -27,11 +27,17 @@ final class StopwatchViewModel: GameViewModelProtocol {
 
     func startGame() {
         guard state == .ready || state == .result else { return }
+        timing.stop()
+        countdownTask?.cancel()
+        currentValue = Constants.stopwatchStartValue
+        stoppedValues = Array(repeating: nil, count: config.playerMode.playerCount)
+        playerStopped = Array(repeating: false, count: config.playerMode.playerCount)
         state = .countdown(3)
         runCountdown(from: 3)
     }
 
     func resetGame() {
+        countdownTask?.cancel()
         timing.stop()
         currentValue = Constants.stopwatchStartValue
         stoppedValues = Array(repeating: nil, count: config.playerMode.playerCount)
@@ -41,7 +47,7 @@ final class StopwatchViewModel: GameViewModelProtocol {
 
     func playerTapped(index: Int) {
         guard case .active = state else { return }
-        guard index < playerStopped.count, !playerStopped[index] else { return }
+        guard playerStopped.indices.contains(index), !playerStopped[index] else { return }
 
         haptic.lightTap()
         playerStopped[index] = true
@@ -57,6 +63,7 @@ final class StopwatchViewModel: GameViewModelProtocol {
 
     /// Score for a player (lower is better)
     func scoreFor(player: Int) -> Double {
+        guard stoppedValues.indices.contains(player) else { return Constants.stopwatchStartValue }
         guard let value = stoppedValues[player] else { return Constants.stopwatchStartValue }
         return abs(value)
     }
@@ -91,7 +98,10 @@ final class StopwatchViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -107,6 +117,7 @@ final class StopwatchViewModel: GameViewModelProtocol {
     }
 
     deinit {
+        countdownTask?.cancel()
         timing.stop()
     }
 }

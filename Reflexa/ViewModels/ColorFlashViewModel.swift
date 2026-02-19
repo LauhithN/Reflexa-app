@@ -15,6 +15,7 @@ final class ColorFlashViewModel: GameViewModelProtocol {
 
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
+    private var countdownTask: Task<Void, Never>?
     private let haptic = HapticService.shared
 
     init(config: GameConfiguration) {
@@ -29,6 +30,7 @@ final class ColorFlashViewModel: GameViewModelProtocol {
     }
 
     func resetGame() {
+        countdownTask?.cancel()
         waitTask?.cancel()
         resetValues()
         state = .ready
@@ -64,6 +66,7 @@ final class ColorFlashViewModel: GameViewModelProtocol {
         isDecoyFlashVisible = false
         decoyFlashesShown = 0
         stimulusTime = 0
+        countdownTask?.cancel()
         waitTask?.cancel()
     }
 
@@ -77,7 +80,10 @@ final class ColorFlashViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -141,6 +147,7 @@ final class ColorFlashViewModel: GameViewModelProtocol {
     }
 
     deinit {
+        countdownTask?.cancel()
         waitTask?.cancel()
     }
 }

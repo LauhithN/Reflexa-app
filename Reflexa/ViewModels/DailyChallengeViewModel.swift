@@ -18,6 +18,8 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
 
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
+    private var countdownTask: Task<Void, Never>?
+    private var resultTransitionTask: Task<Void, Never>?
     private let haptic = HapticService.shared
     private var modelContext: ModelContext?
 
@@ -37,6 +39,9 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
         if let existing = try? modelContext.fetch(descriptor).first {
             hasAttemptedToday = existing.attempted
             todayScore = existing.reactionTimeMs
+        } else {
+            hasAttemptedToday = false
+            todayScore = nil
         }
 
         // Load all-time best
@@ -45,6 +50,8 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
         )
         if let results = try? modelContext.fetch(allDescriptor) {
             allTimeBest = results.compactMap(\.reactionTimeMs).min()
+        } else {
+            allTimeBest = nil
         }
 
         countdownToNext = Date().countdownToMidnight
@@ -58,6 +65,8 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
     }
 
     func resetGame() {
+        countdownTask?.cancel()
+        resultTransitionTask?.cancel()
         waitTask?.cancel()
         state = .ready
     }
@@ -71,7 +80,10 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
             recordResult(reactionTimeMs: nil)
             state = .falseStart(nil)
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            resultTransitionTask?.cancel()
+            resultTransitionTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { return }
                 self?.state = .result
             }
 
@@ -118,7 +130,11 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
             }
         }
 
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Daily challenge save failed: \(error)")
+        }
     }
 
     private func runCountdown(from value: Int) {
@@ -131,7 +147,10 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -156,6 +175,8 @@ final class DailyChallengeViewModel: GameViewModelProtocol {
     }
 
     deinit {
+        countdownTask?.cancel()
+        resultTransitionTask?.cancel()
         waitTask?.cancel()
     }
 }

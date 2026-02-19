@@ -27,6 +27,7 @@ final class QuickTapViewModel: GameViewModelProtocol {
 
     private let timing = TimingService()
     private let haptic = HapticService.shared
+    private var countdownTask: Task<Void, Never>?
 
     init(config: GameConfiguration) {
         self.config = config
@@ -40,6 +41,7 @@ final class QuickTapViewModel: GameViewModelProtocol {
     }
 
     func resetGame() {
+        countdownTask?.cancel()
         timing.stop()
         resetValues()
         state = .ready
@@ -61,6 +63,7 @@ final class QuickTapViewModel: GameViewModelProtocol {
         tapsPerSecond = 0
         bestTapsPerSecond = 0
         tapTimestamps = []
+        countdownTask?.cancel()
     }
 
     private func runCountdown(from value: Int) {
@@ -73,7 +76,10 @@ final class QuickTapViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -108,6 +114,7 @@ final class QuickTapViewModel: GameViewModelProtocol {
     }
 
     deinit {
+        countdownTask?.cancel()
         timing.stop()
     }
 }

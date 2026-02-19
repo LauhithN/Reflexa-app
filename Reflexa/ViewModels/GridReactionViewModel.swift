@@ -24,6 +24,7 @@ final class GridReactionViewModel: GameViewModelProtocol {
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?
     private var feedbackTask: Task<Void, Never>?
+    private var countdownTask: Task<Void, Never>?
     private let haptic = HapticService.shared
     private var lastActiveCell: Int = -1
 
@@ -48,6 +49,7 @@ final class GridReactionViewModel: GameViewModelProtocol {
     }
 
     func resetGame() {
+        countdownTask?.cancel()
         waitTask?.cancel()
         feedbackTask?.cancel()
         resetValues()
@@ -56,6 +58,7 @@ final class GridReactionViewModel: GameViewModelProtocol {
 
     func playerTapped(index: Int) {
         // In grid reaction, index = cell tapped (0-15)
+        guard (0..<(gridSize * gridSize)).contains(index) else { return }
         guard case .active = state else { return }
 
         if index == activeCell {
@@ -125,6 +128,7 @@ final class GridReactionViewModel: GameViewModelProtocol {
         wrongTapCount = 0
         fastestRoundMs = nil
         slowestRoundMs = nil
+        countdownTask?.cancel()
         waitTask?.cancel()
         feedbackTask?.cancel()
     }
@@ -150,7 +154,10 @@ final class GridReactionViewModel: GameViewModelProtocol {
         state = .countdown(value)
         haptic.countdownBeat()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        countdownTask?.cancel()
+        countdownTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
             self?.runCountdown(from: value - 1)
         }
     }
@@ -178,6 +185,7 @@ final class GridReactionViewModel: GameViewModelProtocol {
     }
 
     deinit {
+        countdownTask?.cancel()
         waitTask?.cancel()
         feedbackTask?.cancel()
     }
