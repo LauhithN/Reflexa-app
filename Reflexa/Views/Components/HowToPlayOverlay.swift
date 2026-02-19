@@ -16,8 +16,6 @@ struct HowToPlayOverlay: View {
             return "Battle over multiple rounds. First tap after signal scores points, and every 3rd round is a POWER round worth +2. False starts cost the faulter 1 point."
         case .reactionDuel:
             return "Wait for GO, then press and hold to charge power. Release as close as possible to the target zone. Lowest offset wins. Pressing early is a false start."
-        case .dailyChallenge:
-            return "You get one attempt per day. Wait for the color change and tap. Try to beat your all-time best!"
         case .quickTap:
             return "Tap the screen as many times as you can in 10 seconds. Every tap counts!"
         case .sequenceMemory:

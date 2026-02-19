@@ -99,12 +99,7 @@ struct GameCard: View {
     }
 
     private var cardTint: Color {
-        switch gameType {
-        case .dailyChallenge:
-            return Color.accentSecondary
-        default:
-            return Color.accentPrimary
-        }
+        Color.accentPrimary
     }
 
     private var accessibilityText: String {

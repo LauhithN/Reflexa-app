@@ -24,10 +24,10 @@ Use in **App Store Connect -> App Information**:
 Use in **App Store Connect -> iOS App -> Version Information**.
 
 ### Subtitle
-`Train Your Reflexes Daily`
+`Train Your Reflexes Fast`
 
 ### Promotional Text
-`Train reaction speed with 9 focused game modes in solo or local multiplayer. No account, no ads, no subscriptions, and no in-app purchases.`
+`Train reaction speed with 8 focused game modes in solo or local multiplayer. No account, no ads, no subscriptions, and no in-app purchases.`
 
 ### Keywords (92 bytes)
 `reaction time,reflex training,brain games,speed test,quick tap,multiplayer,memory game,focus`
@@ -35,7 +35,7 @@ Use in **App Store Connect -> iOS App -> Version Information**.
 ### Description
 `Reflexa is a modern reaction-training game built for short, repeatable practice.
 
-Play 9 game modes that challenge timing, speed, memory, and focus:
+Play 8 game modes that challenge timing, speed, memory, and focus:
 - Stopwatch
 - Color Flash
 - Quick Tap
@@ -44,12 +44,9 @@ Play 9 game modes that challenge timing, speed, memory, and focus:
 - Grid Reaction
 - Charge & Release
 - Color Battle (local multiplayer)
-- Daily Challenge
 
 Highlights:
 - Solo and local multiplayer experiences
-- Personal best tracking and local stats
-- Daily challenge mode
 - Fast sessions designed for quick practice
 - Clean, distraction-free interface
 
@@ -58,7 +55,7 @@ Privacy and app model:
 - No ads
 - No subscriptions
 - No in-app purchases
-- Local-first data storage on device`
+- No persistent gameplay history or stats tracking`
 
 ### Copyright
 `2026 Reflexa. All rights reserved.`
@@ -77,8 +74,8 @@ Recommended safe set:
   2. Game setup
   3. Gameplay (timing mode)
   4. Gameplay (tap/speed mode)
-  5. Daily challenge
-  6. Stats screen
+  5. Gameplay (multiplayer mode)
+  6. Result screen
   7. Settings screen (legal/support links visible)
 
 Quality rules:
@@ -108,7 +105,7 @@ In **App Store Connect -> App Privacy** use:
 Why this matches current app:
 - No third-party analytics/ads SDKs.
 - No account backend.
-- Local storage only (SwiftData on device).
+- No persistent gameplay database or history tracking.
 - Share action uses iOS share sheet and is user-initiated.
 
 Important: if you later add analytics, remote APIs, ads, login, or tracking, you must update these answers before that build is released.
@@ -146,7 +143,7 @@ App characteristics:
 - No login or account creation.
 - No subscriptions or in-app purchases.
 - No ads and no third-party analytics SDK.
-- User results/stats are stored locally on-device.
+- No persistent results/stats tracking.
 - Settings contains Support, Privacy Policy, and Terms links.`
 
 ## 9) Build Selection (`#35`)

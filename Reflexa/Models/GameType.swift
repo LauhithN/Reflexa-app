@@ -5,7 +5,6 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
     case colorFlash
     case colorBattle
     case reactionDuel
-    case dailyChallenge
     case quickTap
     case sequenceMemory
     case colorSort
@@ -19,7 +18,6 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .colorFlash: return "Color Flash"
         case .colorBattle: return "Color Battle"
         case .reactionDuel: return "Charge & Release"
-        case .dailyChallenge: return "Daily Challenge"
         case .quickTap: return "Quick Tap"
         case .sequenceMemory: return "Sequence Memory"
         case .colorSort: return "Color Sort"
@@ -33,7 +31,6 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .colorFlash: return "Ignore decoys, tap true flash"
         case .colorBattle: return "Power rounds and penalties"
         case .reactionDuel: return "Hold, charge, release on target"
-        case .dailyChallenge: return "One shot per day"
         case .quickTap: return "Tap as fast as you can"
         case .sequenceMemory: return "Repeat the sequence"
         case .colorSort: return "Tap the color, not the word"
@@ -47,7 +44,6 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .colorFlash: return [.solo]
         case .colorBattle: return [.twoPlayer, .fourPlayer]
         case .reactionDuel: return [.solo, .twoPlayer, .fourPlayer]
-        case .dailyChallenge: return [.solo]
         case .quickTap: return [.solo]
         case .sequenceMemory: return [.solo]
         case .colorSort: return [.solo]
@@ -63,7 +59,7 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// Format a score for display in stats and results
+    /// Format a score for display in results
     func formatScore(_ score: Double) -> String {
         switch self {
         case .stopwatch:
@@ -85,7 +81,6 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .colorFlash: return "eye.fill"
         case .colorBattle: return "bolt.horizontal.fill"
         case .reactionDuel: return "bolt.ring.closed"
-        case .dailyChallenge: return "bolt.shield.fill"
         case .quickTap: return "bolt.heart.fill"
         case .sequenceMemory: return "square.grid.2x2.fill"
         case .colorSort: return "paintpalette.fill"

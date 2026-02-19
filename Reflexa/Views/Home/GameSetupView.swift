@@ -1,4 +1,3 @@
-import StoreKit
 import SwiftUI
 
 struct GameSetupView: View {
@@ -7,8 +6,6 @@ struct GameSetupView: View {
     @State private var selectedMode: PlayerMode
     @State private var isPlaying = false
     @State private var animateIn = false
-    @AppStorage("gamesCompletedCount") private var gamesCompletedCount = 0
-    @Environment(\.requestReview) private var requestReview
 
     init(gameType: GameType) {
         self.gameType = gameType
@@ -83,13 +80,6 @@ struct GameSetupView: View {
             gameView
                 .howToPlayOverlay(for: gameType)
         }
-        .onChange(of: isPlaying) { _, nowPlaying in
-            guard !nowPlaying else { return }
-            gamesCompletedCount += 1
-            if gamesCompletedCount % 3 == 0 {
-                requestReview()
-            }
-        }
     }
 
     private var iconBadge: some View {
@@ -135,8 +125,6 @@ struct GameSetupView: View {
             ColorBattleGameView(config: config)
         case .reactionDuel:
             ReactionDuelGameView(config: config)
-        case .dailyChallenge:
-            DailyChallengeGameView()
         case .quickTap:
             QuickTapGameView(config: config)
         case .sequenceMemory:

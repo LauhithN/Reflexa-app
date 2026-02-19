@@ -19,7 +19,7 @@ struct OnboardingView: View {
                 ) {
                     featureRow(icon: "sparkles", text: "Fast startup, instant play")
                     featureRow(icon: "person.2.fill", text: "Solo and local multiplayer")
-                    featureRow(icon: "chart.line.uptrend.xyaxis", text: "Track progress over time")
+                    featureRow(icon: "bolt.circle.fill", text: "No account required")
                 }
                 .tag(0)
 
@@ -38,13 +38,13 @@ struct OnboardingView: View {
 
                 page(
                     icon: "trophy.fill",
-                    title: "Set New Bests",
-                    subtitle: "Compete against yourself daily and beat your personal best.",
+                    title: "Stay Sharp",
+                    subtitle: "Train your reflexes with focused, repeatable practice.",
                     accent: Color.accentHot
                 ) {
-                    featureRow(icon: "calendar", text: "Daily challenge streaks")
-                    featureRow(icon: "medal.fill", text: "Personal best tracking")
-                    featureRow(icon: "gamecontroller.fill", text: "9 unique game modes")
+                    featureRow(icon: "clock.arrow.circlepath", text: "Short rounds, instant retry")
+                    featureRow(icon: "gamecontroller.fill", text: "8 unique game modes")
+                    featureRow(icon: "person.2.fill", text: "Solo and local multiplayer")
                 }
                 .tag(2)
             }

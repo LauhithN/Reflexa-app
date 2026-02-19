@@ -6,8 +6,7 @@ struct HomeView: View {
 
     private let allGames: [GameType] = [
         .stopwatch, .colorFlash, .quickTap, .sequenceMemory,
-        .colorBattle, .reactionDuel, .colorSort, .gridReaction,
-        .dailyChallenge
+        .colorBattle, .reactionDuel, .colorSort, .gridReaction
     ]
 
     var body: some View {
@@ -71,7 +70,7 @@ struct HomeView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
-                pill(text: "9 modes", tint: Color.accentPrimary)
+                pill(text: "8 modes", tint: Color.accentPrimary)
                 pill(text: "Solo + Multiplayer", tint: Color.accentSecondary)
             }
         }
