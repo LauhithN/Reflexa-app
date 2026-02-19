@@ -3,8 +3,13 @@ import SwiftData
 
 @main
 struct ReflexaApp: App {
-    private let modelContainer: ModelContainer
-    private let didFailToLoadData: Bool
+    private enum DataStoreState {
+        case persistent(ModelContainer)
+        case inMemoryFallback(ModelContainer)
+        case unavailable
+    }
+
+    private let dataStoreState: DataStoreState
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     init() {
@@ -19,56 +24,93 @@ struct ReflexaApp: App {
                 schema: schema,
                 isStoredInMemoryOnly: false
             )
-            modelContainer = try ModelContainer(
+            let container = try ModelContainer(
                 for: schema,
                 configurations: [configuration]
             )
-            didFailToLoadData = false
+            dataStoreState = .persistent(container)
         } catch {
             // Fallback to in-memory storage so the app doesn't crash
             do {
-                let fallback = try ModelContainer(
+                let container = try ModelContainer(
                     for: schema,
                     configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
                 )
-                modelContainer = fallback
+                dataStoreState = .inMemoryFallback(container)
             } catch {
-                // Last resort: if even in-memory container fails, terminate with a clear diagnostic
-                fatalError("Failed to create in-memory SwiftData container. Device may have insufficient resources. Error: \(error)")
+                // Last resort: render a startup failure screen instead of crashing.
+                dataStoreState = .unavailable
             }
-            didFailToLoadData = true
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding {
-                NavigationStack {
-                    HomeView()
-                }
-                .tint(Color.accentPrimary)
-                .overlay(alignment: .top) {
-                    if didFailToLoadData {
-                        Text("Stats may not be saved this session.")
-                            .font(.caption)
-                            .foregroundStyle(Color.textPrimary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.error.opacity(0.9))
-                            .clipShape(Capsule())
-                            .overlay(
-                                Capsule()
-                                    .stroke(.white.opacity(0.18), lineWidth: 1)
-                            )
-                            .padding(.top, 4)
-                    }
-                }
-                .background(Color.appBackground)
-                .preferredColorScheme(.dark)
-            } else {
-                OnboardingView()
+            switch dataStoreState {
+            case .persistent(let modelContainer):
+                appContent(showDataWarning: false)
+                    .modelContainer(modelContainer)
+            case .inMemoryFallback(let modelContainer):
+                appContent(showDataWarning: true)
+                    .modelContainer(modelContainer)
+            case .unavailable:
+                DataStoreUnavailableView()
             }
         }
-        .modelContainer(modelContainer)
+    }
+
+    @ViewBuilder
+    private func appContent(showDataWarning: Bool) -> some View {
+        if hasCompletedOnboarding {
+            NavigationStack {
+                HomeView()
+            }
+            .tint(Color.accentPrimary)
+            .overlay(alignment: .top) {
+                if showDataWarning {
+                    Text("Stats may not be saved this session.")
+                        .font(.caption)
+                        .foregroundStyle(Color.textPrimary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.error.opacity(0.9))
+                        .clipShape(Capsule())
+                        .overlay(
+                            Capsule()
+                                .stroke(.white.opacity(0.18), lineWidth: 1)
+                        )
+                        .padding(.top, 4)
+                }
+            }
+            .background(Color.appBackground)
+            .preferredColorScheme(.dark)
+        } else {
+            OnboardingView()
+        }
+    }
+}
+
+private struct DataStoreUnavailableView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 36, weight: .bold))
+                .foregroundStyle(Color.error)
+
+            Text("Reflexa could not start")
+                .font(.resultTitle)
+                .foregroundStyle(Color.textPrimary)
+                .multilineTextAlignment(.center)
+
+            Text("Local data failed to initialize. Restart the app and free some storage or memory, then try again.")
+                .font(.bodyLarge)
+                .foregroundStyle(Color.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AmbientBackground())
+        .preferredColorScheme(.dark)
     }
 }

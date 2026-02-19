@@ -63,7 +63,7 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// Format a score for display in leaderboards and results
+    /// Format a score for display in stats and results
     func formatScore(_ score: Double) -> String {
         switch self {
         case .stopwatch:

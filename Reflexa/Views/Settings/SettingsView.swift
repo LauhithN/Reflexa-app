@@ -73,6 +73,14 @@ struct SettingsView: View {
 
     private var legalSection: some View {
         settingsSection(title: "Legal") {
+            if let supportURL = URL(string: Constants.supportURL) {
+                Link(destination: supportURL) {
+                    legalRow(icon: "questionmark.circle.fill", title: "Contact Support")
+                }
+            }
+
+            Divider().overlay(Color.strokeSubtle)
+
             if let privacyURL = URL(string: Constants.privacyPolicyURL) {
                 Link(destination: privacyURL) {
                     legalRow(icon: "hand.raised.fill", title: "Privacy Policy")

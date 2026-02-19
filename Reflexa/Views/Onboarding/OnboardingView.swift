@@ -39,7 +39,7 @@ struct OnboardingView: View {
                 page(
                     icon: "trophy.fill",
                     title: "Set New Bests",
-                    subtitle: "Compete against yourself daily and climb your local leaderboard.",
+                    subtitle: "Compete against yourself daily and beat your personal best.",
                     accent: Color.accentHot
                 ) {
                     featureRow(icon: "calendar", text: "Daily challenge streaks")

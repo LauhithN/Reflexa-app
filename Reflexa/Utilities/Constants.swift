@@ -4,6 +4,7 @@ enum Constants {
     // MARK: - Legal
     static let privacyPolicyURL = "https://lauhithn.github.io/reflexa-legal-pages/privacy.html"
     static let termsOfUseURL = "https://lauhithn.github.io/reflexa-legal-pages/terms.html"
+    static let supportURL = "https://lauhithn.github.io/reflexa-legal-pages/support.html"
 
     // MARK: - Timing
     static let countdownDuration: Int = 3
