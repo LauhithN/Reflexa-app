@@ -66,6 +66,7 @@ struct OnboardingView: View {
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color.textSecondary)
+                .accessibleTapTarget()
             }
         }
         .padding(.horizontal, 20)

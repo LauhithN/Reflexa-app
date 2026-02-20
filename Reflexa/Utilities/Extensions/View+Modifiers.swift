@@ -57,6 +57,84 @@ struct SecondaryCTAButtonStyle: ButtonStyle {
     }
 }
 
+/// Shared in-game chrome with guaranteed exit affordance and optional rules recall.
+private struct GameScaffoldModifier: ViewModifier {
+    let title: String
+    let gameType: GameType?
+    let onExit: () -> Void
+
+    @State private var showHowToPlay = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .top) {
+                GeometryReader { proxy in
+                    HStack {
+                        scaffoldButton(
+                            icon: "xmark",
+                            accessibilityLabel: "Exit \(title)",
+                            action: onExit
+                        )
+                        .accessibilitySortPriority(1000)
+                        .allowsHitTesting(true)
+
+                        Spacer()
+
+                        if gameType != nil {
+                            scaffoldButton(
+                                icon: "questionmark",
+                                accessibilityLabel: "How to play \(title)",
+                                action: {
+                                    withAnimation(reduceMotion ? .linear(duration: 0.1) : .easeOut(duration: 0.2)) {
+                                        showHowToPlay = true
+                                    }
+                                }
+                            )
+                            .allowsHitTesting(true)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.top, proxy.safeAreaInsets.top + 8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                }
+                .allowsHitTesting(false)
+            }
+            .overlay {
+                if showHowToPlay, let gameType {
+                    HowToPlayOverlay(gameType: gameType) {
+                        withAnimation(reduceMotion ? .linear(duration: 0.1) : .easeOut(duration: 0.2)) {
+                            showHowToPlay = false
+                        }
+                    }
+                    .zIndex(30)
+                }
+            }
+    }
+
+    private func scaffoldButton(
+        icon: String,
+        accessibilityLabel: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(Color.textPrimary)
+                .frame(width: 44, height: 44)
+                .background(Color.black.opacity(0.38))
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.16), lineWidth: 1)
+                )
+                .clipShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibleTapTarget()
+        .accessibilityLabel(accessibilityLabel)
+    }
+}
+
 extension View {
     /// Applies 180-degree rotation for bottom players in multiplayer
     func rotatedForPlayer(_ playerIndex: Int, mode: PlayerMode) -> some View {
@@ -128,5 +206,14 @@ extension View {
                     dismiss()
                 }
             }
+    }
+
+    /// Adds a shared top chrome for active game screens.
+    func gameScaffold(
+        title: String,
+        gameType: GameType? = nil,
+        onExit: @escaping () -> Void
+    ) -> some View {
+        modifier(GameScaffoldModifier(title: title, gameType: gameType, onExit: onExit))
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var showSettings = false
     @State private var animateIn = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private let allGames: [GameType] = [
         .stopwatch, .colorFlash, .quickTap, .sequenceMemory,
@@ -33,6 +34,7 @@ struct HomeView: View {
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(Color.textPrimary)
                 }
+                .accessibleTapTarget()
                 .accessibilityLabel("Settings")
             }
         }
@@ -101,10 +103,10 @@ struct HomeView: View {
                 .font(.caption)
                 .foregroundStyle(Color.textSecondary)
 
-            VStack(spacing: 12) {
+            LazyVGrid(columns: gridColumns, spacing: 12) {
                 ForEach(Array(allGames.enumerated()), id: \.element.id) { index, game in
                     NavigationLink {
-                        GameSetupView(gameType: game)
+                        destination(for: game)
                     } label: {
                         GameCard(gameType: game)
                     }
@@ -119,6 +121,31 @@ struct HomeView: View {
                 }
             }
         }
+    }
+
+    private var gridColumns: [GridItem] {
+        if dynamicTypeSize.isAccessibilitySize {
+            return [GridItem(.flexible(), spacing: 12)]
+        }
+
+        return [
+            GridItem(.flexible(), spacing: 12),
+            GridItem(.flexible(), spacing: 12)
+        ]
+    }
+
+    @ViewBuilder
+    private func destination(for game: GameType) -> some View {
+        if shouldBypassSetup(for: game) {
+            GameDestinationView(gameType: game, playerMode: .solo)
+                .howToPlayOverlay(for: game)
+        } else {
+            GameSetupView(gameType: game)
+        }
+    }
+
+    private func shouldBypassSetup(for game: GameType) -> Bool {
+        game.supportedModes == [.solo]
     }
 
     private func pill(text: String, tint: Color) -> some View {

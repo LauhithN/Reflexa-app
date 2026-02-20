@@ -17,6 +17,8 @@ struct ColorSortGameView: View {
         Color(hex: "34D399"), // green
         Color(hex: "F59E0B"), // yellow
     ]
+    private let shapeSymbols = ["circle.fill", "square.fill", "triangle.fill", "diamond.fill"]
+    private let shapeNames = ["Circle", "Square", "Triangle", "Diamond"]
 
     init(config: GameConfiguration) {
         _viewModel = State(initialValue: ColorSortViewModel(config: config))
@@ -66,6 +68,9 @@ struct ColorSortGameView: View {
                 timerPulse = false
             }
         }
+        .gameScaffold(title: "Color Sort", gameType: .colorSort) {
+            dismiss()
+        }
         .navigationBarHidden(true)
         .statusBarHidden()
     }
@@ -101,7 +106,7 @@ struct ColorSortGameView: View {
                 .font(.resultTitle)
                 .foregroundStyle(Color.textPrimary)
 
-            Text("Tap the ink color, ignore the word!")
+            Text("Tap the ink color and shape cue, ignore the word!")
                 .font(.bodyLarge)
                 .foregroundStyle(Color.textSecondary)
 
@@ -154,6 +159,16 @@ struct ColorSortGameView: View {
                 .font(.system(size: 64, weight: .black, design: .rounded))
                 .foregroundStyle(colorValues[viewModel.currentInkIndex])
 
+            HStack(spacing: 8) {
+                Image(systemName: shapeSymbols[viewModel.currentInkIndex])
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(colorValues[viewModel.currentInkIndex])
+
+                Text("\(shapeNames[viewModel.currentInkIndex]) cue")
+                    .font(.caption)
+                    .foregroundStyle(Color.textSecondary)
+            }
+
             // Score counter
             HStack(spacing: 16) {
                 Label("\(viewModel.correctCount)", systemImage: "checkmark.circle.fill")
@@ -176,9 +191,15 @@ struct ColorSortGameView: View {
                     Button {
                         viewModel.playerTapped(index: index)
                     } label: {
-                        Text(colorNames[index])
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.textPrimary)
+                        HStack(spacing: 8) {
+                            Image(systemName: shapeSymbols[index])
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(colorValues[index])
+
+                            Text(colorNames[index])
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundStyle(Color.textPrimary)
+                        }
                             .frame(maxWidth: .infinity)
                             .frame(height: 64)
                             .background(
@@ -192,6 +213,7 @@ struct ColorSortGameView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibleTapTarget()
+                    .accessibilityLabel("\(colorNames[index]) \(shapeNames[index])")
                 }
             }
             .padding(.horizontal, 24)

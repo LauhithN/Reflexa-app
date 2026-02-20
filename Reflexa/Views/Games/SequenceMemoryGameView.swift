@@ -49,6 +49,9 @@ struct SequenceMemoryGameView: View {
                 animateScoreCountUp()
             }
         }
+        .gameScaffold(title: "Sequence Memory", gameType: .sequenceMemory) {
+            dismiss()
+        }
         .navigationBarHidden(true)
         .statusBarHidden()
     }

@@ -6,9 +6,9 @@ extension Color {
     static let appBackgroundSecondary = Color(hex: "0B1326")
     static let cardBackground = Color(hex: "121C31")
     static let elevatedCard = Color(hex: "192744")
-    static let strokeSubtle = Color.white.opacity(0.12)
+    static let strokeSubtle = Color.white.opacity(0.25)
     static let textPrimary = Color.white
-    static let textSecondary = Color(hex: "9EABC8")
+    static let textSecondary = Color(hex: "C8D3EB")
 
     // MARK: - Brand Accent
     static let accentPrimary = Color(hex: "5B8CFF")

@@ -48,6 +48,9 @@ struct ReactionDuelGameView: View {
                 activePresses.removeAll()
             }
         }
+        .gameScaffold(title: "Charge & Release", gameType: .reactionDuel) {
+            dismiss()
+        }
         .navigationBarHidden(true)
         .statusBarHidden()
     }

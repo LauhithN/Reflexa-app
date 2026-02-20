@@ -65,6 +65,9 @@ struct QuickTapGameView: View {
                 timerPulse = false
             }
         }
+        .gameScaffold(title: "Quick Tap", gameType: .quickTap) {
+            dismiss()
+        }
         .navigationBarHidden(true)
         .statusBarHidden()
     }

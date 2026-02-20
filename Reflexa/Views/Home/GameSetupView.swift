@@ -6,6 +6,7 @@ struct GameSetupView: View {
     @State private var selectedMode: PlayerMode
     @State private var isPlaying = false
     @State private var animateIn = false
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
 
     init(gameType: GameType) {
         self.gameType = gameType
@@ -27,13 +28,33 @@ struct GameSetupView: View {
                     .multilineTextAlignment(.center)
 
                 HStack(spacing: 8) {
-                    detailChip(text: "\(gameType.supportedModes.count) mode\(gameType.supportedModes.count == 1 ? "" : "s")", tint: Color.accentPrimary)
+                    detailChip(text: "\(availableModes.count) mode\(availableModes.count == 1 ? "" : "s")", tint: Color.accentPrimary)
                 }
             }
             .padding(20)
             .glassCard(cornerRadius: 24)
 
-            if gameType.supportedModes.count > 1 {
+            if voiceOverEnabled && supportsSoloMode && availableModes.count < gameType.supportedModes.count {
+                Text("VoiceOver is active, so local multiplayer modes are hidden for this game.")
+                    .font(.caption)
+                    .foregroundStyle(Color.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .glassCard(cornerRadius: 14)
+            }
+
+            if voiceOverBlocksStart {
+                Text("This game requires simultaneous local touch input and is unavailable while VoiceOver is on.")
+                    .font(.caption)
+                    .foregroundStyle(Color.error)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .glassCard(cornerRadius: 14)
+            }
+
+            if availableModes.count > 1 {
                 VStack(spacing: 12) {
                     Text("Player Mode")
                         .font(.caption)
@@ -41,7 +62,7 @@ struct GameSetupView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
 
                     PlayerModeSelector(
-                        modes: gameType.supportedModes,
+                        modes: availableModes,
                         selected: $selectedMode
                     )
                 }
@@ -50,34 +71,38 @@ struct GameSetupView: View {
                 .glassCard(cornerRadius: 18)
             }
 
-            Spacer()
-
-            Button {
-                isPlaying = true
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "play.fill")
-                    Text("Start Game")
-                }
-            }
-            .buttonStyle(PrimaryCTAButtonStyle(tint: Color.accentPrimary))
-            .accessibleTapTarget()
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 16)
         .padding(.top, 16)
-        .padding(.bottom, 32)
+        .padding(.bottom, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AmbientBackground())
         .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            startGameButton
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+                .background(Color.black.opacity(0.2))
+        }
         .opacity(animateIn ? 1 : 0)
         .offset(y: animateIn ? 0 : 12)
         .onAppear {
+            if !availableModes.contains(selectedMode), let fallbackMode = availableModes.first {
+                selectedMode = fallbackMode
+            }
             withAnimation(.easeOut(duration: 0.35)) {
                 animateIn = true
             }
         }
+        .onChange(of: voiceOverEnabled) { _, _ in
+            if !availableModes.contains(selectedMode), let fallbackMode = availableModes.first {
+                selectedMode = fallbackMode
+            }
+        }
         .fullScreenCover(isPresented: $isPlaying) {
-            gameView
+            GameDestinationView(gameType: gameType, playerMode: selectedMode)
                 .howToPlayOverlay(for: gameType)
         }
     }
@@ -110,11 +135,48 @@ struct GameSetupView: View {
             .clipShape(Capsule())
     }
 
-    // MARK: - Game View Router
+    private var startGameButton: some View {
+        Button {
+            guard canStartGame else { return }
+            isPlaying = true
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "play.fill")
+                Text("Start Game")
+            }
+        }
+        .buttonStyle(PrimaryCTAButtonStyle(tint: Color.accentPrimary))
+        .accessibleTapTarget()
+        .disabled(!canStartGame)
+        .opacity(canStartGame ? 1 : 0.55)
+    }
+    
+    private var availableModes: [PlayerMode] {
+        guard voiceOverEnabled else { return gameType.supportedModes }
+        return supportsSoloMode ? [.solo] : gameType.supportedModes
+    }
 
+    private var supportsSoloMode: Bool {
+        gameType.supportedModes.contains(.solo)
+    }
+
+    private var voiceOverBlocksStart: Bool {
+        voiceOverEnabled && !supportsSoloMode
+    }
+
+    private var canStartGame: Bool {
+        !voiceOverBlocksStart
+    }
+}
+
+// MARK: - Game View Router
+struct GameDestinationView: View {
+    let gameType: GameType
+    let playerMode: PlayerMode
+    
     @ViewBuilder
     private var gameView: some View {
-        let config = GameConfiguration(gameType: gameType, playerMode: selectedMode)
+        let config = GameConfiguration(gameType: gameType, playerMode: playerMode)
 
         switch gameType {
         case .stopwatch:
@@ -134,5 +196,9 @@ struct GameSetupView: View {
         case .gridReaction:
             GridReactionGameView(config: config)
         }
+    }
+
+    var body: some View {
+        gameView
     }
 }

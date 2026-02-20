@@ -62,6 +62,9 @@ struct ColorBattleGameView: View {
         .onChange(of: viewModel.state) { _, _ in
             activePresses.removeAll()
         }
+        .gameScaffold(title: "Color Battle", gameType: .colorBattle) {
+            dismiss()
+        }
         .navigationBarHidden(true)
         .statusBarHidden()
     }
