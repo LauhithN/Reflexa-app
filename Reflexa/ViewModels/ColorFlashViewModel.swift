@@ -17,6 +17,7 @@ final class ColorFlashViewModel: GameViewModelProtocol {
     private var waitTask: Task<Void, Never>?
     private var countdownTask: Task<Void, Never>?
     private let haptic = HapticService.shared
+    private var pausedState: GameState?
 
     init(config: GameConfiguration) {
         self.config = config
@@ -53,6 +54,28 @@ final class ColorFlashViewModel: GameViewModelProtocol {
             haptic.success()
             state = .result
 
+        default:
+            break
+        }
+    }
+
+    func setPaused(_ paused: Bool) {
+        if paused {
+            guard pausedState == nil else { return }
+            pausedState = state
+            countdownTask?.cancel()
+            waitTask?.cancel()
+            return
+        }
+
+        guard let pausedState else { return }
+        self.pausedState = nil
+
+        switch pausedState {
+        case .countdown(let value):
+            runCountdown(from: value)
+        case .waiting:
+            beginWaitingPhase()
         default:
             break
         }

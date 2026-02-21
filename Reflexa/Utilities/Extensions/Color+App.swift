@@ -2,24 +2,28 @@ import SwiftUI
 
 extension Color {
     // MARK: - Surfaces
-    static let appBackground = Color(hex: "060A14")
-    static let appBackgroundSecondary = Color(hex: "0B1326")
-    static let cardBackground = Color(hex: "121C31")
-    static let elevatedCard = Color(hex: "192744")
-    static let strokeSubtle = Color.white.opacity(0.25)
-    static let textPrimary = Color.white
-    static let textSecondary = Color(hex: "C8D3EB")
+    static let appBackground = Color(hex: "05020D")
+    static let appBackgroundSecondary = Color(hex: "120827")
+    static let cardBackground = Color(hex: "161129")
+    static let elevatedCard = Color(hex: "231941")
+    static let strokeSubtle = Color.white.opacity(0.2)
+    static let textPrimary = Color(hex: "F9F7FF")
+    static let textSecondary = Color(hex: "B7B5C8")
 
     // MARK: - Brand Accent
-    static let accentPrimary = Color(hex: "5B8CFF")
-    static let accentSecondary = Color(hex: "2DD4BF")
-    static let accentHot = Color(hex: "FB7185")
-    static let accentSun = Color(hex: "F59E0B")
+    static let brandPurple = Color(hex: "7B3FF2")
+    static let brandPurpleDeep = Color(hex: "5A22C8")
+    static let brandYellow = Color(hex: "FFD94D")
+    static let brandYellowDeep = Color(hex: "F7B500")
+    static let accentPrimary = Color.brandYellow
+    static let accentSecondary = Color.brandPurple
+    static let accentHot = Color(hex: "FF4F67")
+    static let accentSun = Color(hex: "FFB020")
     // MARK: - Player Colors
-    static let player1 = Color(hex: "5B8CFF")
-    static let player2 = Color(hex: "F87171")
-    static let player3 = Color(hex: "34D399")
-    static let player4 = Color(hex: "F59E0B")
+    static let player1 = Color.brandPurple
+    static let player2 = Color(hex: "FF5C69")
+    static let player3 = Color(hex: "36D39A")
+    static let player4 = Color.brandYellow
 
     // MARK: - States
     static let success = Color(hex: "34D399")
@@ -37,7 +41,7 @@ extension Color {
 
     static var heroGradient: LinearGradient {
         LinearGradient(
-            colors: [Color.accentPrimary, Color.accentSecondary],
+            colors: [Color.brandPurple, Color.brandYellow],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )

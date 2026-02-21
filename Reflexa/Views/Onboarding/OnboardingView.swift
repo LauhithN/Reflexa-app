@@ -12,39 +12,38 @@ struct OnboardingView: View {
 
             TabView(selection: $currentPage) {
                 page(
-                    icon: "bolt.fill",
-                    title: "Welcome to Reflexa",
-                    subtitle: "Modern reflex training in short, addictive rounds.",
-                    accent: Color.accentPrimary
+                    icon: "mascot",
+                    title: "Pick. Tap. Repeat.",
+                    subtitle: "Fast reflex drills.",
+                    accent: Color.brandPurple
                 ) {
-                    featureRow(icon: "sparkles", text: "Fast startup, instant play")
-                    featureRow(icon: "person.2.fill", text: "Solo and local multiplayer")
-                    featureRow(icon: "bolt.circle.fill", text: "No account required")
+                    featureRow(icon: "sparkles", text: "Instant start")
+                    featureRow(icon: "gamecontroller.fill", text: "8 game modes")
+                    featureRow(icon: "person.2.fill", text: "Solo + local multiplayer")
                 }
                 .tag(0)
 
                 page(
-                    icon: "scope",
-                    title: "Challenge Modes",
-                    subtitle: "Precision, speed, and pressure with unique mechanics.",
-                    accent: Color.accentSecondary
+                    icon: "gamecontroller.fill",
+                    title: "Speed + Precision",
+                    subtitle: "Short rounds. Quick retry.",
+                    accent: Color.brandYellowDeep
                 ) {
-                    featureRow(icon: "clock", text: "Stopwatch precision")
-                    featureRow(icon: "eye.fill", text: "Color Flash decoy reaction")
-                    featureRow(icon: "hand.tap.fill", text: "Quick Tap speed sprint")
-                    featureRow(icon: "square.grid.3x3.fill", text: "Grid Reaction focus test")
+                    featureRow(icon: "clock", text: "Stopwatch")
+                    featureRow(icon: "eye.fill", text: "Color Flash")
+                    featureRow(icon: "hand.tap.fill", text: "Quick Tap")
+                    featureRow(icon: "square.grid.3x3.fill", text: "Grid Reaction")
                 }
                 .tag(1)
 
                 page(
-                    icon: "trophy.fill",
-                    title: "Stay Sharp",
-                    subtitle: "Train your reflexes with focused, repeatable practice.",
+                    icon: "bolt.circle.fill",
+                    title: "Ready?",
+                    subtitle: "Train now.",
                     accent: Color.accentHot
                 ) {
-                    featureRow(icon: "clock.arrow.circlepath", text: "Short rounds, instant retry")
-                    featureRow(icon: "gamecontroller.fill", text: "8 unique game modes")
-                    featureRow(icon: "person.2.fill", text: "Solo and local multiplayer")
+                    featureRow(icon: "clock.arrow.circlepath", text: "Instant replay")
+                    featureRow(icon: "bolt.fill", text: "Track your score")
                 }
                 .tag(2)
             }
@@ -78,7 +77,7 @@ struct OnboardingView: View {
             HStack(spacing: 8) {
                 ForEach(0..<totalPages, id: \.self) { index in
                     Capsule()
-                        .fill(index == currentPage ? Color.accentPrimary : Color.white.opacity(0.2))
+                        .fill(index == currentPage ? Color.brandYellow : Color.white.opacity(0.2))
                         .frame(width: index == currentPage ? 26 : 8, height: 8)
                         .animation(.spring(response: 0.25, dampingFraction: 0.8), value: currentPage)
                 }
@@ -123,9 +122,16 @@ struct OnboardingView: View {
                     )
                     .frame(width: 88, height: 88)
 
-                Image(systemName: icon)
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundStyle(.white)
+                if icon == "mascot" {
+                    Image("Mascot")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(10)
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(.white)
+                }
             }
 
             Text(title)
@@ -154,7 +160,7 @@ struct OnboardingView: View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color.accentPrimary)
+                .foregroundStyle(Color.brandYellow)
                 .frame(width: 22)
 
             Text(text)

@@ -55,7 +55,13 @@ struct ColorFlashGameView: View {
         .onChange(of: viewModel.state) { _, newState in
             updateAnimations(for: newState)
         }
-        .gameScaffold(title: "Color Flash", gameType: .colorFlash) {
+        .gameScaffold(
+            title: "Color Flash",
+            gameType: .colorFlash,
+            onHowToPlayVisibilityChanged: { isVisible in
+                viewModel.setPaused(isVisible)
+            }
+        ) {
             dismiss()
         }
         .navigationBarHidden(true)

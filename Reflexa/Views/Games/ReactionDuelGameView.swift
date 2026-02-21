@@ -48,7 +48,13 @@ struct ReactionDuelGameView: View {
                 activePresses.removeAll()
             }
         }
-        .gameScaffold(title: "Charge & Release", gameType: .reactionDuel) {
+        .gameScaffold(
+            title: "Charge & Release",
+            gameType: .reactionDuel,
+            onHowToPlayVisibilityChanged: { isVisible in
+                viewModel.setPaused(isVisible)
+            }
+        ) {
             dismiss()
         }
         .navigationBarHidden(true)

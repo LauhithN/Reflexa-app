@@ -1,10 +1,12 @@
 import AVFoundation
+import OSLog
 import SwiftUI
 
 /// Audio playback service for game sounds.
 /// Pre-loads sounds during .ready state to avoid first-play latency.
 final class SoundService {
     static let shared = SoundService()
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.lauhithnatarajan.reflexa.app", category: "SoundService")
 
     private var beepPlayer: AVAudioPlayer?
     private var countdownPlayer: AVAudioPlayer?
@@ -31,7 +33,7 @@ final class SoundService {
                 try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
                 try AVAudioSession.sharedInstance().setActive(true)
             } catch {
-                print("Audio session configuration failed: \(error)")
+                self.logger.error("Audio session configuration failed: \(String(describing: error), privacy: .private)")
             }
         }
     }

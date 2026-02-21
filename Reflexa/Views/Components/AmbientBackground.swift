@@ -7,36 +7,52 @@ struct AmbientBackground: View {
 
     var body: some View {
         ZStack {
-            Color.appBackground
-
             LinearGradient(
-                colors: [Color.appBackgroundSecondary.opacity(0.95), Color.appBackground],
+                colors: [Color.appBackgroundSecondary, Color.appBackground],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
 
-            glow(
-                colors: [Color.accentPrimary.opacity(0.55), Color.clear],
-                size: 360,
-                x: animate ? -120 : -180,
-                y: animate ? -240 : -150,
-                duration: 13
+            RadialGradient(
+                colors: [Color.brandPurple.opacity(0.4), Color.clear],
+                center: .topLeading,
+                startRadius: 10,
+                endRadius: 360
             )
 
-            glow(
-                colors: [Color.accentSecondary.opacity(0.5), Color.clear],
-                size: 300,
-                x: animate ? 150 : 110,
-                y: animate ? 300 : 230,
-                duration: 11
-            )
-
-            glow(
-                colors: [Color.accentHot.opacity(0.35), Color.clear],
-                size: 260,
-                x: animate ? 170 : 110,
-                y: animate ? -190 : -120,
+            orb(
+                colors: [Color.brandYellow.opacity(0.22), Color.clear],
+                size: 380,
+                x: animate ? -140 : -200,
+                y: animate ? -230 : -140,
                 duration: 14
+            )
+
+            orb(
+                colors: [Color.brandYellow.opacity(0.36), Color.clear],
+                size: 320,
+                x: animate ? 170 : 120,
+                y: animate ? 280 : 220,
+                duration: 12
+            )
+
+            RoundedRectangle(cornerRadius: 180, style: .continuous)
+                .fill(Color.brandYellow.opacity(0.12))
+                .frame(width: 300, height: 120)
+                .rotationEffect(.degrees(-16))
+                .blur(radius: 45)
+                .offset(x: animate ? 30 : -40, y: animate ? -120 : -160)
+                .animation(
+                    reduceMotion
+                        ? nil
+                        : .easeInOut(duration: 11).repeatForever(autoreverses: true),
+                    value: animate
+                )
+
+            LinearGradient(
+                colors: [Color.clear, Color.black.opacity(0.36)],
+                startPoint: .top,
+                endPoint: .bottom
             )
         }
         .ignoresSafeArea()
@@ -46,7 +62,7 @@ struct AmbientBackground: View {
         }
     }
 
-    private func glow(
+    private func orb(
         colors: [Color],
         size: CGFloat,
         x: CGFloat,

@@ -27,6 +27,7 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
     private var delayedResultTask: Task<Void, Never>?
     private var countdownTask: Task<Void, Never>?
     private var hasFalseStart = false
+    private var pausedState: GameState?
 
     private let chargeRatePerSecond = 68.0
     private let overchargePenalty = 12.0
@@ -104,6 +105,32 @@ final class ReactionDuelViewModel: GameViewModelProtocol {
         guard !hasFalseStart else { return }
         guard case .active = state else { return }
         finalizeCharge(for: index, manualRelease: true)
+    }
+
+    func setPaused(_ paused: Bool) {
+        if paused {
+            guard pausedState == nil else { return }
+            pausedState = state
+            countdownTask?.cancel()
+            waitTask?.cancel()
+            delayedResultTask?.cancel()
+            timing.pause()
+            return
+        }
+
+        guard let pausedState else { return }
+        self.pausedState = nil
+
+        switch pausedState {
+        case .countdown(let value):
+            runCountdown(from: value)
+        case .waiting:
+            beginWaitingPhase()
+        case .active:
+            timing.resume()
+        default:
+            break
+        }
     }
 
     // MARK: - Private

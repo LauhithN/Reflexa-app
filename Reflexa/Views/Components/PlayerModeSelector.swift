@@ -50,15 +50,15 @@ struct PlayerModeSelector: View {
                 }
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(selected == mode ? Color.textPrimary : Color.textSecondary)
+                .foregroundStyle(selected == mode ? Color.black.opacity(0.82) : Color.textSecondary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 11)
                 .background(
                     Capsule()
-                        .fill(selected == mode ? Color.accentPrimary : Color.cardBackground.opacity(0.8))
+                        .fill(selected == mode ? Color.brandYellow : Color.cardBackground.opacity(0.9))
                         .overlay(
                             Capsule()
-                                .stroke(selected == mode ? .white.opacity(0.18) : Color.strokeSubtle, lineWidth: 1)
+                                .stroke(selected == mode ? Color.brandYellowDeep.opacity(0.9) : Color.strokeSubtle, lineWidth: 1)
                         )
                 )
                 .clipShape(Capsule())

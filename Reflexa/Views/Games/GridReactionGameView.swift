@@ -78,7 +78,13 @@ struct GridReactionGameView: View {
                 animateResultReveal()
             }
         }
-        .gameScaffold(title: "Grid Reaction", gameType: .gridReaction) {
+        .gameScaffold(
+            title: "Grid Reaction",
+            gameType: .gridReaction,
+            onHowToPlayVisibilityChanged: { isVisible in
+                viewModel.setPaused(isVisible)
+            }
+        ) {
             dismiss()
         }
         .navigationBarHidden(true)

@@ -49,7 +49,13 @@ struct SequenceMemoryGameView: View {
                 animateScoreCountUp()
             }
         }
-        .gameScaffold(title: "Sequence Memory", gameType: .sequenceMemory) {
+        .gameScaffold(
+            title: "Sequence Memory",
+            gameType: .sequenceMemory,
+            onHowToPlayVisibilityChanged: { isVisible in
+                viewModel.setPaused(isVisible)
+            }
+        ) {
             dismiss()
         }
         .navigationBarHidden(true)

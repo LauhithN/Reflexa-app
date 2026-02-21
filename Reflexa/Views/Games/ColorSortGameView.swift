@@ -68,7 +68,13 @@ struct ColorSortGameView: View {
                 timerPulse = false
             }
         }
-        .gameScaffold(title: "Color Sort", gameType: .colorSort) {
+        .gameScaffold(
+            title: "Color Sort",
+            gameType: .colorSort,
+            onHowToPlayVisibilityChanged: { isVisible in
+                viewModel.setPaused(isVisible)
+            }
+        ) {
             dismiss()
         }
         .navigationBarHidden(true)

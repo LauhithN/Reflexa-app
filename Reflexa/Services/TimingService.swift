@@ -21,6 +21,8 @@ final class TimingService {
     private var displayLink: CADisplayLink?
     private var displayLinkProxy: DisplayLinkProxy?
     private var startTime: CFTimeInterval = 0
+    private var pausedAt: CFTimeInterval?
+    private var pausedDuration: CFTimeInterval = 0
     private var onTick: ((CFTimeInterval) -> Void)?
     private var isPaused = false
 
@@ -32,6 +34,8 @@ final class TimingService {
         stop()
         self.onTick = onTick
         self.startTime = CACurrentMediaTime()
+        self.pausedAt = nil
+        self.pausedDuration = 0
         self.elapsed = 0
 
         let proxy = DisplayLinkProxy(owner: self)
@@ -48,20 +52,29 @@ final class TimingService {
         displayLinkProxy = nil
         onTick = nil
         isPaused = false
+        pausedAt = nil
+        pausedDuration = 0
     }
 
     func pause() {
+        guard !isPaused else { return }
+        pausedAt = CACurrentMediaTime()
         displayLink?.isPaused = true
         isPaused = true
     }
 
     func resume() {
+        guard isPaused else { return }
+        if let pausedAt {
+            pausedDuration += CACurrentMediaTime() - pausedAt
+        }
+        self.pausedAt = nil
         displayLink?.isPaused = false
         isPaused = false
     }
 
     @objc private func tick() {
-        elapsed = CACurrentMediaTime() - startTime
+        elapsed = CACurrentMediaTime() - startTime - pausedDuration
         onTick?(elapsed)
     }
 

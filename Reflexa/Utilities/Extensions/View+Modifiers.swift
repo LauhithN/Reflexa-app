@@ -4,9 +4,13 @@ import SwiftUI
 struct CardButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
-            .brightness(configuration.isPressed ? -0.02 : 0)
-            .shadow(color: .black.opacity(configuration.isPressed ? 0.12 : 0.2), radius: configuration.isPressed ? 6 : 14, y: configuration.isPressed ? 2 : 8)
+            .scaleEffect(configuration.isPressed ? 0.984 : 1.0)
+            .brightness(configuration.isPressed ? -0.03 : 0)
+            .shadow(
+                color: Color.black.opacity(configuration.isPressed ? 0.2 : 0.28),
+                radius: configuration.isPressed ? 8 : 16,
+                y: configuration.isPressed ? 3 : 9
+            )
             .animation(.spring(response: 0.26, dampingFraction: 0.78), value: configuration.isPressed)
     }
 }
@@ -18,12 +22,12 @@ struct PrimaryCTAButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.bodyLarge.weight(.semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.black.opacity(0.82))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(
                 LinearGradient(
-                    colors: [tint, tint.opacity(0.82)],
+                    colors: [tint, tint.opacity(0.8)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -31,8 +35,9 @@ struct PrimaryCTAButtonStyle: ButtonStyle {
             .clipShape(Capsule())
             .overlay(
                 Capsule()
-                    .stroke(.white.opacity(0.16), lineWidth: 1)
+                    .stroke(.white.opacity(0.2), lineWidth: 1)
             )
+            .shadow(color: tint.opacity(configuration.isPressed ? 0.18 : 0.35), radius: configuration.isPressed ? 6 : 14, y: 6)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.spring(response: 0.2, dampingFraction: 0.8), value: configuration.isPressed)
     }
@@ -46,7 +51,7 @@ struct SecondaryCTAButtonStyle: ButtonStyle {
             .foregroundStyle(Color.textSecondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(Color.cardBackground.opacity(0.76))
+            .background(Color.cardBackground.opacity(0.9))
             .clipShape(Capsule())
             .overlay(
                 Capsule()
@@ -62,6 +67,7 @@ private struct GameScaffoldModifier: ViewModifier {
     let title: String
     let gameType: GameType?
     let onExit: () -> Void
+    let onHowToPlayVisibilityChanged: ((Bool) -> Void)?
 
     @State private var showHowToPlay = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -86,6 +92,7 @@ private struct GameScaffoldModifier: ViewModifier {
                                 icon: "questionmark",
                                 accessibilityLabel: "How to play \(title)",
                                 action: {
+                                    onHowToPlayVisibilityChanged?(true)
                                     withAnimation(reduceMotion ? .linear(duration: 0.1) : .easeOut(duration: 0.2)) {
                                         showHowToPlay = true
                                     }
@@ -96,13 +103,13 @@ private struct GameScaffoldModifier: ViewModifier {
                     }
                     .padding(.horizontal, 12)
                     .padding(.top, proxy.safeAreaInsets.top + 8)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .frame(maxWidth: .infinity, alignment: .top)
                 }
-                .allowsHitTesting(false)
             }
             .overlay {
                 if showHowToPlay, let gameType {
                     HowToPlayOverlay(gameType: gameType) {
+                        onHowToPlayVisibilityChanged?(false)
                         withAnimation(reduceMotion ? .linear(duration: 0.1) : .easeOut(duration: 0.2)) {
                             showHowToPlay = false
                         }
@@ -165,7 +172,7 @@ extension View {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [Color.elevatedCard.opacity(0.96), Color.cardBackground.opacity(0.82)],
+                            colors: [Color.elevatedCard.opacity(0.96), Color.cardBackground.opacity(0.88)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -175,7 +182,7 @@ extension View {
                             .stroke(Color.strokeSubtle, lineWidth: 1)
                     )
             )
-            .shadow(color: .black.opacity(0.28), radius: 16, y: 8)
+            .shadow(color: .black.opacity(0.34), radius: 18, y: 10)
     }
 
     /// Applies the shared ambient background.
@@ -212,8 +219,16 @@ extension View {
     func gameScaffold(
         title: String,
         gameType: GameType? = nil,
+        onHowToPlayVisibilityChanged: ((Bool) -> Void)? = nil,
         onExit: @escaping () -> Void
     ) -> some View {
-        modifier(GameScaffoldModifier(title: title, gameType: gameType, onExit: onExit))
+        modifier(
+            GameScaffoldModifier(
+                title: title,
+                gameType: gameType,
+                onExit: onExit,
+                onHowToPlayVisibilityChanged: onHowToPlayVisibilityChanged
+            )
+        )
     }
 }

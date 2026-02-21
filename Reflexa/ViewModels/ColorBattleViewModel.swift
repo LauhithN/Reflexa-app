@@ -31,6 +31,7 @@ final class ColorBattleViewModel: GameViewModelProtocol {
     private var countdownTask: Task<Void, Never>?
     private let haptic = HapticService.shared
     private var roundHandled = false
+    private var pausedState: GameState?
 
     init(config: GameConfiguration) {
         self.config = config
@@ -81,6 +82,31 @@ final class ColorBattleViewModel: GameViewModelProtocol {
             state = .stopped
             advanceOrFinish()
 
+        default:
+            break
+        }
+    }
+
+    func setPaused(_ paused: Bool) {
+        if paused {
+            guard pausedState == nil else { return }
+            pausedState = state
+            countdownTask?.cancel()
+            waitTask?.cancel()
+            roundResetTask?.cancel()
+            return
+        }
+
+        guard let pausedState else { return }
+        self.pausedState = nil
+
+        switch pausedState {
+        case .countdown(let value):
+            runCountdown(from: value)
+        case .waiting:
+            beginWaitingPhase()
+        case .stopped, .falseStart:
+            scheduleRoundTransition()
         default:
             break
         }
@@ -141,6 +167,10 @@ final class ColorBattleViewModel: GameViewModelProtocol {
     }
 
     private func advanceOrFinish() {
+        scheduleRoundTransition()
+    }
+
+    private func scheduleRoundTransition() {
         // Check if all rounds played
         if currentRound >= config.roundCount {
             let maxScore = scores.max() ?? 0

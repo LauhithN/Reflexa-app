@@ -27,6 +27,7 @@ final class GridReactionViewModel: GameViewModelProtocol {
     private var countdownTask: Task<Void, Never>?
     private let haptic = HapticService.shared
     private var lastActiveCell: Int = -1
+    private var pausedState: GameState?
 
     var speedTier: String {
         switch averageTimeMs {
@@ -92,12 +93,7 @@ final class GridReactionViewModel: GameViewModelProtocol {
                 // Brief pause then next round
                 currentRound = roundTimes.count + 1
                 state = .waiting
-
-                waitTask = Task { @MainActor [weak self] in
-                    try? await Task.sleep(for: .milliseconds(Int.random(in: 800...1500)))
-                    guard !Task.isCancelled else { return }
-                    self?.lightUpRandomCell()
-                }
+                scheduleWaitingForNextStimulus()
             }
         } else {
             // Wrong tap
@@ -112,6 +108,33 @@ final class GridReactionViewModel: GameViewModelProtocol {
     /// Called from the grid view — tap on specific cell
     func cellTapped(_ cellIndex: Int) {
         playerTapped(index: cellIndex)
+    }
+
+    func setPaused(_ paused: Bool) {
+        if paused {
+            guard pausedState == nil else { return }
+            pausedState = state
+            countdownTask?.cancel()
+            waitTask?.cancel()
+            feedbackTask?.cancel()
+            return
+        }
+
+        guard let pausedState else { return }
+        self.pausedState = nil
+
+        switch pausedState {
+        case .countdown(let value):
+            runCountdown(from: value)
+        case .waiting:
+            if roundTimes.isEmpty {
+                beginFirstRound()
+            } else {
+                scheduleWaitingForNextStimulus()
+            }
+        default:
+            break
+        }
     }
 
     // MARK: - Private
@@ -164,8 +187,12 @@ final class GridReactionViewModel: GameViewModelProtocol {
 
     private func beginFirstRound() {
         state = .waiting
+        scheduleWaitingForNextStimulus(delayRange: 500...1200)
+    }
+
+    private func scheduleWaitingForNextStimulus(delayRange: ClosedRange<Int> = 800...1500) {
         waitTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(Int.random(in: 500...1200)))
+            try? await Task.sleep(for: .milliseconds(Int.random(in: delayRange)))
             guard !Task.isCancelled else { return }
             self?.lightUpRandomCell()
         }

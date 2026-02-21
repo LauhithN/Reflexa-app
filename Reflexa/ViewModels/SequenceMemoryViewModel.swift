@@ -31,6 +31,7 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
     private var countdownTask: Task<Void, Never>?
     private var resultTransitionTask: Task<Void, Never>?
     private var feedbackTask: Task<Void, Never>?
+    private var pausedState: GameState?
 
     init(config: GameConfiguration) {
         self.config = config
@@ -82,6 +83,32 @@ final class SequenceMemoryViewModel: GameViewModelProtocol {
                 self?.wrongTapIndex = nil
                 self?.state = .result
             }
+        }
+    }
+
+    func setPaused(_ paused: Bool) {
+        if paused {
+            guard pausedState == nil else { return }
+            pausedState = state
+            countdownTask?.cancel()
+            resultTransitionTask?.cancel()
+            feedbackTask?.cancel()
+            playbackTask?.cancel()
+            return
+        }
+
+        guard let pausedState else { return }
+        self.pausedState = nil
+
+        switch pausedState {
+        case .countdown(let value):
+            runCountdown(from: value)
+        case .active:
+            if isShowingSequence {
+                playSequence()
+            }
+        default:
+            break
         }
     }
 

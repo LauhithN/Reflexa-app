@@ -22,9 +22,10 @@ targets:
           - "**/.DS_Store"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.reflexa.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.lauhithnatarajan.reflexa.app
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
+        DEVELOPMENT_TEAM: VR3668U55A
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_CFBundleDisplayName: Reflexa

@@ -28,6 +28,7 @@ final class QuickTapViewModel: GameViewModelProtocol {
     private let timing = TimingService()
     private let haptic = HapticService.shared
     private var countdownTask: Task<Void, Never>?
+    private var pausedState: GameState?
 
     init(config: GameConfiguration) {
         self.config = config
@@ -52,6 +53,28 @@ final class QuickTapViewModel: GameViewModelProtocol {
         haptic.lightTap()
         tapCount += 1
         tapTimestamps.append(CACurrentMediaTime())
+    }
+
+    func setPaused(_ paused: Bool) {
+        if paused {
+            guard pausedState == nil else { return }
+            pausedState = state
+            countdownTask?.cancel()
+            timing.pause()
+            return
+        }
+
+        guard let pausedState else { return }
+        self.pausedState = nil
+
+        switch pausedState {
+        case .countdown(let value):
+            runCountdown(from: value)
+        case .active:
+            timing.resume()
+        default:
+            break
+        }
     }
 
     // MARK: - Private

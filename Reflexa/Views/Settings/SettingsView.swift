@@ -9,6 +9,7 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
+                    headerSection
                     preferencesSection
                     aboutSection
                     legalSection
@@ -33,16 +34,48 @@ struct SettingsView: View {
         .preferredColorScheme(.dark)
     }
 
+    private var headerSection: some View {
+        HStack(spacing: 12) {
+            Image("Mascot")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 56, height: 56)
+                .padding(8)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.brandPurple.opacity(0.92))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.white.opacity(0.16), lineWidth: 1)
+                        )
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Reflexa Settings")
+                    .font(.playerLabel.weight(.bold))
+                    .foregroundStyle(Color.textPrimary)
+
+                Text("Tune sound, haptics, and support options.")
+                    .font(.caption)
+                    .foregroundStyle(Color.textSecondary)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .glassCard(cornerRadius: 18)
+    }
+
     private var preferencesSection: some View {
         settingsSection(title: "Preferences") {
             Toggle(isOn: $soundEnabled) {
                 rowLabel(
                     icon: soundEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill",
                     title: "Sound",
-                    tint: soundEnabled ? Color.accentPrimary : Color.textSecondary
+                    tint: soundEnabled ? Color.brandYellow : Color.textSecondary
                 )
             }
-            .tint(Color.accentPrimary)
+            .tint(Color.brandPurple)
 
             Divider().overlay(Color.strokeSubtle)
 
@@ -50,10 +83,10 @@ struct SettingsView: View {
                 rowLabel(
                     icon: hapticsEnabled ? "hand.tap.fill" : "hand.raised.slash.fill",
                     title: "Haptics",
-                    tint: hapticsEnabled ? Color.accentPrimary : Color.textSecondary
+                    tint: hapticsEnabled ? Color.brandYellow : Color.textSecondary
                 )
             }
-            .tint(Color.accentPrimary)
+            .tint(Color.brandPurple)
         }
     }
 
@@ -73,7 +106,7 @@ struct SettingsView: View {
 
     private var legalSection: some View {
         settingsSection(title: "Legal") {
-            if let supportURL = URL(string: Constants.supportURL) {
+            if let supportURL = validatedLegalURL(Constants.supportURL) {
                 Link(destination: supportURL) {
                     legalRow(icon: "questionmark.circle.fill", title: "Contact Support")
                 }
@@ -81,7 +114,7 @@ struct SettingsView: View {
 
             Divider().overlay(Color.strokeSubtle)
 
-            if let privacyURL = URL(string: Constants.privacyPolicyURL) {
+            if let privacyURL = validatedLegalURL(Constants.privacyPolicyURL) {
                 Link(destination: privacyURL) {
                     legalRow(icon: "hand.raised.fill", title: "Privacy Policy")
                 }
@@ -89,12 +122,23 @@ struct SettingsView: View {
 
             Divider().overlay(Color.strokeSubtle)
 
-            if let termsURL = URL(string: Constants.termsOfUseURL) {
+            if let termsURL = validatedLegalURL(Constants.termsOfUseURL) {
                 Link(destination: termsURL) {
                     legalRow(icon: "doc.text.fill", title: "Terms of Use")
                 }
             }
         }
+    }
+
+    private func validatedLegalURL(_ rawValue: String) -> URL? {
+        guard let url = URL(string: rawValue),
+              url.scheme?.lowercased() == "https",
+              url.host?.lowercased() == "lauhithn.github.io",
+              url.path.hasPrefix("/reflexa-legal-pages/")
+        else {
+            return nil
+        }
+        return url
     }
 
     private func settingsSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -126,7 +170,7 @@ struct SettingsView: View {
 
     private func legalRow(icon: String, title: String) -> some View {
         HStack {
-            rowLabel(icon: icon, title: title, tint: Color.accentPrimary)
+            rowLabel(icon: icon, title: title, tint: Color.brandYellow)
             Spacer()
             Image(systemName: "arrow.up.right")
                 .font(.caption.weight(.semibold))

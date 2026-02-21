@@ -42,7 +42,13 @@ struct StopwatchGameView: View {
         .onChange(of: viewModel.state) { _, _ in
             activePresses.removeAll()
         }
-        .gameScaffold(title: "Stopwatch", gameType: .stopwatch) {
+        .gameScaffold(
+            title: "Stopwatch",
+            gameType: .stopwatch,
+            onHowToPlayVisibilityChanged: { isVisible in
+                viewModel.setPaused(isVisible)
+            }
+        ) {
             dismiss()
         }
         .navigationBarHidden(true)
