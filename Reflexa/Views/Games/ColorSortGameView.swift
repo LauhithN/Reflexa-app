@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ColorSortGameView: View {
-    @State private var viewModel: ColorSortViewModel
+    @StateObject private var viewModel: ColorSortViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -21,7 +21,7 @@ struct ColorSortGameView: View {
     private let shapeNames = ["Circle", "Square", "Triangle", "Diamond"]
 
     init(config: GameConfiguration) {
-        _viewModel = State(initialValue: ColorSortViewModel(config: config))
+        _viewModel = StateObject(wrappedValue: ColorSortViewModel(config: config))
     }
 
     var body: some View {
@@ -55,13 +55,13 @@ struct ColorSortGameView: View {
         .onAppear {
             viewModel.startGame()
         }
-        .onChange(of: viewModel.state) { _, newState in
+        .onChange(of: viewModel.state) { newState in
             if case .result = newState {
                 animateScoreCountUp()
             }
 
             if case .active = newState, !reduceMotion {
-                withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                withAnimation(Spring.gentle.repeatForever(autoreverses: true)) {
                     timerPulse = true
                 }
             } else {
@@ -153,9 +153,6 @@ struct ColorSortGameView: View {
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(viewModel.timeRemaining <= 3 ? Color.error : Color.textPrimary)
-                    .if(!reduceMotion) { view in
-                        view.contentTransition(.numericText())
-                    }
             }
 
             Spacer().frame(height: 8)
@@ -240,9 +237,6 @@ struct ColorSortGameView: View {
                     .font(.system(size: 72, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color.textPrimary)
-                    .if(!reduceMotion) { view in
-                        view.contentTransition(.numericText())
-                    }
 
                 Text("correct answers")
                     .font(.bodyLarge)
@@ -315,7 +309,7 @@ struct ColorSortGameView: View {
 
         for step in 0...steps {
             DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(step)) {
-                withAnimation(.easeOut(duration: 0.05)) {
+                withAnimation(Spring.easeOut(duration: 0.05)) {
                     displayedScore = min(increment * step, target)
                 }
             }

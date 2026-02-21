@@ -3,16 +3,20 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("soundEnabled") private var soundEnabled = true
     @AppStorage("hapticsEnabled") private var hapticsEnabled = true
+
+    @State private var showResetAlert = false
+
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
-                    headerSection
-                    preferencesSection
-                    aboutSection
-                    legalSection
+                    appPreview
+                    togglesCard
+                    aboutCard
+                    legalCard
+                    resetCard
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
@@ -27,154 +31,148 @@ struct SettingsView: View {
                         dismiss()
                     }
                     .foregroundStyle(Color.textPrimary)
-                    .accessibleTapTarget()
                 }
             }
         }
-        .preferredColorScheme(.dark)
+        .tint(.accentPrimary)
+        .alert("Reset best scores?", isPresented: $showResetAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Reset", role: .destructive) {
+                resetBestScores()
+            }
+        } message: {
+            Text("This clears all local best scores on this device.")
+        }
     }
 
-    private var headerSection: some View {
-        HStack(spacing: 12) {
-            Image("Mascot")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 56, height: 56)
-                .padding(8)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.brandPurple.opacity(0.92))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.white.opacity(0.16), lineWidth: 1)
-                        )
-                )
+    private var appPreview: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.appBackground)
+                    .frame(width: 64, height: 64)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(Color.strokeSubtle, lineWidth: 1)
+                    )
+
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 26, weight: .black))
+                    .foregroundStyle(Color.accentPrimary)
+            }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Reflexa Settings")
-                    .font(.playerLabel.weight(.bold))
+                Text("Reflexa")
+                    .font(.sectionTitle)
                     .foregroundStyle(Color.textPrimary)
-
-                Text("Tune sound, haptics, and support options.")
-                    .font(.caption)
+                Text("Minimal local multiplayer reflex training")
+                    .font(.monoSmall)
                     .foregroundStyle(Color.textSecondary)
             }
 
-            Spacer(minLength: 0)
+            Spacer()
         }
         .padding(14)
         .glassCard(cornerRadius: 18)
     }
 
-    private var preferencesSection: some View {
-        settingsSection(title: "Preferences") {
-            Toggle(isOn: $soundEnabled) {
-                rowLabel(
-                    icon: soundEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill",
-                    title: "Sound",
-                    tint: soundEnabled ? Color.brandYellow : Color.textSecondary
-                )
-            }
-            .tint(Color.brandPurple)
+    private var togglesCard: some View {
+        GlassCard(cornerRadius: 18) {
+            VStack(spacing: 12) {
+                Toggle(isOn: $soundEnabled) {
+                    settingRow(icon: soundEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill", title: "Sound")
+                }
 
-            Divider().overlay(Color.strokeSubtle)
+                Divider().overlay(Color.strokeSubtle)
 
-            Toggle(isOn: $hapticsEnabled) {
-                rowLabel(
-                    icon: hapticsEnabled ? "hand.tap.fill" : "hand.raised.slash.fill",
-                    title: "Haptics",
-                    tint: hapticsEnabled ? Color.brandYellow : Color.textSecondary
-                )
+                Toggle(isOn: $hapticsEnabled) {
+                    settingRow(icon: hapticsEnabled ? "hand.tap.fill" : "hand.raised.slash.fill", title: "Haptics")
+                }
             }
-            .tint(Color.brandPurple)
         }
     }
 
-    private var aboutSection: some View {
-        settingsSection(title: "About") {
+    private var aboutCard: some View {
+        GlassCard(cornerRadius: 18) {
             HStack {
                 Text("Version")
                     .font(.playerLabel)
                     .foregroundStyle(Color.textPrimary)
                 Spacer()
                 Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
-                    .font(.playerLabel)
+                    .font(.monoSmall)
                     .foregroundStyle(Color.textSecondary)
             }
         }
     }
 
-    private var legalSection: some View {
-        settingsSection(title: "Legal") {
-            if let supportURL = validatedLegalURL(Constants.supportURL) {
-                Link(destination: supportURL) {
-                    legalRow(icon: "questionmark.circle.fill", title: "Contact Support")
-                }
-            }
-
-            Divider().overlay(Color.strokeSubtle)
-
-            if let privacyURL = validatedLegalURL(Constants.privacyPolicyURL) {
-                Link(destination: privacyURL) {
-                    legalRow(icon: "hand.raised.fill", title: "Privacy Policy")
-                }
-            }
-
-            Divider().overlay(Color.strokeSubtle)
-
-            if let termsURL = validatedLegalURL(Constants.termsOfUseURL) {
-                Link(destination: termsURL) {
-                    legalRow(icon: "doc.text.fill", title: "Terms of Use")
-                }
-            }
-        }
-    }
-
-    private func validatedLegalURL(_ rawValue: String) -> URL? {
-        guard let url = URL(string: rawValue),
-              url.scheme?.lowercased() == "https",
-              url.host?.lowercased() == "lauhithn.github.io",
-              url.path.hasPrefix("/reflexa-legal-pages/")
-        else {
-            return nil
-        }
-        return url
-    }
-
-    private func settingsSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.textSecondary)
-
+    private var legalCard: some View {
+        GlassCard(cornerRadius: 18) {
             VStack(spacing: 12) {
-                content()
+                if let supportURL = URL(string: Constants.supportURL) {
+                    legalRow(icon: "questionmark.circle.fill", title: "Support", url: supportURL)
+                }
+                if let privacyURL = URL(string: Constants.privacyPolicyURL) {
+                    legalRow(icon: "hand.raised.fill", title: "Privacy Policy", url: privacyURL)
+                }
+                if let termsURL = URL(string: Constants.termsOfUseURL) {
+                    legalRow(icon: "doc.text.fill", title: "Terms of Use", url: termsURL)
+                }
             }
-            .padding(14)
-            .glassCard(cornerRadius: 16)
         }
     }
 
-    private func rowLabel(icon: String, title: String, tint: Color) -> some View {
+    private var resetCard: some View {
+        Button {
+            showResetAlert = true
+        } label: {
+            Text("Reset Best Scores")
+                .font(.sectionTitle)
+                .foregroundStyle(Color.destructive)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.destructive.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Reset Best Scores")
+        .accessibilityHint("Clears local score history")
+    }
+
+    private func settingRow(icon: String, title: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(tint)
-                .frame(width: 22)
-
+                .foregroundStyle(Color.accentPrimary)
+                .frame(width: 20)
             Text(title)
                 .font(.playerLabel)
                 .foregroundStyle(Color.textPrimary)
         }
     }
 
-    private func legalRow(icon: String, title: String) -> some View {
-        HStack {
-            rowLabel(icon: icon, title: title, tint: Color.brandYellow)
-            Spacer()
-            Image(systemName: "arrow.up.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.textSecondary)
+    private func legalRow(icon: String, title: String, url: URL) -> some View {
+        Link(destination: url) {
+            HStack {
+                settingRow(icon: icon, title: title)
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .foregroundStyle(Color.textSecondary)
+            }
         }
+        .accessibilityLabel(title)
+        .accessibilityHint("Opens in browser")
+    }
+
+    private func resetBestScores() {
+        let keys = [
+            "bestTime",
+            "bestQuickTap",
+            "bestGridReaction",
+            "bestReactionDuel",
+            "bestColorFlash",
+            "bestSequenceMemory",
+            "bestColorSort"
+        ]
+        keys.forEach { UserDefaults.standard.removeObject(forKey: $0) }
     }
 }

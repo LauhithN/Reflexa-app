@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SequenceMemoryGameView: View {
-    @State private var viewModel: SequenceMemoryViewModel
+    @StateObject private var viewModel: SequenceMemoryViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -17,7 +17,7 @@ struct SequenceMemoryGameView: View {
     ]
 
     init(config: GameConfiguration) {
-        _viewModel = State(initialValue: SequenceMemoryViewModel(config: config))
+        _viewModel = StateObject(wrappedValue: SequenceMemoryViewModel(config: config))
     }
 
     var body: some View {
@@ -44,7 +44,7 @@ struct SequenceMemoryGameView: View {
         .onAppear {
             viewModel.startGame()
         }
-        .onChange(of: viewModel.state) { _, newState in
+        .onChange(of: viewModel.state) { newState in
             if case .result = newState {
                 animateScoreCountUp()
             }
@@ -171,7 +171,7 @@ struct SequenceMemoryGameView: View {
             )
             .shadow(color: isActive ? cellColors[index].opacity(0.5) : .clear, radius: 12)
             .scaleEffect(isWrongTap && !reduceMotion ? 0.95 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.5), value: isWrongTap)
+            .animation(Spring.snappy, value: isWrongTap)
             .onTapGesture {
                 viewModel.playerTapped(index: index)
             }
@@ -191,9 +191,6 @@ struct SequenceMemoryGameView: View {
                     .font(.system(size: 72, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color.textPrimary)
-                    .if(!reduceMotion) { view in
-                        view.contentTransition(.numericText())
-                    }
 
                 Text("sequence length reached")
                     .font(.bodyLarge)
@@ -259,7 +256,7 @@ struct SequenceMemoryGameView: View {
 
         for step in 0...steps {
             DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(step)) {
-                withAnimation(.easeOut(duration: 0.05)) {
+                withAnimation(Spring.easeOut(duration: 0.05)) {
                     displayedScore = min(step, target)
                 }
             }

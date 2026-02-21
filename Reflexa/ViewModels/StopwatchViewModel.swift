@@ -1,19 +1,19 @@
 import Foundation
 import QuartzCore
+import Combine
 
 /// Stopwatch game: Countdown from 100 to 0, stop at exactly 0.
 /// Score = abs(stoppedValue). Lower is better.
-@Observable
-final class StopwatchViewModel: GameViewModelProtocol {
+final class StopwatchViewModel: ObservableObject, GameViewModelProtocol {
     let config: GameConfiguration
-    var state: GameState = .ready
+    @Published var state: GameState = .ready
 
     // Display value counting down from 100
-    var currentValue: Double = Constants.stopwatchStartValue
+    @Published var currentValue: Double = Constants.stopwatchStartValue
     // Per-player stopped values (indexed by player)
-    var stoppedValues: [Double?]
+    @Published var stoppedValues: [Double?]
     // Per-player stopped state
-    var playerStopped: [Bool]
+    @Published var playerStopped: [Bool]
 
     private let timing = TimingService()
     private let haptic = HapticService.shared

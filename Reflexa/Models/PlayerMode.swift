@@ -7,19 +7,19 @@ enum PlayerMode: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    var displayName: String {
-        switch self {
-        case .solo: return "Solo"
-        case .twoPlayer: return "2 Players"
-        case .fourPlayer: return "4 Players"
-        }
-    }
-
     var playerCount: Int {
         switch self {
         case .solo: return 1
         case .twoPlayer: return 2
         case .fourPlayer: return 4
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .solo: return "Solo"
+        case .twoPlayer: return "2 Players"
+        case .fourPlayer: return "4 Players"
         }
     }
 

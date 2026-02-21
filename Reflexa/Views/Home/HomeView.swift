@@ -1,145 +1,150 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var showSettings = false
-    @State private var animateIn = false
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AppStorage("bestTime") private var bestTime = 243.0
 
-    private let allGames: [GameType] = [
-        .stopwatch, .colorFlash, .quickTap, .sequenceMemory,
-        .colorBattle, .reactionDuel, .colorSort, .gridReaction
+    @State private var showSettings = false
+    @State private var taglineIndex = 0
+    @State private var animateIn = false
+
+    private let taglines = [
+        "How fast are you today?",
+        "Focus. React. Improve.",
+        "Your reflexes, sharpened.",
+        "One tap changes everything.",
+        "Challenge a friend."
     ]
 
+    private let allGames: [GameType] = [.stopwatch, .colorFlash, .quickTap, .sequenceMemory, .colorSort, .gridReaction]
+    private let duelGames: [GameType] = [.reactionDuel, .colorBattle]
+
+    private let rotateTimer = Timer.publish(every: 4, on: .main, in: .common).autoconnect()
+
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 18) {
-                topBar
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 24) {
+                heroHeader
                     .opacity(animateIn ? 1 : 0)
                     .offset(y: animateIn ? 0 : 10)
 
-                titleBlock
-                    .opacity(animateIn ? 1 : 0)
-                    .offset(y: animateIn ? 0 : 10)
+                gamesSection(title: "Game Modes", caption: "Solo · 2 Player · 4 Player", games: allGames)
 
-                gameGrid
-                    .opacity(animateIn ? 1 : 0)
-                    .offset(y: animateIn ? 0 : 12)
+                gamesSection(title: "Competitive Modes", caption: "Local multiplayer only", games: duelGames)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 30)
+            .padding(.top, 16)
+            .padding(.bottom, 32)
         }
         .background(AmbientBackground())
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showSettings) {
             SettingsView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
+                .preferredColorScheme(.dark)
+        }
+        .onReceive(rotateTimer) { _ in
+            withAnimation(Spring.smooth) {
+                taglineIndex = (taglineIndex + 1) % taglines.count
+            }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.35)) {
+            withAnimation(Spring.smooth) {
                 animateIn = true
             }
         }
     }
 
-    private var topBar: some View {
-        HStack(spacing: 12) {
-            progressBar
+    private var heroHeader: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "bolt.fill")
+                        .foregroundStyle(Color.accentPrimary)
+                        .accessibilityLabel("Lightning bolt")
 
-            Spacer(minLength: 0)
+                    Text("Reflexa")
+                        .font(.heroTitle)
+                        .foregroundStyle(Color.textPrimary)
+                }
 
-            Button {
-                showSettings = true
-            } label: {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(Color.textPrimary)
-                    .frame(width: 42, height: 42)
-                    .background(
-                        Circle()
-                            .fill(Color.cardBackground.opacity(0.95))
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.strokeSubtle, lineWidth: 1)
-                            )
-                    )
-            }
-            .buttonStyle(CardButtonStyle())
-            .accessibilityLabel("Settings")
-        }
-    }
+                Spacer()
 
-    private var progressBar: some View {
-        HStack(spacing: 8) {
-            Capsule()
-                .fill(Color.brandYellow)
-                .frame(width: 82, height: 6)
-
-            Capsule()
-                .fill(Color.white.opacity(0.14))
-                .frame(width: 64, height: 6)
-        }
-    }
-
-    private var titleBlock: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                Text("Choose a game")
-                    .font(.sectionTitle.weight(.heavy))
-                    .foregroundStyle(Color.textPrimary)
-
-                Image("Mascot")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 30, height: 30)
-            }
-
-            Text("Tap to play")
-                .font(.caption)
-                .foregroundStyle(Color.textSecondary)
-        }
-    }
-
-    private var gameGrid: some View {
-        LazyVGrid(columns: gridColumns, spacing: 12) {
-            ForEach(Array(allGames.enumerated()), id: \.element.id) { index, game in
-                NavigationLink {
-                    destination(for: game)
+                Button {
+                    showSettings = true
                 } label: {
-                    GameCard(gameType: game)
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Color.textPrimary)
                 }
                 .buttonStyle(CardButtonStyle())
-                .opacity(animateIn ? 1 : 0)
-                .offset(y: animateIn ? 0 : 12)
-                .animation(
-                    .spring(response: 0.34, dampingFraction: 0.84)
-                        .delay(Double(index) * 0.03),
-                    value: animateIn
+                .accessibilityLabel("Settings")
+                .accessibilityHint("Open app settings")
+            }
+
+            Text("Test your reflexes with friends or solo.")
+                .font(.bodyLarge)
+                .foregroundStyle(Color.textSecondary)
+
+            HStack {
+                Text("⚡ Best: \(Int(bestTime.rounded()))ms")
+                    .font(.playerLabel)
+                    .foregroundStyle(Color.accentPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.accentPrimary.opacity(0.14))
+                    .clipShape(Capsule())
+                    .pulseGlow(color: .accentPrimary)
+
+                Spacer(minLength: 0)
+            }
+
+            Text(taglines[taglineIndex])
+                .font(.playerLabel)
+                .foregroundStyle(Color.textSecondary)
+                .id(taglineIndex)
+                .transition(.opacity)
+        }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.elevatedCard.opacity(0.98), Color.cardBackground.opacity(0.82)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                 )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.strokeSubtle, lineWidth: 1)
+                )
+        )
+    }
+
+    private func gamesSection(title: String, caption: String, games: [GameType]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.sectionTitle)
+                .foregroundStyle(Color.textPrimary)
+
+            Text(caption)
+                .font(.monoSmall)
+                .foregroundStyle(Color.textSecondary)
+
+            VStack(spacing: 12) {
+                ForEach(Array(games.enumerated()), id: \.element.id) { index, game in
+                    NavigationLink {
+                        GameSetupView(gameType: game)
+                    } label: {
+                        GameCard(gameType: game)
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(animateIn ? 1 : 0)
+                    .offset(y: animateIn ? 0 : 12)
+                    .animation(Spring.stagger(index), value: animateIn)
+                }
             }
         }
-    }
-
-    private var gridColumns: [GridItem] {
-        if dynamicTypeSize.isAccessibilitySize {
-            return [GridItem(.flexible(), spacing: 12)]
-        }
-        return [
-            GridItem(.flexible(), spacing: 12),
-            GridItem(.flexible(), spacing: 12)
-        ]
-    }
-
-    @ViewBuilder
-    private func destination(for game: GameType) -> some View {
-        if shouldBypassSetup(for: game) {
-            GameDestinationView(gameType: game, playerMode: .solo)
-                .howToPlayOverlay(for: game)
-        } else {
-            GameSetupView(gameType: game)
-        }
-    }
-
-    private func shouldBypassSetup(for game: GameType) -> Bool {
-        game.supportedModes == [.solo]
     }
 }

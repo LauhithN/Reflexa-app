@@ -1,85 +1,120 @@
 import SwiftUI
 
-/// Brief instruction overlay shown on first play of each game type.
 struct HowToPlayOverlay: View {
     let gameType: GameType
     let onDismiss: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var instructions: String {
+    private var instructions: [String] {
         switch gameType {
         case .stopwatch:
-            return "A timer counts down from 100. Tap to stop it as close to 0 as possible. The closer you get, the better!"
+            return [
+                "Start the timer and stop as close to 0.000 as possible.",
+                "In multiplayer, each player takes one turn.",
+                "Closest value to zero wins."
+            ]
         case .colorFlash:
-            return "Stay calm during the wait. Decoy flashes may appear to trick you. Tap only when the REAL full red flash appears. Early taps are false starts."
-        case .colorBattle:
-            return "Battle over multiple rounds. First tap after signal scores points, and every 3rd round is a POWER round worth +2. False starts cost the faulter 1 point."
-        case .reactionDuel:
-            return "Wait for GO, then press and hold to charge power. Release as close as possible to the target zone. Lowest offset wins. Pressing early is a false start."
+            return [
+                "Watch the color transitions carefully.",
+                "Tap only when the screen matches the target color.",
+                "5 rounds score your color-match accuracy."
+            ]
         case .quickTap:
-            return "Tap the screen as many times as you can in 10 seconds. Every tap counts!"
+            return [
+                "Tap as fast as possible for 10 seconds.",
+                "Every tap counts toward your total.",
+                "Beat your personal best tap count."
+            ]
         case .sequenceMemory:
-            return "Watch the colored cells flash in sequence, then tap them back in the same order. Each level adds one more step. One wrong tap and it's game over!"
+            return [
+                "Memorize the sequence glow pattern.",
+                "Repeat it exactly to advance.",
+                "One mistake ends the run."
+            ]
         case .colorSort:
-            return "A color word appears in a different ink color. Tap the button matching the INK COLOR, not the word itself. Score as many as you can in 15 seconds!"
+            return [
+                "Read the word, but trust the ink color.",
+                "Tap the matching ink color option.",
+                "Fast and accurate answers win rounds."
+            ]
         case .gridReaction:
-            return "A 4x4 grid of squares. When one lights up, tap it as fast as you can. 10 rounds — your score is the average time."
+            return [
+                "Tap the lit cell as fast as possible.",
+                "Multiplayer uses split zones and simultaneous rounds.",
+                "Most round wins takes the game."
+            ]
+        case .reactionDuel:
+            return [
+                "Wait for the trigger flash.",
+                "Tap your zone immediately after GO.",
+                "Early taps add a false-start penalty."
+            ]
+        case .colorBattle:
+            return [
+                "Turn-based rounds with pass-device handoff.",
+                "Match target colors to score points.",
+                "Power-ups can swing the match."
+            ]
         }
     }
 
     var body: some View {
         ZStack {
-            AmbientBackground()
-                .overlay(Color.black.opacity(0.5))
+            Color.black.opacity(0.72).ignoresSafeArea()
 
-            VStack(spacing: 24) {
-                Image(systemName: gameType.iconName)
-                    .font(.system(size: 48))
-                    .foregroundStyle(Color.waiting)
-
-                Text("How to Play")
-                    .font(.gameTitle)
-                    .foregroundStyle(Color.textPrimary)
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    Image(systemName: gameType.iconName)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Color.accentPrimary)
+                    Text("How To Play")
+                        .font(.resultTitle)
+                        .foregroundStyle(Color.textPrimary)
+                }
 
                 Text(gameType.displayName)
-                    .font(.playerLabel)
-                    .foregroundStyle(Color.waiting)
-
-                Text(instructions)
-                    .font(.bodyLarge)
+                    .font(.sectionTitle)
                     .foregroundStyle(Color.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
 
-                Button {
-                    onDismiss()
-                } label: {
-                    Text("Got it!")
-                        .frame(minWidth: 200)
+                ForEach(Array(instructions.enumerated()), id: \.offset) { _, line in
+                    HStack(alignment: .top, spacing: 8) {
+                        Circle()
+                            .fill(Color.accentSecondary)
+                            .frame(width: 6, height: 6)
+                            .padding(.top, 6)
+                        Text(line)
+                            .font(.bodyLarge)
+                            .foregroundStyle(Color.textPrimary)
+                    }
                 }
-                .buttonStyle(PrimaryCTAButtonStyle(tint: .accentPrimary))
-                .accessibleTapTarget()
+
+                Text("Tap anywhere to continue")
+                    .font(.caption)
+                    .foregroundStyle(Color.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 6)
             }
             .padding(20)
-            .glassCard(cornerRadius: 24)
+            .glassCard(cornerRadius: 22)
             .padding(.horizontal, 18)
         }
-        .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onDismiss()
+        }
     }
 }
 
-/// Modifier that shows a how-to-play overlay on first play of each game type.
 struct HowToPlayModifier: ViewModifier {
     let gameType: GameType
+
     @AppStorage private var hasSeenInstructions: Bool
     @State private var showOverlay: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(gameType: GameType) {
         self.gameType = gameType
         let key = "hasSeenHowToPlay_\(gameType.rawValue)"
-        self._hasSeenInstructions = AppStorage(wrappedValue: false, key)
-        self._showOverlay = State(initialValue: !UserDefaults.standard.bool(forKey: key))
+        _hasSeenInstructions = AppStorage(wrappedValue: false, key)
+        _showOverlay = State(initialValue: !UserDefaults.standard.bool(forKey: key))
     }
 
     func body(content: Content) -> some View {
@@ -88,11 +123,10 @@ struct HowToPlayModifier: ViewModifier {
 
             if showOverlay {
                 HowToPlayOverlay(gameType: gameType) {
-                    withAnimation(reduceMotion ? .linear(duration: 0.1) : .easeOut(duration: 0.3)) {
-                        showOverlay = false
-                    }
+                    showOverlay = false
                     hasSeenInstructions = true
                 }
+                .transition(.opacity)
             }
         }
     }

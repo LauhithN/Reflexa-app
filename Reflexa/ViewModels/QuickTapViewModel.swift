@@ -1,20 +1,20 @@
 import Foundation
 import QuartzCore
+import Combine
 
 /// Quick Tap: Tap as many times as possible in 10 seconds.
 /// Score = tap count. Higher is better.
-@Observable
-final class QuickTapViewModel: GameViewModelProtocol {
+final class QuickTapViewModel: ObservableObject, GameViewModelProtocol {
     let config: GameConfiguration
-    var state: GameState = .ready
+    @Published var state: GameState = .ready
 
-    var tapCount: Int = 0
-    var timeRemaining: Double = Constants.quickTapDuration
-    var isFinished: Bool = false
+    @Published var tapCount: Int = 0
+    @Published var timeRemaining: Double = Constants.quickTapDuration
+    @Published var isFinished: Bool = false
 
-    var tapsPerSecond: Double = 0
-    var bestTapsPerSecond: Double = 0
-    var tapTimestamps: [CFTimeInterval] = []
+    @Published var tapsPerSecond: Double = 0
+    @Published var bestTapsPerSecond: Double = 0
+    @Published var tapTimestamps: [CFTimeInterval] = []
 
     var speedTier: String {
         switch tapCount {

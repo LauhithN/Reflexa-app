@@ -1,17 +1,17 @@
 import Foundation
 import QuartzCore
+import Combine
 
 /// Color Flash: Screen turns RED after random 2-5s delay. Tap ASAP.
 /// Score = reaction time in ms. False start if tap during wait.
-@Observable
-final class ColorFlashViewModel: GameViewModelProtocol {
+final class ColorFlashViewModel: ObservableObject, GameViewModelProtocol {
     let config: GameConfiguration
-    var state: GameState = .ready
+    @Published var state: GameState = .ready
 
-    var reactionTimeMs: Int = 0
-    var percentile: Int = 0
-    var isDecoyFlashVisible = false
-    var decoyFlashesShown = 0
+    @Published var reactionTimeMs: Int = 0
+    @Published var percentile: Int = 0
+    @Published var isDecoyFlashVisible = false
+    @Published var decoyFlashesShown = 0
 
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?

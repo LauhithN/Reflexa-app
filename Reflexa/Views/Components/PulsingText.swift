@@ -1,23 +1,22 @@
 import SwiftUI
 
-/// Text that pulses opacity — used for "Wait..." and "Get Ready" states
 struct PulsingText: View {
     let text: String
     let color: Color
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isPulsing = false
+    @State private var pulsing = false
 
     var body: some View {
         Text(text)
-            .font(.gameTitle)
+            .font(.resultTitle)
             .foregroundStyle(color)
-            .opacity(reduceMotion ? 1.0 : (isPulsing ? 0.4 : 1.0))
+            .opacity(reduceMotion ? 1 : (pulsing ? 0.45 : 1))
             .onAppear {
                 guard !reduceMotion else { return }
-                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-                    isPulsing = true
+                withAnimation(Spring.gentle.repeatForever(autoreverses: true)) {
+                    pulsing = true
                 }
             }
-            .accessibilityLabel(text)
     }
 }

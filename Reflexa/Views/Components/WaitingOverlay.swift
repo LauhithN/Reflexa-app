@@ -1,21 +1,24 @@
 import SwiftUI
 
-/// Overlay shown during the waiting/anticipation phase before stimulus
 struct WaitingOverlay: View {
-    let isDark: Bool // true for sound/vibration reflex (no visual cue)
+    var title: String = "Get Ready..."
+    var subtitle: String = "Wait for the trigger"
 
     var body: some View {
         ZStack {
-            if isDark {
-                Color.black.ignoresSafeArea()
-            } else {
-                AmbientBackground()
-            }
+            AmbientBackground().overlay(Color.black.opacity(0.4))
 
-            if !isDark {
-                PulsingText(text: "Wait...", color: .waiting)
+            VStack(spacing: 20) {
+                PulseOrb(color: .accentPrimary, size: 120, pulseScale: 1.2, pulseDuration: 1.5)
+
+                Text(title)
+                    .font(.resultTitle)
+                    .foregroundStyle(Color.textPrimary)
+
+                Text(subtitle)
+                    .font(.bodyLarge)
+                    .foregroundStyle(Color.textSecondary)
             }
         }
-        .accessibilityLabel("Waiting for stimulus. Do not tap yet.")
     }
 }

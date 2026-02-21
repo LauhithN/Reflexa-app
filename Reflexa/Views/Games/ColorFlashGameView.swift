@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ColorFlashGameView: View {
-    @State private var viewModel: ColorFlashViewModel
+    @StateObject private var viewModel: ColorFlashViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -9,7 +9,7 @@ struct ColorFlashGameView: View {
     @State private var flashGlow = false
 
     init(config: GameConfiguration) {
-        _viewModel = State(initialValue: ColorFlashViewModel(config: config))
+        _viewModel = StateObject(wrappedValue: ColorFlashViewModel(config: config))
     }
 
     var body: some View {
@@ -52,7 +52,7 @@ struct ColorFlashGameView: View {
             viewModel.startGame()
             updateAnimations(for: viewModel.state)
         }
-        .onChange(of: viewModel.state) { _, newState in
+        .onChange(of: viewModel.state) { newState in
             updateAnimations(for: newState)
         }
         .gameScaffold(
@@ -83,7 +83,7 @@ struct ColorFlashGameView: View {
                 endRadius: 420
             )
             .animation(
-                reduceMotion ? nil : .easeInOut(duration: 0.2).repeatForever(autoreverses: true),
+                reduceMotion ? nil : Spring.ambient(duration: 0.2).repeatForever(autoreverses: true),
                 value: flashGlow
             )
 
@@ -163,7 +163,7 @@ struct ColorFlashGameView: View {
                     .foregroundStyle(viewModel.isDecoyFlashVisible ? Color.black : Color.waiting)
             }
             .animation(
-                reduceMotion ? nil : .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+                reduceMotion ? nil : Spring.ambient(duration: 0.9).repeatForever(autoreverses: true),
                 value: waitingPulse
             )
 

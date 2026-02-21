@@ -2,74 +2,72 @@ import SwiftUI
 
 extension Color {
     // MARK: - Surfaces
-    static let appBackground = Color(hex: "05020D")
-    static let appBackgroundSecondary = Color(hex: "120827")
-    static let cardBackground = Color(hex: "161129")
-    static let elevatedCard = Color(hex: "231941")
-    static let strokeSubtle = Color.white.opacity(0.2)
-    static let textPrimary = Color(hex: "F9F7FF")
-    static let textSecondary = Color(hex: "B7B5C8")
+    static let appBackground = Color(hex: "#0A0A0F")
+    static let appBackgroundSecondary = Color(hex: "#0F0F18")
+    static let cardBackground = Color(hex: "#14141C")
+    static let elevatedCard = Color(hex: "#1C1C28")
+    static let strokeSubtle = Color.white.opacity(0.07)
 
-    // MARK: - Brand Accent
-    static let brandPurple = Color(hex: "7B3FF2")
-    static let brandPurpleDeep = Color(hex: "5A22C8")
-    static let brandYellow = Color(hex: "FFD94D")
-    static let brandYellowDeep = Color(hex: "F7B500")
-    static let accentPrimary = Color.brandYellow
-    static let accentSecondary = Color.brandPurple
-    static let accentHot = Color(hex: "FF4F67")
-    static let accentSun = Color(hex: "FFB020")
-    // MARK: - Player Colors
-    static let player1 = Color.brandPurple
-    static let player2 = Color(hex: "FF5C69")
-    static let player3 = Color(hex: "36D39A")
-    static let player4 = Color.brandYellow
+    // MARK: - Accent Palette
+    static let accentPrimary = Color(hex: "#7B68EE")
+    static let accentSecondary = Color(hex: "#5EE7A0")
+    static let accentHot = Color(hex: "#FF6B6B")
+    static let accentAmber = Color(hex: "#FFD166")
 
-    // MARK: - States
-    static let success = Color(hex: "34D399")
-    static let error = Color(hex: "FB7185")
-    static let warning = Color(hex: "FBBF24")
-    static let waiting = Color.accentPrimary
-    // MARK: - Gradients
-    static var appGradient: LinearGradient {
-        LinearGradient(
-            colors: [Color.appBackgroundSecondary, Color.appBackground],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+    // MARK: - Players
+    static let player1Color = Color(hex: "#4FC3F7")
+    static let player2Color = Color(hex: "#FF8A65")
+    static let player3Color = Color(hex: "#CE93D8")
+    static let player4Color = Color(hex: "#A5D6A7")
 
-    static var heroGradient: LinearGradient {
-        LinearGradient(
-            colors: [Color.brandPurple, Color.brandYellow],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+    // MARK: - Typography
+    static let textPrimary = Color(hex: "#F0F0F8")
+    static let textSecondary = Color(hex: "#888899")
+    static let textTertiary = Color(hex: "#555566")
+
+    // MARK: - Semantic
+    static let success = Color(hex: "#5EE7A0")
+    static let warning = Color(hex: "#FFD166")
+    static let destructive = Color(hex: "#FF6B6B")
+
+    // Compatibility aliases
+    static let error = destructive
+    static let waiting = accentPrimary
+    static let brandPurple = accentPrimary
+    static let brandPurpleDeep = accentPrimary.opacity(0.82)
+    static let brandYellow = accentAmber
+    static let brandYellowDeep = accentAmber.opacity(0.8)
+    static let accentSun = accentAmber
+    static let player1 = player1Color
+    static let player2 = player2Color
+    static let player3 = player3Color
+    static let player4 = player4Color
 
     static func playerColor(for index: Int) -> Color {
         switch index {
-        case 0: return .player1
-        case 1: return .player2
-        case 2: return .player3
-        case 3: return .player4
-        default: return .player1
+        case 0: return .player1Color
+        case 1: return .player2Color
+        case 2: return .player3Color
+        case 3: return .player4Color
+        default: return .player1Color
         }
     }
 
     init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        let hexValue = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
+        Scanner(string: hexValue).scanHexInt64(&int)
+
         let a, r, g, b: UInt64
-        switch hex.count {
+        switch hexValue.count {
         case 6:
-            (a, r, g, b) = (255, (int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
+            (a, r, g, b) = (255, (int >> 16) & 0xff, (int >> 8) & 0xff, int & 0xff)
         case 8:
-            (a, r, g, b) = ((int >> 24) & 0xFF, (int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
+            (a, r, g, b) = ((int >> 24) & 0xff, (int >> 16) & 0xff, (int >> 8) & 0xff, int & 0xff)
         default:
             (a, r, g, b) = (255, 0, 0, 0)
         }
+
         self.init(
             .sRGB,
             red: Double(r) / 255,

@@ -1,26 +1,46 @@
 import SwiftUI
 
+private struct HapticsEnabledKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+private struct SoundEnabledKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var hapticsEnabled: Bool {
+        get { self[HapticsEnabledKey.self] }
+        set { self[HapticsEnabledKey.self] = newValue }
+    }
+
+    var soundEnabled: Bool {
+        get { self[SoundEnabledKey.self] }
+        set { self[SoundEnabledKey.self] = newValue }
+    }
+}
+
 @main
 struct ReflexaApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("hapticsEnabled") private var hapticsEnabled = true
+    @AppStorage("soundEnabled") private var soundEnabled = true
 
     var body: some Scene {
         WindowGroup {
-            appContent
-        }
-    }
-
-    @ViewBuilder
-    private var appContent: some View {
-        if hasCompletedOnboarding {
-            NavigationStack {
-                HomeView()
+            Group {
+                if hasCompletedOnboarding {
+                    NavigationStack {
+                        HomeView()
+                    }
+                } else {
+                    OnboardingView()
+                }
             }
-            .tint(Color.accentPrimary)
-            .background(Color.appBackground)
+            .environment(\.hapticsEnabled, hapticsEnabled)
+            .environment(\.soundEnabled, soundEnabled)
+            .tint(.accentPrimary)
             .preferredColorScheme(.dark)
-        } else {
-            OnboardingView()
         }
     }
 }

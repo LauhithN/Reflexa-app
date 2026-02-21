@@ -2,8 +2,8 @@ name: Reflexa
 options:
   bundleIdPrefix: com.reflexa
   deploymentTarget:
-    iOS: "17.0"
-  xcodeVersion: "26.0"
+    iOS: "16.0"
+  xcodeVersion: "15.0"
   generateEmptyDirectories: true
 
 settings:

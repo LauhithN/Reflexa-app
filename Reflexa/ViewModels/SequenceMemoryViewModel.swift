@@ -1,20 +1,20 @@
 import Foundation
+import Combine
 
 /// Sequence Memory: Watch a sequence flash on a 2x2 grid, then repeat it.
 /// Each level adds one step. Wrong tap = game over. Score = highest level completed.
-@Observable
-final class SequenceMemoryViewModel: GameViewModelProtocol {
+final class SequenceMemoryViewModel: ObservableObject, GameViewModelProtocol {
     let config: GameConfiguration
-    var state: GameState = .ready
+    @Published var state: GameState = .ready
 
-    var level: Int = 0
-    var sequence: [Int] = []
-    var highlightedCell: Int? = nil
-    var inputProgress: Int = 0
-    var isShowingSequence: Bool = false
-    var wrongTapIndex: Int? = nil
-    var correctTapIndex: Int? = nil
-    var finalLevel: Int = 0
+    @Published var level: Int = 0
+    @Published var sequence: [Int] = []
+    @Published var highlightedCell: Int? = nil
+    @Published var inputProgress: Int = 0
+    @Published var isShowingSequence: Bool = false
+    @Published var wrongTapIndex: Int? = nil
+    @Published var correctTapIndex: Int? = nil
+    @Published var finalLevel: Int = 0
 
     var performanceTier: String {
         switch finalLevel {

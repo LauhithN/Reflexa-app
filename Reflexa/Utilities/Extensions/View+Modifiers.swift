@@ -1,68 +1,81 @@
 import SwiftUI
 
-/// Button style with subtle press feedback for card-based navigation
-struct CardButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.984 : 1.0)
-            .brightness(configuration.isPressed ? -0.03 : 0)
-            .shadow(
-                color: Color.black.opacity(configuration.isPressed ? 0.2 : 0.28),
-                radius: configuration.isPressed ? 8 : 16,
-                y: configuration.isPressed ? 3 : 9
-            )
-            .animation(.spring(response: 0.26, dampingFraction: 0.78), value: configuration.isPressed)
+private struct AccessibleTapTargetModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content.frame(minWidth: 44, minHeight: 44)
     }
 }
 
-/// Button style used for prominent call-to-action actions
-struct PrimaryCTAButtonStyle: ButtonStyle {
-    var tint: Color = .accentPrimary
+private struct ReflexaButtonPressModifier: ViewModifier {
+    let isPressed: Bool
 
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.bodyLarge.weight(.semibold))
-            .foregroundStyle(Color.black.opacity(0.82))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(
-                LinearGradient(
-                    colors: [tint, tint.opacity(0.8)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .clipShape(Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(.white.opacity(0.2), lineWidth: 1)
-            )
-            .shadow(color: tint.opacity(configuration.isPressed ? 0.18 : 0.35), radius: configuration.isPressed ? 6 : 14, y: 6)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: configuration.isPressed)
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isPressed ? 0.96 : 1)
+            .opacity(isPressed ? 0.85 : 1)
+            .animation(Spring.instant, value: isPressed)
     }
 }
 
-/// Button style used for secondary actions
-struct SecondaryCTAButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.bodyLarge.weight(.semibold))
-            .foregroundStyle(Color.textSecondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(Color.cardBackground.opacity(0.9))
-            .clipShape(Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(Color.strokeSubtle, lineWidth: 1)
-            )
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: configuration.isPressed)
+private struct PlayerBorderModifier: ViewModifier {
+    let color: Color
+    let width: CGFloat
+
+    func body(content: Content) -> some View {
+        content.overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(color.opacity(0.9), lineWidth: width)
+        )
     }
 }
 
-/// Shared in-game chrome with guaranteed exit affordance and optional rules recall.
+private struct ShimmerModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var phase: CGFloat = -0.8
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                GeometryReader { proxy in
+                    LinearGradient(
+                        colors: [Color.clear, Color.white.opacity(0.2), Color.clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .rotationEffect(.degrees(20))
+                    .offset(x: proxy.size.width * phase)
+                }
+                .blendMode(.screen)
+                .clipped()
+                .allowsHitTesting(false)
+            }
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(Spring.linear(duration: 1.6).repeatForever(autoreverses: false)) {
+                    phase = 1.2
+                }
+            }
+    }
+}
+
+private struct PulseGlowModifier: ViewModifier {
+    let color: Color
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var animate = false
+
+    func body(content: Content) -> some View {
+        content
+            .shadow(color: color.opacity(animate ? 0.45 : 0.18), radius: animate ? 20 : 8)
+            .scaleEffect(animate ? 1.02 : 1)
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(Spring.smooth.repeatForever(autoreverses: true)) {
+                    animate = true
+                }
+            }
+    }
+}
+
 private struct GameScaffoldModifier: ViewModifier {
     let title: String
     let gameType: GameType?
@@ -75,127 +88,72 @@ private struct GameScaffoldModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .top) {
-                GeometryReader { proxy in
-                    HStack {
-                        scaffoldButton(
-                            icon: "xmark",
-                            accessibilityLabel: "Exit \(title)",
-                            action: onExit
-                        )
-                        .accessibilitySortPriority(1000)
-                        .allowsHitTesting(true)
-
-                        Spacer()
-
-                        if gameType != nil {
-                            scaffoldButton(
-                                icon: "questionmark",
-                                accessibilityLabel: "How to play \(title)",
-                                action: {
-                                    onHowToPlayVisibilityChanged?(true)
-                                    withAnimation(reduceMotion ? .linear(duration: 0.1) : .easeOut(duration: 0.2)) {
-                                        showHowToPlay = true
-                                    }
-                                }
-                            )
-                            .allowsHitTesting(true)
-                        }
+                HStack {
+                    Button(action: onExit) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(Color.textPrimary.opacity(0.9))
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.top, proxy.safeAreaInsets.top + 8)
-                    .frame(maxWidth: .infinity, alignment: .top)
+                    .accessibleTapTarget()
+                    .accessibilityLabel("End Game")
+                    .accessibilityHint("Closes the active game")
+
+                    Spacer()
+
+                    if let gameType {
+                        Button {
+                            onHowToPlayVisibilityChanged?(true)
+                            withAnimation(reduceMotion ? Spring.gentle : Spring.snappy) {
+                                showHowToPlay = true
+                            }
+                        } label: {
+                            Image(systemName: "questionmark.circle.fill")
+                                .font(.system(size: 28, weight: .semibold))
+                                .foregroundStyle(Color.textPrimary.opacity(0.9))
+                        }
+                        .accessibleTapTarget()
+                        .accessibilityLabel("How to play")
+                        .accessibilityHint("Shows instructions for \(gameType.displayName)")
+                    }
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 10)
             }
             .overlay {
                 if showHowToPlay, let gameType {
                     HowToPlayOverlay(gameType: gameType) {
                         onHowToPlayVisibilityChanged?(false)
-                        withAnimation(reduceMotion ? .linear(duration: 0.1) : .easeOut(duration: 0.2)) {
+                        withAnimation(reduceMotion ? Spring.gentle : Spring.snappy) {
                             showHowToPlay = false
                         }
                     }
-                    .zIndex(30)
+                    .zIndex(50)
                 }
             }
-    }
-
-    private func scaffoldButton(
-        icon: String,
-        accessibilityLabel: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(Color.textPrimary)
-                .frame(width: 44, height: 44)
-                .background(Color.black.opacity(0.38))
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.16), lineWidth: 1)
-                )
-                .clipShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibleTapTarget()
-        .accessibilityLabel(accessibilityLabel)
     }
 }
 
 extension View {
-    /// Applies 180-degree rotation for bottom players in multiplayer
-    func rotatedForPlayer(_ playerIndex: Int, mode: PlayerMode) -> some View {
-        self.rotationEffect(shouldRotate(playerIndex: playerIndex, mode: mode) ? .degrees(180) : .zero)
-    }
-
-    private func shouldRotate(playerIndex: Int, mode: PlayerMode) -> Bool {
-        switch mode {
-        case .solo:
-            return false
-        case .twoPlayer:
-            return playerIndex == 1
-        case .fourPlayer:
-            return playerIndex >= 2
-        }
-    }
-
-    /// Standard card styling
-    func cardStyle() -> some View {
-        glassCard()
-    }
-
-    /// Elevated card styling used across modernized screens
-    func glassCard(cornerRadius: CGFloat = 20) -> some View {
-        self
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.elevatedCard.opacity(0.96), Color.cardBackground.opacity(0.88)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .stroke(Color.strokeSubtle, lineWidth: 1)
-                    )
-            )
-            .shadow(color: .black.opacity(0.34), radius: 18, y: 10)
-    }
-
-    /// Applies the shared ambient background.
-    func screenBackground() -> some View {
-        self.background(AmbientBackground())
-    }
-
-    /// Minimum 44x44 touch target
     func accessibleTapTarget() -> some View {
-        self.frame(minWidth: 44, minHeight: 44)
+        modifier(AccessibleTapTargetModifier())
     }
 
-    /// Conditional modifier
+    func reflexaButtonPress(_ isPressed: Bool) -> some View {
+        modifier(ReflexaButtonPressModifier(isPressed: isPressed))
+    }
+
+    func playerBorder(color: Color, width: CGFloat = 2) -> some View {
+        modifier(PlayerBorderModifier(color: color, width: width))
+    }
+
+    func shimmerEffect() -> some View {
+        modifier(ShimmerModifier())
+    }
+
+    func pulseGlow(color: Color) -> some View {
+        modifier(PulseGlowModifier(color: color))
+    }
+
     @ViewBuilder
     func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
         if condition {
@@ -205,17 +163,6 @@ extension View {
         }
     }
 
-    /// Dismiss the view when the app goes to background during an active game
-    func dismissOnBackground(dismiss: DismissAction, isActive: Bool) -> some View {
-        self.onChange(of: isActive) { _, _ in }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
-                if isActive {
-                    dismiss()
-                }
-            }
-    }
-
-    /// Adds a shared top chrome for active game screens.
     func gameScaffold(
         title: String,
         gameType: GameType? = nil,
@@ -230,5 +177,13 @@ extension View {
                 onHowToPlayVisibilityChanged: onHowToPlayVisibilityChanged
             )
         )
+    }
+
+    func dismissOnBackground(dismiss: DismissAction, isActive: Bool) -> some View {
+        onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            if isActive {
+                dismiss()
+            }
+        }
     }
 }

@@ -2,56 +2,37 @@ import SwiftUI
 
 struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @State private var currentPage = 0
 
-    private let totalPages = 3
+    @State private var currentPage = 0
+    @State private var revealHeroLetters = false
+    @State private var revealModeCards = false
+
+    private let pages = 3
+    private let previewGames: [GameType] = [.stopwatch, .colorFlash, .quickTap, .sequenceMemory, .colorSort, .gridReaction]
 
     var body: some View {
-        VStack(spacing: 0) {
-            topBar
+        ZStack {
+            AmbientBackground()
 
-            TabView(selection: $currentPage) {
-                page(
-                    icon: "mascot",
-                    title: "Pick. Tap. Repeat.",
-                    subtitle: "Fast reflex drills.",
-                    accent: Color.brandPurple
-                ) {
-                    featureRow(icon: "sparkles", text: "Instant start")
-                    featureRow(icon: "gamecontroller.fill", text: "8 game modes")
-                    featureRow(icon: "person.2.fill", text: "Solo + local multiplayer")
-                }
-                .tag(0)
+            VStack(spacing: 0) {
+                topBar
 
-                page(
-                    icon: "gamecontroller.fill",
-                    title: "Speed + Precision",
-                    subtitle: "Short rounds. Quick retry.",
-                    accent: Color.brandYellowDeep
-                ) {
-                    featureRow(icon: "clock", text: "Stopwatch")
-                    featureRow(icon: "eye.fill", text: "Color Flash")
-                    featureRow(icon: "hand.tap.fill", text: "Quick Tap")
-                    featureRow(icon: "square.grid.3x3.fill", text: "Grid Reaction")
+                TabView(selection: $currentPage) {
+                    heroPage.tag(0)
+                    modesPreviewPage.tag(1)
+                    valuePage.tag(2)
                 }
-                .tag(1)
+                .tabViewStyle(.page(indexDisplayMode: .never))
 
-                page(
-                    icon: "bolt.circle.fill",
-                    title: "Ready?",
-                    subtitle: "Train now.",
-                    accent: Color.accentHot
-                ) {
-                    featureRow(icon: "clock.arrow.circlepath", text: "Instant replay")
-                    featureRow(icon: "bolt.fill", text: "Track your score")
-                }
-                .tag(2)
+                bottomControls
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-
-            bottomControls
+            .padding(.top, 8)
+            .padding(.bottom, 20)
         }
-        .background(AmbientBackground())
+        .onAppear {
+            revealHeroLetters = true
+            revealModeCards = true
+        }
         .preferredColorScheme(.dark)
     }
 
@@ -59,113 +40,151 @@ struct OnboardingView: View {
         HStack {
             Spacer()
 
-            if currentPage < totalPages - 1 {
+            if currentPage < pages - 1 {
                 Button("Skip") {
                     hasCompletedOnboarding = true
                 }
-                .font(.caption.weight(.semibold))
+                .font(.caption)
                 .foregroundStyle(Color.textSecondary)
-                .accessibleTapTarget()
+                .accessibilityLabel("Skip onboarding")
+                .accessibilityHint("Open the home screen")
             }
         }
         .padding(.horizontal, 20)
-        .padding(.top, 18)
+        .frame(height: 40)
     }
 
-    private var bottomControls: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 8) {
-                ForEach(0..<totalPages, id: \.self) { index in
-                    Capsule()
-                        .fill(index == currentPage ? Color.brandYellow : Color.white.opacity(0.2))
-                        .frame(width: index == currentPage ? 26 : 8, height: 8)
-                        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: currentPage)
+    private var heroPage: some View {
+        VStack(spacing: 18) {
+            Spacer(minLength: 12)
+
+            PulseOrb(color: .accentPrimary, size: 120, pulseScale: 1.2, pulseDuration: 1.8)
+
+            HStack(spacing: 0) {
+                ForEach(Array("Reflexa".enumerated()), id: \.offset) { index, char in
+                    Text(String(char))
+                        .font(.heroTitle)
+                        .foregroundStyle(Color.textPrimary)
+                        .opacity(revealHeroLetters ? 1 : 0)
+                        .animation(Spring.stagger(index), value: revealHeroLetters)
                 }
             }
 
-            Button {
-                if currentPage == totalPages - 1 {
-                    hasCompletedOnboarding = true
-                } else {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-                        currentPage += 1
-                    }
-                }
-            } label: {
-                Text(currentPage == totalPages - 1 ? "Start Playing" : "Continue")
-            }
-            .buttonStyle(PrimaryCTAButtonStyle(tint: Color.accentPrimary))
-            .accessibleTapTarget()
-        }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 26)
-    }
-
-    private func page<Content: View>(
-        icon: String,
-        title: String,
-        subtitle: String,
-        accent: Color,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(spacing: 20) {
-            Spacer(minLength: 16)
-
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [accent, accent.opacity(0.65)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 88, height: 88)
-
-                if icon == "mascot" {
-                    Image("Mascot")
-                        .resizable()
-                        .scaledToFit()
-                        .padding(10)
-                } else {
-                    Image(systemName: icon)
-                        .font(.system(size: 34, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-            }
-
-            Text(title)
-                .font(.resultTitle)
-                .foregroundStyle(Color.textPrimary)
-                .multilineTextAlignment(.center)
-
-            Text(subtitle)
+            Text("Train your reflexes. One tap at a time.")
                 .font(.bodyLarge)
                 .foregroundStyle(Color.textSecondary)
-                .multilineTextAlignment(.center)
 
-            VStack(alignment: .leading, spacing: 12) {
-                content()
+            Spacer()
+        }
+        .padding(.horizontal, 24)
+    }
+
+    private var modesPreviewPage: some View {
+        VStack(spacing: 16) {
+            Text("Game Modes")
+                .font(.resultTitle)
+                .foregroundStyle(Color.textPrimary)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(Array(previewGames.enumerated()), id: \.element.id) { index, game in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Image(systemName: game.iconName)
+                                .font(.system(size: 30, weight: .semibold))
+                                .foregroundStyle(Color.accentPrimary)
+
+                            Text(game.displayName)
+                                .font(.monoSmall)
+                                .foregroundStyle(Color.textPrimary)
+                                .lineLimit(2)
+
+                            Text(game.supportedModes.count > 1 ? "Solo / Multi" : "Solo")
+                                .font(.monoSmall)
+                                .foregroundStyle(Color.textSecondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.white.opacity(0.06))
+                                .clipShape(Capsule())
+                        }
+                        .padding(12)
+                        .frame(width: 120, height: 100, alignment: .topLeading)
+                        .glassCard(cornerRadius: 16)
+                        .opacity(revealModeCards ? 1 : 0)
+                        .offset(x: revealModeCards ? 0 : 20)
+                        .animation(Spring.stagger(index), value: revealModeCards)
+                    }
+                }
+                .padding(.horizontal, 20)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(18)
-            .glassCard(cornerRadius: 20)
+
+            Text("6 modes. Solo and local multiplayer.")
+                .font(.bodyLarge)
+                .foregroundStyle(Color.textSecondary)
+
+            Spacer()
+        }
+        .padding(.top, 16)
+    }
+
+    private var valuePage: some View {
+        VStack(spacing: 18) {
+            Spacer(minLength: 10)
+
+            GlassCard(cornerRadius: 22) {
+                VStack(alignment: .leading, spacing: 14) {
+                    featureRow("No account or internet needed")
+                    featureRow("Solo and local multiplayer")
+                    featureRow("Up to 4 players on one device")
+                    featureRow("Pure reflex training, zero ads")
+                }
+            }
+
+            Button("Let's Go") {
+                hasCompletedOnboarding = true
+            }
+            .buttonStyle(PrimaryCTAButtonStyle())
 
             Spacer()
         }
         .padding(.horizontal, 20)
     }
 
-    private func featureRow(icon: String, text: String) -> some View {
+    private func featureRow(_ text: String) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color.brandYellow)
-                .frame(width: 22)
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(Color.accentSecondary)
+                .font(.system(size: 14, weight: .bold))
 
             Text(text)
-                .font(.playerLabel)
+                .font(.bodyLarge)
                 .foregroundStyle(Color.textPrimary)
+        }
+    }
+
+    private var bottomControls: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 8) {
+                ForEach(0..<pages, id: \.self) { index in
+                    Capsule()
+                        .fill(index == currentPage ? Color.accentPrimary : Color.white.opacity(0.2))
+                        .frame(width: index == currentPage ? 26 : 8, height: 8)
+                        .animation(Spring.snappy, value: currentPage)
+                }
+            }
+
+            Button {
+                if currentPage == pages - 1 {
+                    hasCompletedOnboarding = true
+                } else {
+                    withAnimation(Spring.snappy) {
+                        currentPage += 1
+                    }
+                }
+            } label: {
+                Text(currentPage == pages - 1 ? "Let's Go" : "Continue")
+            }
+            .buttonStyle(PrimaryCTAButtonStyle())
+            .padding(.horizontal, 20)
         }
     }
 }

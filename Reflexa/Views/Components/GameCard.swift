@@ -1,10 +1,8 @@
 import SwiftUI
 
-/// Minimal game tile used on the home screen.
 struct GameCard: View {
     let gameType: GameType
     let action: (() -> Void)?
-    @ScaledMetric(relativeTo: .title3) private var iconSize: CGFloat = 34
 
     init(gameType: GameType, action: (() -> Void)? = nil) {
         self.gameType = gameType
@@ -12,64 +10,80 @@ struct GameCard: View {
     }
 
     var body: some View {
-        let content = tileContent
-
-        if let action {
-            Button(action: action) {
-                content
+        Group {
+            if let action {
+                Button(action: action) {
+                    cardContent
+                }
+                .buttonStyle(CardButtonStyle())
+            } else {
+                cardContent
             }
-            .buttonStyle(CardButtonStyle())
-            .accessibilityLabel(accessibilityText)
-        } else {
-            content
-                .accessibilityLabel(accessibilityText)
         }
+        .accessibilityLabel(accessibilityLabel)
     }
 
-    private var tileContent: some View {
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.brandYellow.opacity(0.26), Color.brandYellow.opacity(0.12)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+            HStack(alignment: .top, spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.accentPrimary.opacity(0.18))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: gameType.iconName)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Color.accentPrimary)
+                }
 
-                Image(systemName: gameType.iconName)
-                    .font(.system(size: iconSize, weight: .bold))
-                    .foregroundStyle(Color.brandYellow)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(gameType.displayName)
+                        .font(.sectionTitle)
+                        .foregroundStyle(Color.textPrimary)
+                    Text(gameType.description)
+                        .font(.caption)
+                        .foregroundStyle(Color.textSecondary)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
             }
-            .frame(width: 68, height: 68)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.brandYellow.opacity(0.35), lineWidth: 1)
-            )
 
-            Spacer(minLength: 0)
+            HStack(spacing: 6) {
+                ForEach(gameType.supportedModes) { mode in
+                    Text(mode == .solo ? "Solo" : mode == .twoPlayer ? "2P" : "4P")
+                        .font(.monoSmall)
+                        .foregroundStyle(Color.textSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Color.white.opacity(0.06))
+                        .clipShape(Capsule())
+                }
 
-            Text(gameType.displayName)
-                .font(.playerLabel.weight(.semibold))
-                .foregroundStyle(Color.textPrimary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+
+                Text(gameType.difficulty.displayName)
+                    .font(.monoSmall)
+                    .foregroundStyle(Color.textPrimary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(Color.cardBackground)
+                    .overlay(
+                        Capsule().stroke(Color.strokeSubtle, lineWidth: 1)
+                    )
+                    .clipShape(Capsule())
+            }
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.cardBackground.opacity(0.95))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color.strokeSubtle, lineWidth: 1)
-                )
-        )
-        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(16)
+        .background(alignment: .leading) {
+            Rectangle()
+                .fill(Color.accentPrimary)
+                .frame(width: 3)
+        }
+        .glassCard(cornerRadius: 18)
     }
 
-    private var accessibilityText: String {
-        "\(gameType.displayName). \(gameType.supportedModes.map { $0.displayName }.joined(separator: ", "))."
+    private var accessibilityLabel: String {
+        let modes = gameType.supportedModes.map(\.displayName).joined(separator: ", ")
+        return "\(gameType.displayName). \(gameType.description). Modes: \(modes)."
     }
 }

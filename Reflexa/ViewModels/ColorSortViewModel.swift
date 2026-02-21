@@ -1,21 +1,21 @@
 import Foundation
 import QuartzCore
+import Combine
 
 /// Color Sort (Stroop Test): A color word appears in mismatched ink.
 /// Tap the button matching the INK COLOR, not the word. 15 seconds.
-@Observable
-final class ColorSortViewModel: GameViewModelProtocol {
+final class ColorSortViewModel: ObservableObject, GameViewModelProtocol {
     let config: GameConfiguration
-    var state: GameState = .ready
+    @Published var state: GameState = .ready
 
     /// 0 = RED, 1 = BLUE, 2 = GREEN, 3 = YELLOW
-    var currentWordIndex: Int = 0
-    var currentInkIndex: Int = 0
+    @Published var currentWordIndex: Int = 0
+    @Published var currentInkIndex: Int = 0
 
-    var correctCount: Int = 0
-    var wrongCount: Int = 0
-    var timeRemaining: Double = Constants.colorSortDuration
-    var showPenaltyFlash: Bool = false
+    @Published var correctCount: Int = 0
+    @Published var wrongCount: Int = 0
+    @Published var timeRemaining: Double = Constants.colorSortDuration
+    @Published var showPenaltyFlash: Bool = false
 
     var accuracy: Double {
         let total = correctCount + wrongCount

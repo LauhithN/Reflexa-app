@@ -4,8 +4,9 @@ struct GameSetupView: View {
     let gameType: GameType
 
     @State private var selectedMode: PlayerMode
+    @State private var playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"]
+    @State private var showHowTo = false
     @State private var isPlaying = false
-    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
 
     init(gameType: GameType) {
         self.gameType = gameType
@@ -13,174 +14,189 @@ struct GameSetupView: View {
     }
 
     var body: some View {
-        VStack(spacing: 18) {
-            headerTile
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 18) {
+                header
+                infoChips
+                howToSection
+                modeSelector
 
-            if availableModes.count > 1 {
-                modeTile
+                if selectedMode != .solo {
+                    playerNamesSection
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
-
-            if voiceOverBlocksStart {
-                Text("Unavailable with VoiceOver for this mode.")
-                    .font(.caption)
-                    .foregroundStyle(Color.error)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-                    .glassCard(cornerRadius: 14)
-            }
-
-            Spacer(minLength: 0)
+            .padding(16)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AmbientBackground())
+        .navigationTitle("Setup")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
-            startGameButton
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                .padding(.bottom, 12)
-                .background(Color.black.opacity(0.18))
-        }
-        .onAppear {
-            if !availableModes.contains(selectedMode), let fallbackMode = availableModes.first {
-                selectedMode = fallbackMode
+            Button {
+                isPlaying = true
+            } label: {
+                Label("Start Game", systemImage: "play.fill")
             }
-        }
-        .onChange(of: voiceOverEnabled) { _, _ in
-            if !availableModes.contains(selectedMode), let fallbackMode = availableModes.first {
-                selectedMode = fallbackMode
-            }
+            .buttonStyle(PrimaryCTAButtonStyle())
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 14)
+            .background(Color.black.opacity(0.22))
+            .accessibilityLabel("Start Game")
+            .accessibilityHint("Launches \(gameType.displayName)")
         }
         .fullScreenCover(isPresented: $isPlaying) {
-            GameDestinationView(gameType: gameType, playerMode: selectedMode)
-                .howToPlayOverlay(for: gameType)
+            GameDestinationView(config: configuration)
+                .preferredColorScheme(.dark)
         }
     }
 
-    private var headerTile: some View {
+    private var configuration: GameConfiguration {
+        GameConfiguration(
+            gameType: gameType,
+            playerMode: selectedMode,
+            playerNames: playerNames
+        )
+    }
+
+    private var header: some View {
         HStack(spacing: 12) {
-            iconBadge
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.accentPrimary, Color.accentPrimary.opacity(0.6)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 64, height: 64)
+
+                Image(systemName: gameType.iconName)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(Color.white)
+                    .accessibilityLabel(gameType.displayName)
+            }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(gameType.displayName)
                     .font(.resultTitle)
                     .foregroundStyle(Color.textPrimary)
-                Text("Ready")
-                    .font(.caption)
+
+                Text(gameType.description)
+                    .font(.bodyLarge)
                     .foregroundStyle(Color.textSecondary)
             }
 
-            Spacer(minLength: 0)
+            Spacer()
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.cardBackground.opacity(0.95))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(Color.strokeSubtle, lineWidth: 1)
-                )
-        )
+        .glassCard(cornerRadius: 20)
     }
 
-    private var iconBadge: some View {
-        ZStack {
-            Circle()
-                .fill(Color.brandYellow.opacity(0.2))
-                .frame(width: 62, height: 62)
-            Image(systemName: gameType.iconName)
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(Color.brandYellow)
+    private var infoChips: some View {
+        HStack(spacing: 10) {
+            chip(text: gameType.difficulty.displayName, tint: .accentAmber)
+            chip(text: gameType.multiplayerTip, tint: .accentSecondary)
         }
-        .overlay(
-            Circle()
-                .stroke(Color.brandYellow.opacity(0.35), lineWidth: 1)
-        )
     }
 
-    private var modeTile: some View {
-        VStack(spacing: 10) {
-            Text("Mode")
-                .font(.caption)
+    private func chip(text: String, tint: Color) -> some View {
+        Text(text)
+            .font(.monoSmall)
+            .foregroundStyle(Color.textPrimary)
+            .lineLimit(1)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(tint.opacity(0.12))
+            .clipShape(Capsule())
+    }
+
+    private var howToSection: some View {
+        DisclosureGroup(isExpanded: $showHowTo) {
+            Text(gameType.multiplayerTip)
+                .font(.bodyLarge)
                 .foregroundStyle(Color.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            PlayerModeSelector(
-                modes: availableModes,
-                selected: $selectedMode
-            )
+                .padding(.top, 8)
+        } label: {
+            Text("How to play")
+                .font(.sectionTitle)
+                .foregroundStyle(Color.textPrimary)
         }
-        .padding(.vertical, 12)
-        .glassCard(cornerRadius: 16)
+        .padding(14)
+        .glassCard(cornerRadius: 18)
     }
 
-    private var startGameButton: some View {
-        Button {
-            guard canStartGame else { return }
-            isPlaying = true
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "play.fill")
-                Text("Start")
+    private var modeSelector: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Players")
+                .font(.sectionTitle)
+                .foregroundStyle(Color.textPrimary)
+
+            PlayerModeSelector(modes: gameType.supportedModes, selected: $selectedMode)
+        }
+        .padding(14)
+        .glassCard(cornerRadius: 18)
+    }
+
+    private var playerNamesSection: some View {
+        GlassCard(cornerRadius: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Player Names")
+                    .font(.sectionTitle)
+                    .foregroundStyle(Color.textPrimary)
+
+                ForEach(0..<selectedMode.playerCount, id: \.self) { index in
+                    HStack(spacing: 10) {
+                        Circle()
+                            .fill(Color.playerColor(for: index))
+                            .frame(width: 10, height: 10)
+
+                        TextField("", text: $playerNames[index])
+                            .font(.bodyLarge)
+                            .foregroundStyle(Color.textPrimary)
+                            .textInputAutocapitalization(.words)
+                            .lineLimit(1)
+                            .accessibilityLabel("Player \(index + 1) name")
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.strokeSubtle, lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
             }
         }
-        .buttonStyle(PrimaryCTAButtonStyle(tint: Color.accentPrimary))
-        .accessibleTapTarget()
-        .disabled(!canStartGame)
-        .opacity(canStartGame ? 1 : 0.5)
-    }
-
-    private var availableModes: [PlayerMode] {
-        guard !voiceOverEnabled else { return supportsSoloMode ? [.solo] : gameType.supportedModes }
-        return gameType.supportedModes
-    }
-
-    private var supportsSoloMode: Bool {
-        gameType.supportedModes.contains(.solo)
-    }
-
-    private var voiceOverBlocksStart: Bool {
-        voiceOverEnabled && !supportsSoloMode
-    }
-
-    private var canStartGame: Bool {
-        !voiceOverBlocksStart
     }
 }
 
-// MARK: - Game View Router
 struct GameDestinationView: View {
-    let gameType: GameType
-    let playerMode: PlayerMode
-
-    @ViewBuilder
-    private var gameView: some View {
-        let config = GameConfiguration(gameType: gameType, playerMode: playerMode)
-
-        switch gameType {
-        case .stopwatch:
-            StopwatchGameView(config: config)
-        case .colorFlash:
-            ColorFlashGameView(config: config)
-        case .colorBattle:
-            ColorBattleGameView(config: config)
-        case .reactionDuel:
-            ReactionDuelGameView(config: config)
-        case .quickTap:
-            QuickTapGameView(config: config)
-        case .sequenceMemory:
-            SequenceMemoryGameView(config: config)
-        case .colorSort:
-            ColorSortGameView(config: config)
-        case .gridReaction:
-            GridReactionGameView(config: config)
-        }
-    }
+    let config: GameConfiguration
 
     var body: some View {
-        gameView
+        Group {
+            switch config.gameType {
+            case .stopwatch:
+                StopwatchGameView(config: config)
+            case .colorFlash:
+                ColorFlashGameView(config: config)
+            case .quickTap:
+                QuickTapGameView(config: config)
+            case .sequenceMemory:
+                SequenceMemoryGameView(config: config)
+            case .colorSort:
+                ColorSortGameView(config: config)
+            case .gridReaction:
+                GridReactionGameView(config: config)
+            case .reactionDuel:
+                ReactionDuelGameView(config: config)
+            case .colorBattle:
+                ColorBattleGameView(config: config)
+            }
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }

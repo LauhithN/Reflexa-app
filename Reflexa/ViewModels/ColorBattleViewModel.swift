@@ -1,21 +1,21 @@
 import Foundation
 import QuartzCore
+import Combine
 
 /// Color Battle: Multi-round arena scoring mode.
 /// Power rounds (every 3rd round) award bonus points. False start costs points.
-@Observable
-final class ColorBattleViewModel: GameViewModelProtocol {
+final class ColorBattleViewModel: ObservableObject, GameViewModelProtocol {
     let config: GameConfiguration
-    var state: GameState = .ready
+    @Published var state: GameState = .ready
 
     // Scores per player
-    var scores: [Int]
-    var currentRound: Int = 1
-    var roundWinner: Int? // Index of round winner (for display)
-    var matchWinner: Int? // Overall match winner
-    var lastRoundPointDelta: Int = 0
-    var tieBreakUsed = false
-    var tiedPlayers: [Int] = []
+    @Published var scores: [Int]
+    @Published var currentRound: Int = 1
+    @Published var roundWinner: Int? // Index of round winner (for display)
+    @Published var matchWinner: Int? // Overall match winner
+    @Published var lastRoundPointDelta: Int = 0
+    @Published var tieBreakUsed = false
+    @Published var tiedPlayers: [Int] = []
 
     var currentRoundPointValue: Int {
         currentRound.isMultiple(of: 3) ? 2 : 1

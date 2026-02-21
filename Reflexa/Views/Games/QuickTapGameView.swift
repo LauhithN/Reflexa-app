@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct QuickTapGameView: View {
-    @State private var viewModel: QuickTapViewModel
+    @StateObject private var viewModel: QuickTapViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -13,7 +13,7 @@ struct QuickTapGameView: View {
     private let accentGreen = Color.success
 
     init(config: GameConfiguration) {
-        _viewModel = State(initialValue: QuickTapViewModel(config: config))
+        _viewModel = StateObject(wrappedValue: QuickTapViewModel(config: config))
     }
 
     var body: some View {
@@ -52,13 +52,13 @@ struct QuickTapGameView: View {
         .onAppear {
             viewModel.startGame()
         }
-        .onChange(of: viewModel.state) { _, newState in
+        .onChange(of: viewModel.state) { newState in
             if case .result = newState {
                 animateScoreCountUp()
             }
 
             if case .active = newState, !reduceMotion {
-                withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                withAnimation(Spring.gentle.repeatForever(autoreverses: true)) {
                     timerPulse = true
                 }
             } else {
@@ -161,9 +161,6 @@ struct QuickTapGameView: View {
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(viewModel.timeRemaining <= 3 ? Color.error : Color.textPrimary)
-                    .if(!reduceMotion) { view in
-                        view.contentTransition(.numericText())
-                    }
             }
 
             Spacer().frame(height: 10)
@@ -175,16 +172,13 @@ struct QuickTapGameView: View {
                         .frame(width: 160, height: 160)
                         .scaleEffect(ringPulse ? 1.6 : 1.0)
                         .opacity(ringPulse ? 0 : 0.8)
-                        .animation(.easeOut(duration: 0.5), value: ringPulse)
+                        .animation(Spring.easeOut(duration: 0.5), value: ringPulse)
                 }
 
                 Text("\(viewModel.tapCount)")
                     .font(.system(size: 96, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color.textPrimary)
-                    .if(!reduceMotion) { view in
-                        view.contentTransition(.numericText())
-                    }
                     .scaleEffect(tapBounce && !reduceMotion ? 1.15 : 1.0)
             }
 
@@ -192,9 +186,6 @@ struct QuickTapGameView: View {
                 .font(.system(size: 18, weight: .medium, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(accentGreen.opacity(0.85))
-                .if(!reduceMotion) { view in
-                    view.contentTransition(.numericText())
-                }
 
             Spacer().frame(height: 20)
 
@@ -219,9 +210,6 @@ struct QuickTapGameView: View {
                     .font(.system(size: 72, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color.textPrimary)
-                    .if(!reduceMotion) { view in
-                        view.contentTransition(.numericText())
-                    }
 
                 Text("taps in 10 seconds")
                     .font(.bodyLarge)
@@ -278,7 +266,7 @@ struct QuickTapGameView: View {
     private func triggerTapFeedback() {
         guard !reduceMotion else { return }
 
-        withAnimation(.spring(response: 0.15, dampingFraction: 0.4)) {
+        withAnimation(Spring.instant) {
             tapBounce = true
         }
         ringPulse = true
@@ -309,7 +297,7 @@ struct QuickTapGameView: View {
 
         for step in 0...steps {
             DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(step)) {
-                withAnimation(.easeOut(duration: 0.05)) {
+                withAnimation(Spring.easeOut(duration: 0.05)) {
                     displayedScore = min(increment * step, target)
                 }
             }

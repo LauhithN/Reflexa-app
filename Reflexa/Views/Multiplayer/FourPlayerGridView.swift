@@ -1,81 +1,59 @@
 import SwiftUI
 
-/// 2x2 grid for 4 players.
-/// Top-left = P1, Top-right = P2, Bottom-left = P3 (rotated 180), Bottom-right = P4 (rotated 180).
 struct FourPlayerGridView<Content: View>: View {
     let content: (Int) -> Content
-    private let deadZoneSize: CGFloat = 20
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Top row
-            HStack(spacing: 0) {
-                content(0)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+        GeometryReader { proxy in
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    content(0)
+                        .frame(width: proxy.size.width / 2, height: proxy.size.height / 2)
 
-                verticalDeadZone
+                    content(1)
+                        .frame(width: proxy.size.width / 2, height: proxy.size.height / 2)
+                        .rotationEffect(.degrees(90))
+                }
 
-                content(1)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                HStack(spacing: 0) {
+                    content(2)
+                        .frame(width: proxy.size.width / 2, height: proxy.size.height / 2)
+                        .rotationEffect(.degrees(270))
+
+                    content(3)
+                        .frame(width: proxy.size.width / 2, height: proxy.size.height / 2)
+                        .rotationEffect(.degrees(180))
+                }
             }
-
-            horizontalDeadZone
-
-            // Bottom row (rotated 180)
-            HStack(spacing: 0) {
-                content(2)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .rotationEffect(.degrees(180))
-
-                verticalDeadZone
-
-                content(3)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .rotationEffect(.degrees(180))
+            .overlay {
+                CrossDivider()
             }
         }
         .ignoresSafeArea()
     }
+}
 
-    private var horizontalDeadZone: some View {
-        Rectangle()
-            .fill(Color.black.opacity(0.22))
-            .frame(height: deadZoneSize)
-            .overlay(
+private struct CrossDivider: View {
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
                 Rectangle()
                     .fill(Color.strokeSubtle)
-                    .frame(height: 1),
-                alignment: .top
-            )
-            .overlay(
-                Rectangle()
-                    .fill(Color.strokeSubtle)
-                    .frame(height: 1),
-                alignment: .bottom
-            )
-            .contentShape(Rectangle())
-            .onTapGesture { }
-            .accessibilityHidden(true)
-    }
+                    .frame(width: 1)
+                    .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
 
-    private var verticalDeadZone: some View {
-        Rectangle()
-            .fill(Color.black.opacity(0.22))
-            .frame(width: deadZoneSize)
-            .overlay(
                 Rectangle()
                     .fill(Color.strokeSubtle)
-                    .frame(width: 1),
-                alignment: .leading
-            )
-            .overlay(
-                Rectangle()
-                    .fill(Color.strokeSubtle)
-                    .frame(width: 1),
-                alignment: .trailing
-            )
-            .contentShape(Rectangle())
-            .onTapGesture { }
-            .accessibilityHidden(true)
+                    .frame(height: 1)
+                    .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
+
+                Circle()
+                    .fill(Color.textSecondary.opacity(0.55))
+                    .frame(width: 8, height: 8)
+                    .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

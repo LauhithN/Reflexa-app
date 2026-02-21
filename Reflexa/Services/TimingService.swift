@@ -1,10 +1,7 @@
 import Foundation
 import QuartzCore
-import UIKit
 
-/// High-precision timing using CADisplayLink for gameplay timers.
-/// NEVER use Timer for gameplay — CADisplayLink syncs with display refresh for smooth updates.
-@Observable
+/// High-precision gameplay timing built on CADisplayLink.
 final class TimingService {
     private final class DisplayLinkProxy {
         weak var owner: TimingService?
@@ -26,26 +23,23 @@ final class TimingService {
     private var onTick: ((CFTimeInterval) -> Void)?
     private var isPaused = false
 
-    /// Current elapsed time since start, in seconds
     private(set) var elapsed: CFTimeInterval = 0
 
-    /// Start the display link timer with a tick callback
     func start(onTick: @escaping (CFTimeInterval) -> Void) {
         stop()
         self.onTick = onTick
-        self.startTime = CACurrentMediaTime()
-        self.pausedAt = nil
-        self.pausedDuration = 0
-        self.elapsed = 0
+        startTime = CACurrentMediaTime()
+        pausedAt = nil
+        pausedDuration = 0
+        elapsed = 0
 
         let proxy = DisplayLinkProxy(owner: self)
         let link = CADisplayLink(target: proxy, selector: #selector(DisplayLinkProxy.tick))
         link.add(to: .main, forMode: .common)
-        self.displayLink = link
-        self.displayLinkProxy = proxy
+        displayLink = link
+        displayLinkProxy = proxy
     }
 
-    /// Stop and clean up the display link
     func stop() {
         displayLink?.invalidate()
         displayLink = nil
@@ -54,6 +48,7 @@ final class TimingService {
         isPaused = false
         pausedAt = nil
         pausedDuration = 0
+        elapsed = 0
     }
 
     func pause() {
@@ -78,17 +73,15 @@ final class TimingService {
         onTick?(elapsed)
     }
 
-    /// Capture a precise timestamp (use for reaction time measurement)
     static func now() -> CFTimeInterval {
         CACurrentMediaTime()
     }
 
-    /// Calculate reaction time in milliseconds between two CACurrentMediaTime timestamps
     static func reactionMs(from start: CFTimeInterval, to end: CFTimeInterval) -> Int {
-        Int((end - start) * 1000)
+        max(0, Int((end - start) * 1000))
     }
 
     deinit {
-        stop()
+        displayLink?.invalidate()
     }
 }

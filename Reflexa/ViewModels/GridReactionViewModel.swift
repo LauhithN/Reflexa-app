@@ -1,25 +1,25 @@
 import Foundation
 import QuartzCore
+import Combine
 
 /// Grid Reaction: 4x4 grid, one square lights up, tap it.
 /// 10 rounds, score = average reaction time.
-@Observable
-final class GridReactionViewModel: GameViewModelProtocol {
+final class GridReactionViewModel: ObservableObject, GameViewModelProtocol {
     let config: GameConfiguration
-    var state: GameState = .ready
+    @Published var state: GameState = .ready
 
     let gridSize = 4
-    var activeCell: Int? // 0-15, which cell is lit
-    var currentRound: Int = 0
-    var roundTimes: [Int] = [] // ms per round
-    var averageTimeMs: Int = 0
-    var percentile: Int = 0
+    @Published var activeCell: Int? // 0-15, which cell is lit
+    @Published var currentRound: Int = 0
+    @Published var roundTimes: [Int] = [] // ms per round
+    @Published var averageTimeMs: Int = 0
+    @Published var percentile: Int = 0
 
-    var lastTapCorrect: Bool?
-    var lastTapCellIndex: Int?
-    var wrongTapCount: Int = 0
-    var fastestRoundMs: Int?
-    var slowestRoundMs: Int?
+    @Published var lastTapCorrect: Bool?
+    @Published var lastTapCellIndex: Int?
+    @Published var wrongTapCount: Int = 0
+    @Published var fastestRoundMs: Int?
+    @Published var slowestRoundMs: Int?
 
     private var stimulusTime: CFTimeInterval = 0
     private var waitTask: Task<Void, Never>?

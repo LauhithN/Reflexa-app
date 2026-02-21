@@ -1,23 +1,23 @@
 import Foundation
 import QuartzCore
+import Combine
 
 /// Charge & Release: Wait for signal, hold to charge, release near target.
 /// Winner = lowest offset from target. False start loses immediately.
-@Observable
-final class ReactionDuelViewModel: GameViewModelProtocol {
+final class ReactionDuelViewModel: ObservableObject, GameViewModelProtocol {
     let config: GameConfiguration
-    var state: GameState = .ready
+    @Published var state: GameState = .ready
 
     let targetCharge: Double = 75
     let perfectWindow: ClosedRange<Double> = 72...78
 
-    var chargeValues: [Double] // live charge 0...100
-    var lockedCharges: [Double?] // final released charge
-    var roundScores: [Double?] // abs offset from target (lower is better)
-    var reactionTimes: [Int?] // ms to initial press after signal
-    var chargingStates: [Bool] // true while player is holding
-    var winnerIndex: Int?
-    var falseStartPlayer: Int?
+    @Published var chargeValues: [Double] // live charge 0...100
+    @Published var lockedCharges: [Double?] // final released charge
+    @Published var roundScores: [Double?] // abs offset from target (lower is better)
+    @Published var reactionTimes: [Int?] // ms to initial press after signal
+    @Published var chargingStates: [Bool] // true while player is holding
+    @Published var winnerIndex: Int?
+    @Published var falseStartPlayer: Int?
 
     private let haptic = HapticService.shared
     private let timing = TimingService()

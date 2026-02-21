@@ -1,32 +1,34 @@
 import Foundation
 
 enum Formatters {
-    /// Format milliseconds for display: "234 ms"
     static func reactionTime(_ ms: Int) -> String {
-        "\(ms) ms"
+        "\(max(0, ms)) ms"
     }
 
-    /// Format seconds with 2 decimal places: "1.23s"
     static func seconds(_ value: Double) -> String {
         String(format: "%.2fs", value)
     }
 
-    /// Format stopwatch value with 2 decimal places: "45.67"
     static func stopwatchValue(_ value: Double) -> String {
-        String(format: "%.2f", value)
+        String(format: "%.3f", value)
     }
 
-    /// Format tap count: "42 taps"
+    static func stopwatchClock(_ value: Double) -> String {
+        let totalMs = Int((max(0, value) * 1000).rounded())
+        let minutes = totalMs / 60_000
+        let seconds = (totalMs % 60_000) / 1000
+        let millis = totalMs % 1000
+        return String(format: "%02d:%02d.%03d", minutes, seconds, millis)
+    }
+
     static func tapCount(_ count: Int) -> String {
-        "\(count) taps"
+        "\(max(0, count)) taps"
     }
 
-    /// Format percentile: "Top 5%"
     static func percentile(_ value: Int) -> String {
-        "Top \(100 - value)%"
+        "Top \(max(1, 100 - value))%"
     }
 
-    /// Format date for display
     static func displayDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
