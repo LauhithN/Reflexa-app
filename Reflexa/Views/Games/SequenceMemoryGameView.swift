@@ -6,6 +6,7 @@ struct SequenceMemoryGameView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var displayedScore: Int = 0
+    @State private var scoreAnimationTask: Task<Void, Never>?
 
     private let accentColor = Color.accentPrimary
 
@@ -47,6 +48,8 @@ struct SequenceMemoryGameView: View {
         .onChange(of: viewModel.state) { newState in
             if case .result = newState {
                 animateScoreCountUp()
+            } else {
+                scoreAnimationTask?.cancel()
             }
         }
         .gameScaffold(
@@ -60,6 +63,9 @@ struct SequenceMemoryGameView: View {
         }
         .navigationBarHidden(true)
         .statusBarHidden()
+        .onDisappear {
+            scoreAnimationTask?.cancel()
+        }
     }
 
     // MARK: - Background
@@ -207,6 +213,7 @@ struct SequenceMemoryGameView: View {
             .padding(.horizontal, 24)
 
             GameActionButtons(primaryTint: accentColor) {
+                scoreAnimationTask?.cancel()
                 displayedScore = 0
                 viewModel.resetGame()
                 viewModel.startGame()
@@ -241,6 +248,7 @@ struct SequenceMemoryGameView: View {
     }
 
     private func animateScoreCountUp() {
+        scoreAnimationTask?.cancel()
         displayedScore = 0
         let target = viewModel.finalLevel
         guard target > 0 else { return }
@@ -254,15 +262,17 @@ struct SequenceMemoryGameView: View {
         let steps = min(target, 30)
         let interval = totalDuration / Double(steps)
 
-        for step in 0...steps {
-            DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(step)) {
+        scoreAnimationTask = Task { @MainActor in
+            for step in 0...steps {
+                guard !Task.isCancelled else { return }
                 withAnimation(Spring.easeOut(duration: 0.05)) {
                     displayedScore = min(step, target)
                 }
+                if step < steps {
+                    try? await Task.sleep(for: .milliseconds(Int(interval * 1000)))
+                }
             }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration + 0.05) {
+            guard !Task.isCancelled else { return }
             displayedScore = target
         }
     }

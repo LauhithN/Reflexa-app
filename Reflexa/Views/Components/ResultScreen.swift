@@ -105,7 +105,7 @@ struct ResultScreen: View {
                 .font(.monoSmall)
                 .foregroundStyle(Color.textSecondary)
 
-                ForEach(Array(sortedScores.enumerated()), id: \.element.id) { index, player in
+                ForEach(Array(sortedScores.enumerated()), id: \.element.id) { _, player in
                     HStack(spacing: 10) {
                         Text(medal(for: player.rank))
                             .frame(width: 28, alignment: .leading)
@@ -127,8 +127,6 @@ struct ResultScreen: View {
                             .foregroundStyle(Color.textPrimary)
                     }
                     .padding(.vertical, 6)
-                    .opacity(reduceMotion ? 1 : 0)
-                    .animation(reduceMotion ? Spring.gentle : Spring.stagger(index), value: sortedScores.count)
                 }
             }
             .padding(16)
@@ -191,7 +189,7 @@ struct ResultScreen: View {
         case .sequenceMemory:
             return "L\(Int(score.rounded()))"
         case .stopwatch:
-            return Formatters.stopwatchValue(score)
+            return "\(Int(score.rounded()))ms"
         default:
             return "\(Int(score.rounded()))ms"
         }

@@ -9,6 +9,8 @@ struct ReactionDuelGameView: View {
     @State private var scores: [Int] = []
     @State private var penalties: [Int] = []
     @State private var reactionTimes: [Int?] = []
+    @State private var matchReactionSums: [Int] = []
+    @State private var matchReactionCounts: [Int] = []
     @State private var earlyPlayers: Set<Int> = []
 
     @State private var triggerFired = false
@@ -195,13 +197,12 @@ struct ReactionDuelGameView: View {
     }
 
     private func averageReaction(for playerIndex: Int) -> Int {
-        let values = reactionTimes.enumerated()
-            .compactMap { index, value in
-                index == playerIndex ? value : nil
-            }
-
-        guard !values.isEmpty else { return Int.max }
-        return values.reduce(0, +) / values.count
+        guard matchReactionSums.indices.contains(playerIndex),
+              matchReactionCounts.indices.contains(playerIndex),
+              matchReactionCounts[playerIndex] > 0 else {
+            return Int.max
+        }
+        return matchReactionSums[playerIndex] / matchReactionCounts[playerIndex]
     }
 
     private func restart() {
@@ -211,6 +212,8 @@ struct ReactionDuelGameView: View {
         scores = Array(repeating: 0, count: playerCount)
         penalties = Array(repeating: 0, count: playerCount)
         reactionTimes = Array(repeating: nil, count: playerCount)
+        matchReactionSums = Array(repeating: 0, count: playerCount)
+        matchReactionCounts = Array(repeating: 0, count: playerCount)
         earlyPlayers = []
         triggerFired = false
         showResult = false
@@ -233,6 +236,7 @@ struct ReactionDuelGameView: View {
     private func startRound() {
         triggerFired = false
         triggerDate = Date()
+        penalties = Array(repeating: 0, count: playerCount)
         reactionTimes = Array(repeating: nil, count: playerCount)
         earlyPlayers = []
 
@@ -260,7 +264,10 @@ struct ReactionDuelGameView: View {
         guard reactionTimes[playerIndex] == nil else { return }
 
         let reaction = Int(Date().timeIntervalSince(triggerDate) * 1000) + penalties[playerIndex]
-        reactionTimes[playerIndex] = max(1, reaction)
+        let clampedReaction = max(1, reaction)
+        reactionTimes[playerIndex] = clampedReaction
+        matchReactionSums[playerIndex] += clampedReaction
+        matchReactionCounts[playerIndex] += 1
         HapticManager.shared.light()
 
         if reactionTimes.allSatisfy({ $0 != nil }) {

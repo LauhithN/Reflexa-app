@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
-    @AppStorage("bestTime") private var bestTime = 243.0
+    @AppStorage("bestTime") private var bestTime = 9_999.0
 
     @State private var showSettings = false
     @State private var taglineIndex = 0
@@ -19,6 +19,7 @@ struct HomeView: View {
     private let duelGames: [GameType] = [.reactionDuel, .colorBattle]
 
     private let rotateTimer = Timer.publish(every: 4, on: .main, in: .common).autoconnect()
+    private var hasStopwatchBest: Bool { bestTime < 9_999 }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -87,7 +88,7 @@ struct HomeView: View {
                 .foregroundStyle(Color.textSecondary)
 
             HStack {
-                Text("⚡ Best: \(Int(bestTime.rounded()))ms")
+                Text(hasStopwatchBest ? "⚡ Best: \(Int(bestTime.rounded()))ms" : "⚡ Best: --")
                     .font(.playerLabel)
                     .foregroundStyle(Color.accentPrimary)
                     .padding(.horizontal, 12)

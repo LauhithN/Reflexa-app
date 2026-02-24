@@ -25,11 +25,11 @@ struct ColorBattleGameView: View {
     @State private var statusMessage: String?
 
     private let palette: [(name: String, color: Color)] = [
-        ("Rose", Color(hex: "#D9A5B3")),
-        ("Sage", Color(hex: "#90A88A")),
-        ("Slate", Color(hex: "#7E8DA8")),
-        ("Sand", Color(hex: "#D8B790")),
-        ("Lavender", Color(hex: "#B19CD9"))
+        ("Red", Color(hex: "#FF3B30")),
+        ("Yellow", Color(hex: "#FFD60A")),
+        ("Blue", Color(hex: "#0A84FF")),
+        ("Green", Color(hex: "#30D158")),
+        ("Purple", Color(hex: "#BF5AF2"))
     ]
 
     private var playerCount: Int { config.playerMode.playerCount }

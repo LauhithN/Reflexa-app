@@ -38,7 +38,7 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
     var description: String {
         switch self {
         case .stopwatch: return "Stop as close to 0.000 as possible"
-        case .colorFlash: return "Tap when the target color matches"
+        case .colorFlash: return "Tap on the real flash, not decoys"
         case .quickTap: return "Tap sprint for 10 seconds"
         case .sequenceMemory: return "Repeat the growing pattern"
         case .colorSort: return "Tap ink color, not the word"

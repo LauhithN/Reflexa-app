@@ -117,7 +117,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, 20)
             }
 
-            Text("6 modes. Solo and local multiplayer.")
+            Text("8 modes. Solo and local multiplayer.")
                 .font(.bodyLarge)
                 .foregroundStyle(Color.textSecondary)
 

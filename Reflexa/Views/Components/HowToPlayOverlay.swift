@@ -14,9 +14,9 @@ struct HowToPlayOverlay: View {
             ]
         case .colorFlash:
             return [
-                "Watch the color transitions carefully.",
-                "Tap only when the screen matches the target color.",
-                "5 rounds score your color-match accuracy."
+                "Wait through the hold phase and ignore decoy flashes.",
+                "Tap only when the full flash appears.",
+                "Early taps trigger a false start."
             ]
         case .quickTap:
             return [

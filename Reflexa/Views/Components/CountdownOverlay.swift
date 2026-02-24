@@ -34,8 +34,10 @@ struct CountdownOverlay: View {
     private func playFeedback() {
         if value > 0 {
             HapticManager.shared.select()
+            SoundService.shared.playCountdownTick()
         } else {
             HapticManager.shared.medium()
+            SoundService.shared.playBeep()
         }
     }
 

@@ -41,6 +41,10 @@ struct ReflexaApp: App {
             .environment(\.soundEnabled, soundEnabled)
             .tint(.accentPrimary)
             .preferredColorScheme(.dark)
+            .onAppear {
+                SoundService.shared.preloadCountdown()
+                SoundService.shared.preloadBeep()
+            }
         }
     }
 }

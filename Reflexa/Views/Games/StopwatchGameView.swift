@@ -175,7 +175,7 @@ struct StopwatchGameView: View {
     private var resultPayload: [PlayerResult] {
         if config.playerMode == .solo {
             let soloScore = abs(timeValue) * 1000
-            let isNewBest = soloScore <= bestTime
+            let isNewBest = soloScore < bestTime
             return [
                 PlayerResult(
                     name: config.activePlayerNames[0],

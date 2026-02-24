@@ -9,6 +9,7 @@ struct QuickTapGameView: View {
     @State private var ringPulse = false
     @State private var timerPulse = false
     @State private var displayedScore: Int = 0
+    @State private var scoreAnimationTask: Task<Void, Never>?
 
     private let accentGreen = Color.success
 
@@ -55,6 +56,8 @@ struct QuickTapGameView: View {
         .onChange(of: viewModel.state) { newState in
             if case .result = newState {
                 animateScoreCountUp()
+            } else {
+                scoreAnimationTask?.cancel()
             }
 
             if case .active = newState, !reduceMotion {
@@ -76,6 +79,9 @@ struct QuickTapGameView: View {
         }
         .navigationBarHidden(true)
         .statusBarHidden()
+        .onDisappear {
+            scoreAnimationTask?.cancel()
+        }
     }
 
     // MARK: - Background
@@ -230,6 +236,7 @@ struct QuickTapGameView: View {
                 .foregroundStyle(Color.textSecondary)
 
             GameActionButtons(primaryTint: accentGreen) {
+                scoreAnimationTask?.cancel()
                 displayedScore = 0
                 viewModel.resetGame()
                 viewModel.startGame()
@@ -280,6 +287,7 @@ struct QuickTapGameView: View {
     }
 
     private func animateScoreCountUp() {
+        scoreAnimationTask?.cancel()
         displayedScore = 0
         let target = viewModel.tapCount
 
@@ -295,15 +303,17 @@ struct QuickTapGameView: View {
         let interval = totalDuration / Double(steps)
         let increment = max(target / steps, 1)
 
-        for step in 0...steps {
-            DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(step)) {
+        scoreAnimationTask = Task { @MainActor in
+            for step in 0...steps {
+                guard !Task.isCancelled else { return }
                 withAnimation(Spring.easeOut(duration: 0.05)) {
                     displayedScore = min(increment * step, target)
                 }
+                if step < steps {
+                    try? await Task.sleep(for: .milliseconds(Int(interval * 1000)))
+                }
             }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration + 0.05) {
+            guard !Task.isCancelled else { return }
             displayedScore = target
         }
     }

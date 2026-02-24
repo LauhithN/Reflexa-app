@@ -12,8 +12,8 @@ enum Constants {
     static let colorSortPenaltyFlashDuration: TimeInterval = 0.35
     static let gridReactionRounds: Int = 10
     static let reactionDuelRounds: Int = 5
-    static let colorBattle2PRounds: Int = 7
-    static let colorBattle4PRounds: Int = 10
+    static let colorBattle2PRounds: Int = 8
+    static let colorBattle4PRounds: Int = 12
     static let stopwatchStartValue: Double = 0
 
     static let minWaitTime: TimeInterval = 1.5
