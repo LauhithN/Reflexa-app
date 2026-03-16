@@ -31,3 +31,46 @@ enum PlayerMode: String, CaseIterable, Identifiable, Codable {
         }
     }
 }
+
+enum GamePlayStyle: String, CaseIterable, Identifiable, Codable {
+    case simultaneous
+    case turnBased
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .simultaneous:
+            return "Simultaneous"
+        case .turnBased:
+            return "Turn-Based"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .simultaneous:
+            return "square.split.2x2.fill"
+        case .turnBased:
+            return "person.crop.rectangle.stack.fill"
+        }
+    }
+
+    var summary: String {
+        switch self {
+        case .simultaneous:
+            return "Everyone plays on their own zone at the same time."
+        case .turnBased:
+            return "One player is active at a time with a pass-device handoff."
+        }
+    }
+
+    var setupLabel: String {
+        switch self {
+        case .simultaneous:
+            return "Shared-device split layout"
+        case .turnBased:
+            return "Sequential turns with handoff"
+        }
+    }
+}

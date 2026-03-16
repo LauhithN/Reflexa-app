@@ -67,3 +67,88 @@ struct PassDeviceScreen: View {
         }
     }
 }
+
+struct TurnBasedStageContainer<Content: View>: View {
+    let roundTitle: String
+    let subtitle: String?
+    let activePlayerName: String
+    let activePlayerColor: Color
+    let players: [PlayerResult]
+    let activePlayerIndex: Int
+    let showPassDevice: Bool
+    let onReady: () -> Void
+    let content: Content
+
+    init(
+        roundTitle: String,
+        subtitle: String? = nil,
+        activePlayerName: String,
+        activePlayerColor: Color,
+        players: [PlayerResult],
+        activePlayerIndex: Int,
+        showPassDevice: Bool,
+        onReady: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.roundTitle = roundTitle
+        self.subtitle = subtitle
+        self.activePlayerName = activePlayerName
+        self.activePlayerColor = activePlayerColor
+        self.players = players
+        self.activePlayerIndex = activePlayerIndex
+        self.showPassDevice = showPassDevice
+        self.onReady = onReady
+        self.content = content()
+    }
+
+    var body: some View {
+        ZStack {
+            VStack(spacing: 16) {
+                VStack(spacing: 8) {
+                    Text(roundTitle)
+                        .font(.monoSmall)
+                        .foregroundStyle(Color.textSecondary)
+
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.playerLabel)
+                            .foregroundStyle(Color.textPrimary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+
+                MultiplayerPlayerPanel(
+                    name: activePlayerName,
+                    accentColor: activePlayerColor,
+                    subtitle: "Turn-Based",
+                    headerTrailing: {
+                        Text("ACTIVE")
+                            .font(.monoSmall)
+                            .foregroundStyle(Color.inkPanel)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(activePlayerColor)
+                            .clipShape(Capsule())
+                    },
+                    content: {
+                        content
+                    }
+                )
+                .frame(maxHeight: .infinity)
+
+                PlayerScoreboard(players: players, activePlayerIndex: activePlayerIndex)
+            }
+            .padding(.top, 88)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 18)
+
+            if showPassDevice {
+                PassDeviceScreen(
+                    playerName: activePlayerName,
+                    playerColor: activePlayerColor,
+                    onReady: onReady
+                )
+            }
+        }
+    }
+}

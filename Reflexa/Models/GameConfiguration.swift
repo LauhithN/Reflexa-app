@@ -3,11 +3,18 @@ import Foundation
 struct GameConfiguration {
     let gameType: GameType
     let playerMode: PlayerMode
+    let playStyle: GamePlayStyle
     let playerNames: [String]
 
-    init(gameType: GameType, playerMode: PlayerMode, playerNames: [String] = ["Player 1", "Player 2", "Player 3", "Player 4"]) {
+    init(
+        gameType: GameType,
+        playerMode: PlayerMode,
+        playStyle: GamePlayStyle? = nil,
+        playerNames: [String] = ["Player 1", "Player 2", "Player 3", "Player 4"]
+    ) {
         self.gameType = gameType
         self.playerMode = playerMode
+        self.playStyle = playStyle ?? gameType.defaultPlayStyle
         let trimmed = playerNames.map { name in
             let value = name.trimmingCharacters(in: .whitespacesAndNewlines)
             return value.isEmpty ? "Player" : value
@@ -42,15 +49,14 @@ struct GameConfiguration {
     }
 
     var requiresPassDevice: Bool {
-        switch gameType {
-        case .stopwatch, .colorBattle:
-            return playerMode != .solo
-        default:
-            return false
-        }
+        playerMode != .solo && effectivePlayStyle == .turnBased
     }
 
     var isTurnBased: Bool {
-        gameType == .stopwatch || gameType == .colorBattle
+        playerMode != .solo && effectivePlayStyle == .turnBased
+    }
+
+    var effectivePlayStyle: GamePlayStyle {
+        playerMode == .solo ? .simultaneous : playStyle
     }
 }

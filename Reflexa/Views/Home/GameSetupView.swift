@@ -4,6 +4,7 @@ struct GameSetupView: View {
     let gameType: GameType
 
     @State private var selectedMode: PlayerMode
+    @State private var selectedPlayStyle: GamePlayStyle
     @State private var playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"]
     @State private var showHowTo = false
     @State private var isPlaying = false
@@ -11,6 +12,7 @@ struct GameSetupView: View {
     init(gameType: GameType) {
         self.gameType = gameType
         _selectedMode = State(initialValue: gameType.supportedModes.first ?? .solo)
+        _selectedPlayStyle = State(initialValue: gameType.defaultPlayStyle)
     }
 
     var body: some View {
@@ -20,6 +22,10 @@ struct GameSetupView: View {
                 infoChips
                 howToSection
                 modeSelector
+                if shouldShowPlayStyleSelector {
+                    playStyleSection
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
 
                 if selectedMode != .solo {
                     playerNamesSection
@@ -55,8 +61,13 @@ struct GameSetupView: View {
         GameConfiguration(
             gameType: gameType,
             playerMode: selectedMode,
+            playStyle: selectedPlayStyle,
             playerNames: playerNames
         )
+    }
+
+    private var shouldShowPlayStyleSelector: Bool {
+        selectedMode != .solo && gameType.supportedPlayStyles.count > 1
     }
 
     private var header: some View {
@@ -142,6 +153,22 @@ struct GameSetupView: View {
                 .foregroundStyle(Color.textPrimary)
 
             PlayerModeSelector(modes: gameType.supportedModes, selected: $selectedMode)
+        }
+        .padding(14)
+        .glassCard(cornerRadius: 18)
+    }
+
+    private var playStyleSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Play Style")
+                .font(.sectionTitle)
+                .foregroundStyle(Color.textPrimary)
+
+            PlayStyleSelector(styles: gameType.supportedPlayStyles, selected: $selectedPlayStyle)
+
+            Text(selectedPlayStyle.summary)
+                .font(.monoSmall)
+                .foregroundStyle(Color.textSecondary)
         }
         .padding(14)
         .glassCard(cornerRadius: 18)

@@ -9,7 +9,8 @@ struct HowToPlayOverlay: View {
         case .stopwatch:
             return [
                 "Start the timer and stop as close to 0.000 as possible.",
-                "In multiplayer, each player takes one turn.",
+                "Simultaneous mode gives every player their own lane on the same device.",
+                "Turn-Based mode hands the phone to one player at a time.",
                 "Closest value to zero wins."
             ]
         case .colorFlash:
@@ -39,18 +40,22 @@ struct HowToPlayOverlay: View {
         case .gridReaction:
             return [
                 "Tap the lit cell as fast as possible.",
-                "Multiplayer uses split zones and simultaneous rounds.",
+                "Simultaneous mode gives each player a dedicated reaction zone.",
+                "Turn-Based mode compares one reaction run per player each round.",
                 "Most round wins takes the game."
             ]
         case .reactionDuel:
             return [
                 "Wait for the trigger flash.",
-                "Tap your zone immediately after GO.",
+                "Simultaneous mode keeps every player's lane live at once.",
+                "Turn-Based mode compares each player's reaction within the round.",
                 "Early taps add a false-start penalty."
             ]
         case .colorBattle:
             return [
-                "Turn-based rounds with pass-device handoff.",
+                "Lock the arena when the live color matches the target.",
+                "Simultaneous mode runs every player lane at the same time.",
+                "Turn-Based mode uses a pass-device handoff between players.",
                 "Match target colors to score points.",
                 "Power-ups can swing the match."
             ]

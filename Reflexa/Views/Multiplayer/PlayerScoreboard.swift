@@ -2,11 +2,15 @@ import SwiftUI
 
 struct PlayerScoreboard: View {
     let players: [PlayerResult]
+    var activePlayerIndex: Int? = nil
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                ForEach(players) { player in
+                ForEach(Array(players.enumerated()), id: \.element.id) { index, player in
+                    let isActive = activePlayerIndex == index
+                    let pending = player.score.isNaN || player.score < 0
+
                     HStack(spacing: 8) {
                         Circle()
                             .fill(player.color)
@@ -16,19 +20,24 @@ struct PlayerScoreboard: View {
                             .font(.monoSmall)
                             .foregroundStyle(Color.textPrimary)
 
-                        Text("\(Int(player.score.rounded()))")
+                        Text(pending ? "--" : "\(Int(player.score.rounded()))")
                             .font(.monoSmall)
                             .monospacedDigit()
-                            .foregroundStyle(Color.textPrimary)
+                            .foregroundStyle(
+                                pending
+                                ? Color.textTertiary
+                                : (isActive ? Color.white : Color.textPrimary)
+                            )
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(player.color.opacity(0.16))
+                    .background(isActive ? player.color.opacity(0.26) : player.color.opacity(0.16))
                     .overlay(
                         Capsule()
-                            .stroke(player.color.opacity(0.42), lineWidth: 1)
+                            .stroke(isActive ? player.color.opacity(0.8) : player.color.opacity(0.42), lineWidth: isActive ? 1.5 : 1)
                     )
                     .clipShape(Capsule())
+                    .shadow(color: isActive ? player.color.opacity(0.28) : .clear, radius: 10)
                     .animation(Spring.snappy, value: player.score)
                 }
             }

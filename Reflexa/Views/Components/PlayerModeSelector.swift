@@ -55,3 +55,82 @@ struct PlayerModeSelector: View {
         }
     }
 }
+
+struct PlayStyleSelector: View {
+    let styles: [GamePlayStyle]
+    @Binding var selected: GamePlayStyle
+
+    var body: some View {
+        VStack(spacing: 10) {
+            ForEach(styles) { style in
+                Button {
+                    withAnimation(Spring.snappy) {
+                        selected = style
+                    }
+                } label: {
+                    HStack(spacing: 14) {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(style == .simultaneous ? Color.accentSecondary.opacity(0.2) : Color.accentAmber.opacity(0.2))
+                            .frame(width: 48, height: 48)
+                            .overlay(
+                                Image(systemName: style.iconName)
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundStyle(Color.textPrimary)
+                            )
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(style.displayName)
+                                .font(.sectionTitle)
+                                .foregroundStyle(Color.textPrimary)
+
+                            Text(style.setupLabel)
+                                .font(.monoSmall)
+                                .foregroundStyle(Color.textSecondary)
+                                .multilineTextAlignment(.leading)
+                        }
+
+                        Spacer(minLength: 12)
+
+                        Image(systemName: selected == style ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(selected == style ? Color.white : Color.textTertiary)
+                    }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(
+                                selected == style
+                                ? AnyShapeStyle(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.16), Color.cardBackground.opacity(0.92)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                : AnyShapeStyle(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.07), Color.cardBackground.opacity(0.82)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(
+                                        selected == style
+                                        ? Color.white.opacity(0.34)
+                                        : Color.strokeSubtle,
+                                        lineWidth: 1
+                                    )
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibleTapTarget()
+                .accessibilityLabel(style.displayName)
+                .accessibilityValue(selected == style ? "Selected" : "Not selected")
+            }
+        }
+    }
+}

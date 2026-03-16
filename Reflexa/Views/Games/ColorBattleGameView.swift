@@ -9,20 +9,21 @@ struct ColorBattleGameView: View {
     @State private var currentPlayerIndex = 0
     @State private var scores: [Int] = []
 
-    @State private var showPassDevice = true
+    @State private var showPassDevice = false
     @State private var showResult = false
+    @State private var roundAnnouncement: String?
 
-    @State private var targetIndex = 0
-    @State private var currentIndex = 0
+    @State private var targetIndices: [Int] = []
+    @State private var currentIndices: [Int] = []
     @State private var cycleTimer: Timer?
-    @State private var turnActive = false
+    @State private var lockedPlayers: Set<Int> = []
+    @State private var skippedThisRound: Set<Int> = []
 
-    @State private var availablePowerUp: PowerUp?
+    @State private var availablePowerUps: [PowerUp?] = []
     @State private var shieldActive: [Bool] = []
     @State private var doubleActive: [Bool] = []
     @State private var skipNextTurn: [Bool] = []
-
-    @State private var statusMessage: String?
+    @State private var roundMessages: [String?] = []
 
     private let palette: [(name: String, color: Color)] = [
         ("Red", Color(hex: "#FF3B30")),
@@ -33,7 +34,8 @@ struct ColorBattleGameView: View {
     ]
 
     private var playerCount: Int { config.playerMode.playerCount }
-    private var totalRounds: Int { config.roundCount }
+    private var totalRounds: Int { max(1, config.roundCount / max(playerCount, 1)) }
+    private var compactLayout: Bool { playerCount == 4 }
 
     var body: some View {
         ZStack {
@@ -47,19 +49,10 @@ struct ColorBattleGameView: View {
                     onPlayAgain: restart,
                     onHome: { dismiss() }
                 )
-            } else if showPassDevice {
-                PassDeviceScreen(
-                    playerName: activePlayerName,
-                    playerColor: activePlayerColor,
-                    onReady: {
-                        withAnimation(Spring.smooth) {
-                            showPassDevice = false
-                        }
-                        beginTurn()
-                    }
-                )
+            } else if config.isTurnBased {
+                turnBasedView
             } else {
-                activeTurnView
+                simultaneousView
             }
         }
         .onAppear {
@@ -77,72 +70,124 @@ struct ColorBattleGameView: View {
         .statusBarHidden()
     }
 
-    private var activeTurnView: some View {
+    private var simultaneousView: some View {
+        ZStack {
+            MultiplayerArenaLayout(playerCount: playerCount, topInset: 110, bottomInset: 18) { playerIndex in
+                simultaneousPanel(for: playerIndex)
+            }
+
+            VStack(spacing: 10) {
+                PlayerScoreboard(players: livePlayerResults)
+
+                Text("Round \(currentRound) / \(totalRounds)")
+                    .font(.monoSmall)
+                    .foregroundStyle(Color.textSecondary)
+
+                if let roundAnnouncement {
+                    roundAnnouncementPill(roundAnnouncement)
+                }
+            }
+            .padding(.top, 14)
+            .padding(.horizontal, 16)
+            .frame(maxHeight: .infinity, alignment: .top)
+        }
+    }
+
+    private var turnBasedView: some View {
+        TurnBasedStageContainer(
+            roundTitle: "Round \(currentRound) / \(totalRounds)",
+            subtitle: turnBasedSubtitle,
+            activePlayerName: activePlayerName,
+            activePlayerColor: activePlayerColor,
+            players: livePlayerResults,
+            activePlayerIndex: currentPlayerIndex,
+            showPassDevice: showPassDevice,
+            onReady: startTurnBasedRound
+        ) {
+            turnBasedPanel(for: currentPlayerIndex)
+        }
+    }
+
+    private func simultaneousPanel(for playerIndex: Int) -> some View {
+        let color = Color.playerColor(for: playerIndex)
+
+        return MultiplayerPlayerPanel(
+            name: config.activePlayerNames[playerIndex],
+            accentColor: color,
+            subtitle: compactLayout ? nil : "Match the target color",
+            compact: compactLayout,
+            inactive: skippedThisRound.contains(playerIndex),
+            headerTrailing: {
+                Text("\(scores[playerIndex])")
+                    .font(.monoSmall)
+                    .foregroundStyle(color)
+                    .monospacedDigit()
+            },
+            content: {
+                VStack(spacing: compactLayout ? 8 : 12) {
+                    targetPill(for: playerIndex, compact: compactLayout)
+
+                    colorArena(playerIndex: playerIndex, compact: compactLayout)
+
+                    activeEffects(for: playerIndex)
+
+                    if let powerUp = availablePowerUps[playerIndex], !lockedPlayers.contains(playerIndex) {
+                        Button {
+                            activatePowerUp(for: playerIndex)
+                        } label: {
+                            Text(powerUp.compactTitle)
+                        }
+                        .buttonStyle(PrimaryCTAButtonStyle(tint: .accentAmber))
+                    }
+
+                    Text(roundMessages[playerIndex] ?? defaultMessage(for: playerIndex))
+                        .font(.monoSmall)
+                        .foregroundStyle(skippedThisRound.contains(playerIndex) ? Color.textTertiary : Color.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+        )
+    }
+
+    private func turnBasedPanel(for playerIndex: Int) -> some View {
         VStack(spacing: 16) {
-            header
+            targetPill(for: playerIndex, compact: false)
 
-            targetPill
+            colorArena(playerIndex: playerIndex, compact: false, explicitHeight: 300)
 
-            colorArena
+            activeEffects(for: playerIndex)
 
-            if let availablePowerUp {
+            if let powerUp = availablePowerUps[playerIndex] {
                 Button {
-                    activatePowerUp(availablePowerUp)
+                    activatePowerUp(for: playerIndex)
                 } label: {
-                    Text(availablePowerUp.label)
-                        .font(.playerLabel)
+                    Text(powerUp.buttonTitle)
                 }
                 .buttonStyle(PrimaryCTAButtonStyle(tint: .accentAmber))
-                .padding(.horizontal, 22)
+                .padding(.horizontal, 12)
             }
 
-            Spacer(minLength: 0)
-
-            PlayerScoreboard(players: livePlayerResults)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
-        }
-        .padding(.top, 16)
-        .overlay(alignment: .bottom) {
-            if let statusMessage {
-                Text(statusMessage)
-                    .font(.monoSmall)
-                    .foregroundStyle(Color.textPrimary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.black.opacity(0.35))
-                    .clipShape(Capsule())
-                    .padding(.bottom, 84)
-                    .transition(.opacity)
-            }
-        }
-    }
-
-    private var header: some View {
-        VStack(spacing: 6) {
-            Text("Round \(currentRound) / \(totalRounds)")
-                .font(.monoSmall)
+            Text(roundMessages[playerIndex] ?? "Tap the arena to lock your color.")
+                .font(.bodyLarge)
                 .foregroundStyle(Color.textSecondary)
-
-            Text("\(activePlayerName)'s Turn")
-                .font(.resultTitle)
-                .foregroundStyle(activePlayerColor)
-                .lineLimit(1)
+                .multilineTextAlignment(.center)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var targetPill: some View {
+    private func targetPill(for playerIndex: Int, compact: Bool) -> some View {
         HStack(spacing: 8) {
             Text("Target")
                 .font(.monoSmall)
                 .foregroundStyle(Color.textSecondary)
 
             Circle()
-                .fill(palette[targetIndex].color)
-                .frame(width: 12, height: 12)
+                .fill(palette[targetIndices[safe: playerIndex] ?? 0].color)
+                .frame(width: compact ? 10 : 12, height: compact ? 10 : 12)
 
-            Text(palette[targetIndex].name)
-                .font(.playerLabel)
+            Text(palette[targetIndices[safe: playerIndex] ?? 0].name)
+                .font(compact ? .playerLabel : .sectionTitle)
                 .foregroundStyle(Color.textPrimary)
         }
         .padding(.horizontal, 12)
@@ -151,31 +196,63 @@ struct ColorBattleGameView: View {
         .clipShape(Capsule())
     }
 
-    private var colorArena: some View {
-        RoundedRectangle(cornerRadius: 28, style: .continuous)
-            .fill(palette[currentIndex].color)
+    private func colorArena(playerIndex: Int, compact: Bool, explicitHeight: CGFloat? = nil) -> some View {
+        let arenaHeight = explicitHeight ?? (compact ? 110 : 180)
+        let active = !lockedPlayers.contains(playerIndex) && !skippedThisRound.contains(playerIndex)
+        let paletteIndex = currentIndices[safe: playerIndex] ?? 0
+
+        return RoundedRectangle(cornerRadius: compact ? 22 : 28, style: .continuous)
+            .fill(palette[paletteIndex].color)
             .overlay(
-                VStack(spacing: 8) {
-                    Text(turnActive ? "Tap To Lock" : "Locked")
-                        .font(.sectionTitle)
+                VStack(spacing: compact ? 6 : 8) {
+                    Text(active ? "Tap To Lock" : "Locked")
+                        .font(compact ? .playerLabel : .sectionTitle)
                         .foregroundStyle(Color.white)
                         .shadow(radius: 4)
 
-                    Text(palette[currentIndex].name)
+                    Text(palette[paletteIndex].name)
                         .font(.monoSmall)
                         .foregroundStyle(Color.white.opacity(0.9))
                 }
             )
             .frame(maxWidth: .infinity)
-            .frame(height: 320)
-            .padding(.horizontal, 16)
-            .onTapGesture {
-                lockColor()
-            }
+            .frame(height: arenaHeight)
             .overlay(
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .stroke(activePlayerColor.opacity(0.6), lineWidth: 2)
+                RoundedRectangle(cornerRadius: compact ? 22 : 28, style: .continuous)
+                    .stroke(Color.playerColor(for: playerIndex).opacity(0.6), lineWidth: 2)
             )
+            .contentShape(RoundedRectangle(cornerRadius: compact ? 22 : 28, style: .continuous))
+            .onTapGesture {
+                lockColor(for: playerIndex)
+            }
+    }
+
+    private func activeEffects(for playerIndex: Int) -> some View {
+        HStack(spacing: 8) {
+            if doubleActive[playerIndex] {
+                effectChip(text: "Double", tint: .accentAmber)
+            }
+            if shieldActive[playerIndex] {
+                effectChip(text: "Shield", tint: .accentSecondary)
+            }
+            if skipNextTurn[playerIndex] {
+                effectChip(text: "Skip Next", tint: .accentHot)
+            }
+        }
+    }
+
+    private func effectChip(text: String, tint: Color) -> some View {
+        Text(text)
+            .font(.monoSmall)
+            .foregroundStyle(Color.textPrimary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(tint.opacity(0.18))
+            .overlay(
+                Capsule()
+                    .stroke(tint.opacity(0.5), lineWidth: 1)
+            )
+            .clipShape(Capsule())
     }
 
     private var resultPayload: [PlayerResult] {
@@ -223,101 +300,184 @@ struct ColorBattleGameView: View {
         currentRound = 1
         currentPlayerIndex = 0
         scores = Array(repeating: 0, count: playerCount)
+        targetIndices = Array(repeating: 0, count: playerCount)
+        currentIndices = Array(repeating: 0, count: playerCount)
+        availablePowerUps = Array(repeating: nil, count: playerCount)
         shieldActive = Array(repeating: false, count: playerCount)
         doubleActive = Array(repeating: false, count: playerCount)
         skipNextTurn = Array(repeating: false, count: playerCount)
-
-        availablePowerUp = nil
-        statusMessage = nil
+        roundMessages = Array(repeating: nil, count: playerCount)
+        lockedPlayers = []
+        skippedThisRound = []
+        roundAnnouncement = nil
         showResult = false
-        showPassDevice = true
-        turnActive = false
+        showPassDevice = false
+
+        if config.isTurnBased {
+            showPassDevice = true
+        } else {
+            beginSimultaneousRound()
+        }
     }
 
-    private func beginTurn() {
-        guard !showResult else { return }
+    private func beginSimultaneousRound() {
+        cycleTimer?.invalidate()
+        roundAnnouncement = nil
+        lockedPlayers = []
+        skippedThisRound = []
+        roundMessages = Array(repeating: nil, count: playerCount)
+        availablePowerUps = Array(repeating: nil, count: playerCount)
 
-        if skipNextTurn[currentPlayerIndex] {
-            skipNextTurn[currentPlayerIndex] = false
-            statusMessage = "\(activePlayerName)'s turn skipped"
-            HapticManager.shared.warning()
-            advanceToNextTurn()
+        for index in 0..<playerCount {
+            configureRound(for: index)
+
+            if skipNextTurn[index] {
+                skipNextTurn[index] = false
+                skippedThisRound.insert(index)
+                lockedPlayers.insert(index)
+                roundMessages[index] = "Skipped this round"
+            }
+        }
+
+        if lockedPlayers.count == playerCount {
+            advanceAfterRound()
             return
         }
 
-        targetIndex = Int.random(in: 0..<palette.count)
-        currentIndex = Int.random(in: 0..<palette.count)
-        turnActive = true
-        statusMessage = nil
+        startCycleTimer()
+    }
 
-        availablePowerUp = Double.random(in: 0...1) < 0.3 ? PowerUp.allCases.randomElement() : nil
+    private func startTurnBasedRound() {
+        showPassDevice = false
+        roundAnnouncement = nil
+        roundMessages[currentPlayerIndex] = nil
+        lockedPlayers.removeAll()
+        skippedThisRound.removeAll()
+        cycleTimer?.invalidate()
 
+        if skipNextTurn[currentPlayerIndex] {
+            skipNextTurn[currentPlayerIndex] = false
+            roundMessages[currentPlayerIndex] = "Skipped this round"
+            roundAnnouncement = "\(activePlayerName) was skipped"
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                advanceTurnBasedFlow()
+            }
+            return
+        }
+
+        configureRound(for: currentPlayerIndex)
+        startCycleTimer()
+    }
+
+    private func configureRound(for playerIndex: Int) {
+        targetIndices[playerIndex] = Int.random(in: 0..<palette.count)
+        currentIndices[playerIndex] = Int.random(in: 0..<palette.count)
+        availablePowerUps[playerIndex] = Double.random(in: 0...1) < 0.3 ? PowerUp.allCases.randomElement() : nil
+        roundMessages[playerIndex] = nil
+    }
+
+    private func startCycleTimer() {
         cycleTimer?.invalidate()
         cycleTimer = Timer.scheduledTimer(withTimeInterval: 0.45, repeats: true) { _ in
-            guard turnActive else { return }
-            currentIndex = Int.random(in: 0..<palette.count)
+            if config.isTurnBased {
+                guard !lockedPlayers.contains(currentPlayerIndex) else { return }
+                currentIndices[currentPlayerIndex] = Int.random(in: 0..<palette.count)
+            } else {
+                for index in 0..<playerCount where !lockedPlayers.contains(index) && !skippedThisRound.contains(index) {
+                    currentIndices[index] = Int.random(in: 0..<palette.count)
+                }
+            }
         }
     }
 
-    private func activatePowerUp(_ powerUp: PowerUp) {
-        availablePowerUp = nil
+    private func activatePowerUp(for playerIndex: Int) {
+        guard let powerUp = availablePowerUps[playerIndex] else { return }
+        availablePowerUps[playerIndex] = nil
 
         switch powerUp {
         case .double:
-            doubleActive[currentPlayerIndex] = true
+            doubleActive[playerIndex] = true
+            roundMessages[playerIndex] = "Double armed"
         case .shield:
-            shieldActive[currentPlayerIndex] = true
+            shieldActive[playerIndex] = true
+            roundMessages[playerIndex] = "Shield armed"
         case .skip:
-            let next = (currentPlayerIndex + 1) % playerCount
+            let next = (playerIndex + 1) % playerCount
             skipNextTurn[next] = true
+            roundMessages[playerIndex] = "\(config.activePlayerNames[next]) skips next"
         }
 
         HapticManager.shared.medium()
         HapticManager.shared.warning()
     }
 
-    private func lockColor() {
-        guard turnActive else { return }
+    private func lockColor(for playerIndex: Int) {
+        guard !showResult, !showPassDevice else { return }
+        guard !skippedThisRound.contains(playerIndex), !lockedPlayers.contains(playerIndex) else { return }
+        guard !config.isTurnBased || playerIndex == currentPlayerIndex else { return }
 
-        turnActive = false
-        cycleTimer?.invalidate()
-        cycleTimer = nil
-
-        let matched = currentIndex == targetIndex
+        let matched = currentIndices[playerIndex] == targetIndices[playerIndex]
         var points = matched ? 1 : -1
 
-        if doubleActive[currentPlayerIndex] {
+        if doubleActive[playerIndex] {
             points *= 2
-            doubleActive[currentPlayerIndex] = false
+            doubleActive[playerIndex] = false
         }
 
-        if points < 0, shieldActive[currentPlayerIndex] {
+        if points < 0, shieldActive[playerIndex] {
             points = 0
-            shieldActive[currentPlayerIndex] = false
+            shieldActive[playerIndex] = false
         }
 
-        scores[currentPlayerIndex] += points
+        scores[playerIndex] += points
+        lockedPlayers.insert(playerIndex)
+        cycleTimer?.invalidate()
 
         if matched {
+            roundMessages[playerIndex] = "+\(points)"
             HapticManager.shared.success()
+        } else if points == 0 {
+            roundMessages[playerIndex] = "Shielded"
+            HapticManager.shared.warning()
         } else {
+            roundMessages[playerIndex] = "\(points)"
             HapticManager.shared.error()
         }
 
-        statusMessage = scoreLine
+        if config.isTurnBased {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                advanceTurnBasedFlow()
+            }
+            return
+        }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
-            advanceToNextTurn()
+        if lockedPlayers.count == playerCount {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                advanceAfterRound()
+            }
+        } else {
+            startCycleTimer()
         }
     }
 
-    private var scoreLine: String {
-        config.activePlayerNames.enumerated().map { index, name in
-            "\(name): \(scores[index])"
-        }.joined(separator: "  |  ")
+    private func advanceTurnBasedFlow() {
+        if currentPlayerIndex < playerCount - 1 {
+            currentPlayerIndex += 1
+            withAnimation(Spring.smooth) {
+                showPassDevice = true
+            }
+            return
+        }
+
+        advanceAfterRound()
     }
 
-    private func advanceToNextTurn() {
+    private func advanceAfterRound() {
+        cycleTimer?.invalidate()
+        cycleTimer = nil
+        roundAnnouncement = leaderLine
+
         if currentRound >= totalRounds {
             withAnimation(Spring.smooth) {
                 showResult = true
@@ -326,10 +486,56 @@ struct ColorBattleGameView: View {
         }
 
         currentRound += 1
-        currentPlayerIndex = (currentPlayerIndex + 1) % playerCount
-        withAnimation(Spring.smooth) {
-            showPassDevice = true
+        currentPlayerIndex = 0
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+            if config.isTurnBased {
+                withAnimation(Spring.smooth) {
+                    showPassDevice = true
+                }
+            } else {
+                beginSimultaneousRound()
+            }
         }
+    }
+
+    private var leaderLine: String {
+        let maxScore = scores.max() ?? 0
+        let leaders = scores.enumerated()
+            .filter { $0.element == maxScore }
+            .map { config.activePlayerNames[$0.offset] }
+
+        if leaders.count == 1 {
+            return "Leader: \(leaders[0])"
+        }
+        return "Tie: \(leaders.joined(separator: ", "))"
+    }
+
+    private func defaultMessage(for playerIndex: Int) -> String {
+        if skippedThisRound.contains(playerIndex) {
+            return "Skipped this round"
+        }
+        if lockedPlayers.contains(playerIndex) {
+            return "Locked in"
+        }
+        return "Tap the arena to lock your color."
+    }
+
+    private var turnBasedSubtitle: String {
+        if let roundAnnouncement, showPassDevice {
+            return roundAnnouncement
+        }
+        return "Each player locks one color per round."
+    }
+
+    private func roundAnnouncementPill(_ text: String) -> some View {
+        Text(text)
+            .font(.monoSmall)
+            .foregroundStyle(Color.textPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.black.opacity(0.3))
+            .clipShape(Capsule())
     }
 }
 
@@ -338,11 +544,32 @@ private enum PowerUp: CaseIterable {
     case shield
     case skip
 
-    var label: String {
+    var buttonTitle: String {
         switch self {
-        case .double: return "⚡ Double Points"
-        case .shield: return "🛡 Shield"
-        case .skip: return "⏩ Skip Opponent"
+        case .double:
+            return "Use Double Points"
+        case .shield:
+            return "Use Shield"
+        case .skip:
+            return "Use Skip"
         }
+    }
+
+    var compactTitle: String {
+        switch self {
+        case .double:
+            return "Double"
+        case .shield:
+            return "Shield"
+        case .skip:
+            return "Skip"
+        }
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        guard indices.contains(index) else { return nil }
+        return self[index]
     }
 }

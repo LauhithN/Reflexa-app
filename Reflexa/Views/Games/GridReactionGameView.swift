@@ -10,39 +10,31 @@ struct GridReactionGameView: View {
     @State private var roundWinner: Int?
     @State private var scores: [Int] = []
     @State private var reactionTimes: [Int] = []
+    @State private var turnReactionTimes: [Int?] = []
     @State private var showResult = false
-    @State private var countdownValue: Int? = 3
+    @State private var showPassDevice = false
+    @State private var countdownValue: Int? = nil
+    @State private var roundAnnouncement: String?
+    @State private var activePlayerIndex = 0
     @State private var roundTask: Task<Void, Never>?
+    @State private var triggerDate = Date()
 
     @AppStorage("bestGridReaction") private var bestGridReaction = 9_999
 
     private var playerCount: Int { config.playerMode.playerCount }
     private var maxRounds: Int { Constants.gridReactionRounds }
-
-    @State private var triggerDate = Date()
+    private var compactLayout: Bool { playerCount == 4 }
 
     var body: some View {
         ZStack {
             AmbientBackground()
 
-            Group {
-                switch config.playerMode {
-                case .solo:
-                    soloView
-                case .twoPlayer:
-                    multiplayerSplitView
-                case .fourPlayer:
-                    multiplayerQuadrantView
-                }
-            }
-
-            if config.playerMode != .solo {
-                VStack {
-                    PlayerScoreboard(players: livePlayerResults)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 14)
-                    Spacer()
-                }
+            if config.playerMode == .solo {
+                soloView
+            } else if config.isTurnBased {
+                turnBasedView
+            } else {
+                simultaneousView
             }
 
             if let countdownValue {
@@ -96,38 +88,88 @@ struct GridReactionGameView: View {
         }
     }
 
-    private var multiplayerSplitView: some View {
-        TwoPlayerSplitView { playerIndex in
-            playerZone(playerIndex: playerIndex, columns: 3, cellCount: 6)
+    private var simultaneousView: some View {
+        ZStack {
+            MultiplayerArenaLayout(playerCount: playerCount, topInset: 110, bottomInset: 18) { playerIndex in
+                simultaneousPanel(for: playerIndex)
+            }
+
+            VStack(spacing: 10) {
+                PlayerScoreboard(players: livePlayerResults)
+                Text("Round \(currentRound) / \(maxRounds)")
+                    .font(.monoSmall)
+                    .foregroundStyle(Color.textSecondary)
+
+                if let roundAnnouncement {
+                    roundAnnouncementPill(roundAnnouncement)
+                }
+            }
+            .padding(.top, 14)
+            .padding(.horizontal, 16)
+            .frame(maxHeight: .infinity, alignment: .top)
         }
     }
 
-    private var multiplayerQuadrantView: some View {
-        FourPlayerGridView { playerIndex in
-            playerZone(playerIndex: playerIndex, columns: 2, cellCount: 4)
+    private var turnBasedView: some View {
+        TurnBasedStageContainer(
+            roundTitle: "Round \(currentRound) / \(maxRounds)",
+            subtitle: turnBasedSubtitle,
+            activePlayerName: config.activePlayerNames[activePlayerIndex],
+            activePlayerColor: Color.playerColor(for: activePlayerIndex),
+            players: livePlayerResults,
+            activePlayerIndex: activePlayerIndex,
+            showPassDevice: showPassDevice,
+            onReady: startTurnBasedRound
+        ) {
+            turnBasedPanel(for: activePlayerIndex)
         }
     }
 
-    private func playerZone(playerIndex: Int, columns: Int, cellCount: Int) -> some View {
+    private func simultaneousPanel(for playerIndex: Int) -> some View {
+        let columns = playerCount == 2 ? 3 : 2
+        let cellCount = playerCount == 2 ? 6 : 4
         let color = Color.playerColor(for: playerIndex)
 
-        return VStack(spacing: 10) {
-            HStack {
-                Text(config.activePlayerNames[playerIndex])
-                    .font(.playerLabel)
-                    .foregroundStyle(Color.textPrimary)
-                    .lineLimit(1)
-
-                Spacer()
-
+        return MultiplayerPlayerPanel(
+            name: config.activePlayerNames[playerIndex],
+            accentColor: color,
+            subtitle: compactLayout ? nil : "Tap the lit cell",
+            compact: compactLayout,
+            headerTrailing: {
                 Text("\(scores[safe: playerIndex] ?? 0)")
                     .font(.monoSmall)
                     .foregroundStyle(color)
                     .monospacedDigit()
+            },
+            content: {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
+                    ForEach(0..<cellCount, id: \.self) { cell in
+                        cellView(
+                            cell: cell,
+                            playerIndex: playerIndex,
+                            isActive: activeCells[safe: playerIndex] == cell,
+                            size: nil
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(config.activePlayerNames[playerIndex]) reaction zone")
+    }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
-                ForEach(0..<cellCount, id: \.self) { cell in
+    private func turnBasedPanel(for playerIndex: Int) -> some View {
+        let color = Color.playerColor(for: playerIndex)
+
+        return VStack(spacing: 18) {
+            Text("Tap the lit cell as fast as you can.")
+                .font(.bodyLarge)
+                .foregroundStyle(Color.textSecondary)
+                .multilineTextAlignment(.center)
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
+                ForEach(0..<9, id: \.self) { cell in
                     cellView(
                         cell: cell,
                         playerIndex: playerIndex,
@@ -136,25 +178,19 @@ struct GridReactionGameView: View {
                     )
                 }
             }
+
+            if let reaction = turnReactionTimes[safe: playerIndex] ?? nil {
+                Text("\(reaction)ms")
+                    .font(.monoLarge)
+                    .foregroundStyle(color)
+                    .monospacedDigit()
+            } else {
+                Text("Only the glowing cell scores.")
+                    .font(.monoSmall)
+                    .foregroundStyle(Color.textSecondary)
+            }
         }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [color.opacity(0.18), Color.cardBackground.opacity(0.8)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(color.opacity(0.82), lineWidth: 2)
-        )
-        .padding(8)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(config.activePlayerNames[playerIndex]) reaction zone")
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func cellView(cell: Int, playerIndex: Int, isActive: Bool, size: CGFloat?) -> some View {
@@ -193,6 +229,7 @@ struct GridReactionGameView: View {
                         )
                     )
             )
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .onTapGesture {
                 handleTap(playerIndex: playerIndex, cell: cell)
             }
@@ -245,14 +282,28 @@ struct GridReactionGameView: View {
 
     private func restartGame() {
         currentRound = 1
+        activePlayerIndex = 0
         scores = Array(repeating: 0, count: playerCount)
         reactionTimes = []
-        activeCells = Array(repeating: 0, count: playerCount)
+        turnReactionTimes = Array(repeating: nil, count: playerCount)
+        activeCells = Array(repeating: 0, count: max(1, playerCount))
         roundWinner = nil
+        roundAnnouncement = nil
         showResult = false
-        countdownValue = 3
+        showPassDevice = false
+        countdownValue = nil
         roundTask?.cancel()
 
+        if config.playerMode == .solo || !config.isTurnBased {
+            startCountdown()
+        } else {
+            showPassDevice = true
+        }
+    }
+
+    private func startCountdown() {
+        countdownValue = 3
+        roundTask?.cancel()
         roundTask = Task { @MainActor in
             for value in stride(from: 2, through: 0, by: -1) {
                 try? await Task.sleep(for: .seconds(1))
@@ -264,56 +315,81 @@ struct GridReactionGameView: View {
         }
     }
 
+    private func startTurnBasedRound() {
+        showPassDevice = false
+        roundAnnouncement = nil
+        startRound()
+    }
+
     private func startRound() {
         roundWinner = nil
 
         let cellCount: Int
         switch config.playerMode {
-        case .solo: cellCount = 9
-        case .twoPlayer: cellCount = 6
-        case .fourPlayer: cellCount = 4
+        case .solo:
+            cellCount = 9
+        case .twoPlayer:
+            cellCount = config.isTurnBased ? 9 : 6
+        case .fourPlayer:
+            cellCount = config.isTurnBased ? 9 : 4
         }
 
-        activeCells = (0..<playerCount).map { _ in Int.random(in: 0..<cellCount) }
+        if config.isTurnBased {
+            activeCells[activePlayerIndex] = Int.random(in: 0..<cellCount)
+        } else {
+            activeCells = (0..<playerCount).map { _ in Int.random(in: 0..<cellCount) }
+        }
+
         triggerDate = Date()
     }
 
     private func handleTap(playerIndex: Int, cell: Int) {
-        guard !showResult, countdownValue == nil else { return }
+        guard !showResult, countdownValue == nil, !showPassDevice else { return }
+
+        if config.playerMode == .solo {
+            guard activeCells[safe: 0] == cell else {
+                HapticManager.shared.error()
+                return
+            }
+
+            reactionTimes.append(max(1, Int(Date().timeIntervalSince(triggerDate) * 1000)))
+            HapticManager.shared.light()
+            advanceSoloRound()
+            return
+        }
+
+        if config.isTurnBased {
+            guard playerIndex == activePlayerIndex else { return }
+            guard activeCells[safe: playerIndex] == cell else {
+                HapticManager.shared.error()
+                return
+            }
+
+            let reaction = max(1, Int(Date().timeIntervalSince(triggerDate) * 1000))
+            turnReactionTimes[playerIndex] = reaction
+            HapticManager.shared.light()
+            advanceTurnBasedRound()
+            return
+        }
+
         guard activeCells[safe: playerIndex] == cell else {
             HapticManager.shared.error()
             return
         }
-
-        let reaction = Int(Date().timeIntervalSince(triggerDate) * 1000)
-
-        if config.playerMode == .solo {
-            reactionTimes.append(max(1, reaction))
-            HapticManager.shared.light()
-            advanceRound()
-            return
-        }
-
         guard roundWinner == nil else { return }
+
         roundWinner = playerIndex
         scores[playerIndex] += 1
         HapticManager.shared.success()
-        advanceRound()
+        advanceSimultaneousRound()
     }
 
-    private func advanceRound() {
-        if config.playerMode == .solo, currentRound == maxRounds {
+    private func advanceSoloRound() {
+        if currentRound == maxRounds {
             let average = reactionTimes.isEmpty ? 0 : reactionTimes.reduce(0, +) / reactionTimes.count
             if average > 0 && average < bestGridReaction {
                 bestGridReaction = average
             }
-            withAnimation(Spring.smooth) {
-                showResult = true
-            }
-            return
-        }
-
-        if config.playerMode != .solo, currentRound == maxRounds {
             withAnimation(Spring.smooth) {
                 showResult = true
             }
@@ -326,6 +402,95 @@ struct GridReactionGameView: View {
             try? await Task.sleep(for: .milliseconds(650))
             startRound()
         }
+    }
+
+    private func advanceSimultaneousRound() {
+        if let winner = roundWinner {
+            roundAnnouncement = "\(config.activePlayerNames[winner]) takes the round"
+        }
+
+        if currentRound == maxRounds {
+            roundTask?.cancel()
+            roundTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(850))
+                guard !Task.isCancelled else { return }
+                withAnimation(Spring.smooth) {
+                    showResult = true
+                }
+            }
+            return
+        }
+
+        currentRound += 1
+        roundTask?.cancel()
+        roundTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(900))
+            guard !Task.isCancelled else { return }
+            roundAnnouncement = nil
+            startRound()
+        }
+    }
+
+    private func advanceTurnBasedRound() {
+        if activePlayerIndex < playerCount - 1 {
+            activePlayerIndex += 1
+            roundTask?.cancel()
+            roundTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(650))
+                guard !Task.isCancelled else { return }
+                showPassDevice = true
+            }
+            return
+        }
+
+        guard let winner = turnReactionTimes.enumerated().compactMap({ index, value -> (Int, Int)? in
+            guard let value else { return nil }
+            return (index, value)
+        }).min(by: { $0.1 < $1.1 })?.0 else {
+            return
+        }
+
+        scores[winner] += 1
+        roundAnnouncement = "\(config.activePlayerNames[winner]) takes the round"
+
+        if currentRound == maxRounds {
+            roundTask?.cancel()
+            roundTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(900))
+                guard !Task.isCancelled else { return }
+                withAnimation(Spring.smooth) {
+                    showResult = true
+                }
+            }
+            return
+        }
+
+        currentRound += 1
+        activePlayerIndex = 0
+        turnReactionTimes = Array(repeating: nil, count: playerCount)
+        roundTask?.cancel()
+        roundTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(950))
+            guard !Task.isCancelled else { return }
+            showPassDevice = true
+        }
+    }
+
+    private var turnBasedSubtitle: String {
+        if let roundAnnouncement, showPassDevice {
+            return roundAnnouncement
+        }
+        return "Each player gets one grid per round."
+    }
+
+    private func roundAnnouncementPill(_ text: String) -> some View {
+        Text(text)
+            .font(.monoSmall)
+            .foregroundStyle(Color.textPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.black.opacity(0.3))
+            .clipShape(Capsule())
     }
 }
 

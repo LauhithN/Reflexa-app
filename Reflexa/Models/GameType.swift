@@ -75,13 +75,13 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
     var multiplayerTip: String {
         switch self {
         case .stopwatch:
-            return "Each player takes a turn. Closest to zero wins."
+            return "Split lanes or pass-device turns. Closest to zero wins."
         case .gridReaction:
-            return "Simultaneous zones. Win rounds by tapping your lit cell first."
+            return "Shared lanes or sequential turns. Fastest round wins."
         case .reactionDuel:
-            return "Wait for trigger. Early tap adds false-start penalty."
+            return "Live duel zones or turn-based reaction rounds."
         case .colorBattle:
-            return "Pass-device rounds with power-ups and penalties."
+            return "Shared color rounds or pass-device power turns."
         default:
             return "Solo mode focuses on your personal best."
         }
@@ -97,6 +97,21 @@ enum GameType: String, CaseIterable, Identifiable, Codable {
         case .gridReaction: return [.solo, .twoPlayer, .fourPlayer]
         case .reactionDuel: return [.twoPlayer, .fourPlayer]
         case .colorBattle: return [.twoPlayer, .fourPlayer]
+        }
+    }
+
+    var supportedPlayStyles: [GamePlayStyle] {
+        supportedModes.contains(where: { $0 != .solo }) ? GamePlayStyle.allCases : []
+    }
+
+    var defaultPlayStyle: GamePlayStyle {
+        switch self {
+        case .reactionDuel, .gridReaction:
+            return .simultaneous
+        case .stopwatch, .colorBattle:
+            return .turnBased
+        default:
+            return .simultaneous
         }
     }
 
