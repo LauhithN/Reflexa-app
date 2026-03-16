@@ -32,7 +32,9 @@ struct ResultScreen: View {
         ZStack {
             AmbientBackground()
 
-            VStack(spacing: 20) {
+            VStack(spacing: 18) {
+                header
+
                 if isMultiplayer {
                     multiplayerLayout
                 } else {
@@ -51,86 +53,112 @@ struct ResultScreen: View {
         }
     }
 
-    private var soloLayout: some View {
-        VStack(spacing: 14) {
-            Text(formattedScore(animatedScore))
-                .font(.monoTime)
-                .monospacedDigit()
+    private var header: some View {
+        VStack(spacing: 10) {
+            BrandMark(size: 44, showSparkles: false)
+
+            Text(isMultiplayer ? "Results" : "Your Result")
+                .font(.resultTitle)
                 .foregroundStyle(Color.textPrimary)
 
-            Text(scoreLabel)
-                .font(.bodyLarge)
+            Text(gameType.displayName)
+                .font(.monoSmall)
                 .foregroundStyle(Color.textSecondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.white.opacity(0.08))
+                .clipShape(Capsule())
+        }
+    }
 
-            if soloResult?.isNewBest == true {
-                Text("✨ New Best!")
-                    .font(.playerLabel)
-                    .foregroundStyle(Color.appBackground)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.accentAmber)
-                    .clipShape(Capsule())
-            }
+    private var soloLayout: some View {
+        GlassCard(cornerRadius: 32) {
+            VStack(spacing: 16) {
+                Text(formattedScore(animatedScore))
+                    .font(.monoTime.weight(.black))
+                    .monospacedDigit()
+                    .foregroundStyle(Color.textPrimary)
 
-            if let result = soloResult {
-                Text(contextTier(for: result.score))
+                Text(scoreLabel.uppercased())
                     .font(.monoSmall)
                     .foregroundStyle(Color.textSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Color.white.opacity(0.06))
-                    .clipShape(Capsule())
+
+                if soloResult?.isNewBest == true {
+                    Text("NEW BEST")
+                        .font(.monoSmall)
+                        .foregroundStyle(Color.inkPanel)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.accentAmber)
+                        .clipShape(Capsule())
+                }
+
+                if let result = soloResult {
+                    Text(contextTier(for: result.score))
+                        .font(.playerLabel)
+                        .foregroundStyle(Color.textPrimary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(Color.white.opacity(0.08))
+                        .clipShape(Capsule())
+                }
             }
+            .frame(maxWidth: .infinity)
         }
-        .padding(20)
-        .glassCard(cornerRadius: 24)
     }
 
     private var multiplayerLayout: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 18) {
             if let winner = sortedScores.first(where: { $0.isWinner }) {
-                Text("\(winner.name) Wins! 🏆")
+                Text("\(winner.name) takes it")
                     .font(.resultTitle)
                     .foregroundStyle(winner.color)
                     .lineLimit(1)
             }
 
-            VStack(spacing: 8) {
-                HStack {
-                    Text("Rank")
-                    Text("Player")
-                    Spacer()
-                    Text("Score")
-                }
-                .font(.monoSmall)
-                .foregroundStyle(Color.textSecondary)
-
-                ForEach(Array(sortedScores.enumerated()), id: \.element.id) { _, player in
-                    HStack(spacing: 10) {
-                        Text(medal(for: player.rank))
-                            .frame(width: 28, alignment: .leading)
-
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(player.color)
-                                .frame(width: 8, height: 8)
-                            Text(player.name)
-                                .lineLimit(1)
-                                .font(.playerLabel)
-                        }
-
-                        Spacer()
-
-                        Text(formattedScore(player.score))
-                            .font(.monoSmall)
-                            .monospacedDigit()
-                            .foregroundStyle(Color.textPrimary)
-                    }
-                    .padding(.vertical, 6)
+            HStack(alignment: .bottom, spacing: 14) {
+                ForEach(Array(sortedScores.prefix(4))) { player in
+                    podiumBar(for: player)
                 }
             }
-            .padding(16)
-            .glassCard(cornerRadius: 20)
+            .frame(maxWidth: .infinity, alignment: .center)
+
+            GlassCard(cornerRadius: 24) {
+                VStack(spacing: 10) {
+                    HStack {
+                        Text("Rank")
+                        Text("Player")
+                        Spacer()
+                        Text("Score")
+                    }
+                    .font(.monoSmall)
+                    .foregroundStyle(Color.textSecondary)
+
+                    ForEach(Array(sortedScores.enumerated()), id: \.element.id) { _, player in
+                        HStack(spacing: 10) {
+                            Text(medal(for: player.rank))
+                                .frame(width: 28, alignment: .leading)
+
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .fill(player.color)
+                                    .frame(width: 8, height: 8)
+                                Text(player.name)
+                                    .lineLimit(1)
+                                    .font(.playerLabel)
+                            }
+
+                            Spacer()
+
+                            Text(formattedScore(player.score))
+                                .font(.monoSmall)
+                                .monospacedDigit()
+                                .foregroundStyle(Color.textPrimary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
         }
     }
 
@@ -149,23 +177,20 @@ struct ResultScreen: View {
                 onHome()
             } label: {
                 Text("Home")
-                    .foregroundStyle(Color.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
-                    .background(Color.cardBackground.opacity(0.72))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(Color.strokeSubtle, lineWidth: 1)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-            .buttonStyle(CardButtonStyle())
+            .buttonStyle(SecondaryCTAButtonStyle())
             .accessibilityLabel("Home")
             .accessibilityHint("Returns to game list")
         }
     }
 
     private func animateResult() {
+        if isMultiplayer {
+            triggerParticles = true
+            HapticManager.shared.doublePulse()
+            return
+        }
+
         guard let soloResult else { return }
 
         if reduceMotion {
@@ -179,6 +204,68 @@ struct ResultScreen: View {
         if soloResult.isNewBest {
             triggerParticles = true
             HapticManager.shared.doublePulse()
+        }
+    }
+
+    private func podiumBar(for player: PlayerResult) -> some View {
+        let width: CGFloat = sortedScores.count > 3 ? 72 : 92
+
+        return VStack(spacing: 8) {
+            if player.rank == 1 {
+                Image(systemName: "crown.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(Color.accentAmber)
+            } else {
+                Spacer()
+                    .frame(height: 18)
+            }
+
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [player.color, player.color.opacity(0.58)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: width, height: podiumHeight(for: player.rank))
+                .overlay(
+                    VStack(spacing: 8) {
+                        Text(rankTitle(for: player.rank))
+                            .font(.playerLabel)
+                            .foregroundStyle(Color.inkPanel)
+
+                        Text(formattedScore(player.score))
+                            .font(.monoSmall)
+                            .monospacedDigit()
+                            .foregroundStyle(Color.inkPanel)
+                    }
+                    .padding(.horizontal, 8)
+                )
+                .shadow(color: player.color.opacity(0.4), radius: 16, y: 12)
+
+            Text(player.name)
+                .font(.playerLabel)
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
+        }
+    }
+
+    private func podiumHeight(for rank: Int) -> CGFloat {
+        switch rank {
+        case 1: return 210
+        case 2: return 162
+        case 3: return 126
+        default: return 104
+        }
+    }
+
+    private func rankTitle(for rank: Int) -> String {
+        switch rank {
+        case 1: return "1st"
+        case 2: return "2nd"
+        case 3: return "3rd"
+        default: return "\(rank)th"
         }
     }
 

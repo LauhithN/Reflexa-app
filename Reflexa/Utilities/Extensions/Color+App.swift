@@ -2,33 +2,36 @@ import SwiftUI
 
 extension Color {
     // MARK: - Surfaces
-    static let appBackground = Color(hex: "#0A0A0F")
-    static let appBackgroundSecondary = Color(hex: "#0F0F18")
-    static let cardBackground = Color(hex: "#14141C")
-    static let elevatedCard = Color(hex: "#1C1C28")
-    static let strokeSubtle = Color.white.opacity(0.07)
+    static let appBackground = Color(hex: "#120426")
+    static let appBackgroundSecondary = Color(hex: "#261052")
+    static let cardBackground = Color(hex: "#1B0F3E")
+    static let elevatedCard = Color(hex: "#28175C")
+    static let inkPanel = Color(hex: "#130A2C")
+    static let strokeSubtle = Color.white.opacity(0.12)
 
     // MARK: - Accent Palette
-    static let accentPrimary = Color(hex: "#7B68EE")
-    static let accentSecondary = Color(hex: "#5EE7A0")
-    static let accentHot = Color(hex: "#FF6B6B")
-    static let accentAmber = Color(hex: "#FFD166")
+    static let accentPrimary = Color(hex: "#FF72B6")
+    static let accentSecondary = Color(hex: "#57F4D0")
+    static let accentHot = Color(hex: "#6978FF")
+    static let accentAmber = Color(hex: "#FFD95A")
+    static let accentBlue = Color(hex: "#76D9FF")
+    static let accentLilac = Color(hex: "#C58CFF")
 
     // MARK: - Players
-    static let player1Color = Color(hex: "#4FC3F7")
-    static let player2Color = Color(hex: "#FF8A65")
-    static let player3Color = Color(hex: "#CE93D8")
-    static let player4Color = Color(hex: "#A5D6A7")
+    static let player1Color = Color(hex: "#69E7FF")
+    static let player2Color = Color(hex: "#FFD44A")
+    static let player3Color = Color(hex: "#C675FF")
+    static let player4Color = Color(hex: "#62F3A2")
 
     // MARK: - Typography
-    static let textPrimary = Color(hex: "#F0F0F8")
-    static let textSecondary = Color(hex: "#888899")
-    static let textTertiary = Color(hex: "#555566")
+    static let textPrimary = Color(hex: "#FFF7FF")
+    static let textSecondary = Color(hex: "#D3C7F4")
+    static let textTertiary = Color(hex: "#8C7DAA")
 
     // MARK: - Semantic
-    static let success = Color(hex: "#5EE7A0")
-    static let warning = Color(hex: "#FFD166")
-    static let destructive = Color(hex: "#FF6B6B")
+    static let success = accentSecondary
+    static let warning = accentAmber
+    static let destructive = Color(hex: "#FF7A91")
 
     // Compatibility aliases
     static let error = destructive

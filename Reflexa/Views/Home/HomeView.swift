@@ -23,17 +23,17 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 28) {
                 heroHeader
                     .opacity(animateIn ? 1 : 0)
                     .offset(y: animateIn ? 0 : 10)
 
-                gamesSection(title: "Game Modes", caption: "Solo · 2 Player · 4 Player", games: allGames)
+                gamesSection(title: "Solo Arcade", caption: "Fast drills and personal bests", games: allGames)
 
-                gamesSection(title: "Competitive Modes", caption: "Local multiplayer only", games: duelGames)
+                gamesSection(title: "Party Battles", caption: "Local same-device chaos", games: duelGames)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 16)
+            .padding(.top, 12)
             .padding(.bottom, 32)
         }
         .background(AmbientBackground())
@@ -57,81 +57,98 @@ struct HomeView: View {
     }
 
     private var heroHeader: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                HStack(spacing: 8) {
-                    Image(systemName: "bolt.fill")
-                        .foregroundStyle(Color.accentPrimary)
-                        .accessibilityLabel("Lightning bolt")
+        GlassCard(cornerRadius: 32) {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(alignment: .top, spacing: 14) {
+                    BrandMark(size: 78)
 
-                    Text("Reflexa")
-                        .font(.heroTitle)
-                        .foregroundStyle(Color.textPrimary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Reflexa")
+                            .font(.heroTitle)
+                            .foregroundStyle(Color.textPrimary)
+
+                        Text("quick games, quick laughs")
+                            .font(.heroCaption)
+                            .foregroundStyle(Color.accentAmber)
+                            .textCase(.lowercase)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(Color.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(CardButtonStyle())
+                    .accessibilityLabel("Settings")
+                    .accessibilityHint("Open app settings")
                 }
 
-                Spacer()
+                Text("Party-ready reflex games for solo streaks, couch battles, and one-phone bragging rights.")
+                    .font(.bodyLarge)
+                    .foregroundStyle(Color.textSecondary)
 
-                Button {
-                    showSettings = true
-                } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Color.textPrimary)
-                }
-                .buttonStyle(CardButtonStyle())
-                .accessibilityLabel("Settings")
-                .accessibilityHint("Open app settings")
-            }
-
-            Text("Test your reflexes with friends or solo.")
-                .font(.bodyLarge)
-                .foregroundStyle(Color.textSecondary)
-
-            HStack {
-                Text(hasStopwatchBest ? "⚡ Best: \(Int(bestTime.rounded()))ms" : "⚡ Best: --")
-                    .font(.playerLabel)
-                    .foregroundStyle(Color.accentPrimary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.accentPrimary.opacity(0.14))
-                    .clipShape(Capsule())
-                    .pulseGlow(color: .accentPrimary)
-
-                Spacer(minLength: 0)
-            }
-
-            Text(taglines[taglineIndex])
-                .font(.playerLabel)
-                .foregroundStyle(Color.textSecondary)
-                .id(taglineIndex)
-                .transition(.opacity)
-        }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.elevatedCard.opacity(0.98), Color.cardBackground.opacity(0.82)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+                HStack(spacing: 10) {
+                    heroChip(
+                        icon: "bolt.fill",
+                        text: hasStopwatchBest ? "\(Int(bestTime.rounded()))ms best" : "Set your first best",
+                        tint: .accentAmber
                     )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.strokeSubtle, lineWidth: 1)
-                )
+
+                    heroChip(icon: "person.3.fill", text: "1 to 4 players", tint: .accentSecondary)
+                }
+
+                Text(taglines[taglineIndex])
+                    .font(.playerLabel)
+                    .foregroundStyle(Color.textPrimary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.08))
+                    .clipShape(Capsule())
+                    .id(taglineIndex)
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    private func heroChip(icon: String, text: String, tint: Color) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .bold))
+
+            Text(text)
+                .lineLimit(1)
+        }
+        .font(.monoSmall)
+        .foregroundStyle(Color.textPrimary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(tint.opacity(0.16))
+        .overlay(
+            Capsule()
+                .stroke(tint.opacity(0.5), lineWidth: 1)
         )
+        .clipShape(Capsule())
+        .pulseGlow(color: tint)
     }
 
     private func gamesSection(title: String, caption: String, games: [GameType]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.sectionTitle)
-                .foregroundStyle(Color.textPrimary)
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.resultTitle)
+                    .foregroundStyle(Color.textPrimary)
 
-            Text(caption)
-                .font(.monoSmall)
-                .foregroundStyle(Color.textSecondary)
+                Text(caption)
+                    .font(.monoSmall)
+                    .foregroundStyle(Color.textSecondary)
+            }
 
             VStack(spacing: 12) {
                 ForEach(Array(games.enumerated()), id: \.element.id) { index, game in

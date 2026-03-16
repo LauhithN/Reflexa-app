@@ -19,14 +19,21 @@ struct TwoPlayerSplitView<Content: View>: View {
     private var divider: some View {
         ZStack {
             Rectangle()
-                .fill(Color.strokeSubtle)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.accentSecondary.opacity(0.32), Color.accentPrimary.opacity(0.32)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
                 .frame(height: 1)
             Circle()
-                .fill(Color.textSecondary.opacity(0.5))
-                .frame(width: 6, height: 6)
+                .fill(Color.white.opacity(0.9))
+                .frame(width: 8, height: 8)
+                .shadow(color: Color.accentAmber.opacity(0.45), radius: 8)
         }
         .frame(height: 12)
-        .background(Color.black.opacity(0.25))
+        .background(Color.black.opacity(0.16))
         .accessibilityHidden(true)
     }
 }

@@ -137,22 +137,45 @@ struct GridReactionGameView: View {
                 }
             }
         }
-        .padding(12)
-        .background(color.opacity(0.12))
-        .playerBorder(color: color, width: 2)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [color.opacity(0.18), Color.cardBackground.opacity(0.8)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(color.opacity(0.82), lineWidth: 2)
+        )
+        .padding(8)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(config.activePlayerNames[playerIndex]) reaction zone")
     }
 
     private func cellView(cell: Int, playerIndex: Int, isActive: Bool, size: CGFloat?) -> some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(isActive ? Color.accentPrimary : Color.cardBackground)
+        let zoneColor = Color.playerColor(for: playerIndex)
+
+        return RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(
+                LinearGradient(
+                    colors: isActive
+                    ? [zoneColor.opacity(0.95), zoneColor.opacity(0.52)]
+                    : [Color.cardBackground, Color.inkPanel],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.strokeSubtle, lineWidth: 1)
+                    .stroke(isActive ? zoneColor.opacity(0.92) : Color.white.opacity(0.08), lineWidth: isActive ? 2 : 1)
             )
             .if(isActive) { view in
-                view.shadow(color: Color.accentPrimary.opacity(0.45), radius: 8)
+                view.shadow(color: zoneColor.opacity(0.45), radius: 10)
             }
             .if(size != nil) { view in
                 view.frame(width: size, height: size)
@@ -160,6 +183,16 @@ struct GridReactionGameView: View {
             .if(size == nil) { view in
                 view.aspectRatio(1, contentMode: .fit)
             }
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(isActive ? 0.18 : 0.05), Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
             .onTapGesture {
                 handleTap(playerIndex: playerIndex, cell: cell)
             }

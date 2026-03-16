@@ -15,7 +15,7 @@ struct GameSetupView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 20) {
                 header
                 infoChips
                 howToSection
@@ -41,7 +41,7 @@ struct GameSetupView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             .padding(.bottom, 14)
-            .background(Color.black.opacity(0.22))
+            .background(Color.black.opacity(0.08))
             .accessibilityLabel("Start Game")
             .accessibilityHint("Launches \(gameType.displayName)")
         }
@@ -60,38 +60,43 @@ struct GameSetupView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.accentPrimary, Color.accentPrimary.opacity(0.6)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+        GlassCard(cornerRadius: 28) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 14) {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.accentPrimary, Color.accentSecondary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .frame(width: 64, height: 64)
+                        .frame(width: 72, height: 72)
+                        .overlay(
+                            Image(systemName: gameType.iconName)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(Color.white)
+                                .accessibilityLabel(gameType.displayName)
+                        )
 
-                Image(systemName: gameType.iconName)
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Color.white)
-                    .accessibilityLabel(gameType.displayName)
-            }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(gameType.displayName)
+                            .font(.resultTitle)
+                            .foregroundStyle(Color.textPrimary)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(gameType.displayName)
-                    .font(.resultTitle)
-                    .foregroundStyle(Color.textPrimary)
+                        Text(gameType.description)
+                            .font(.bodyLarge)
+                            .foregroundStyle(Color.textSecondary)
+                    }
 
-                Text(gameType.description)
-                    .font(.bodyLarge)
+                    Spacer()
+                }
+
+                Text("Choose your crew, skim the rules, then fire it up.")
+                    .font(.monoSmall)
                     .foregroundStyle(Color.textSecondary)
             }
-
-            Spacer()
         }
-        .padding(16)
-        .glassCard(cornerRadius: 20)
     }
 
     private var infoChips: some View {
@@ -106,9 +111,12 @@ struct GameSetupView: View {
             .font(.monoSmall)
             .foregroundStyle(Color.textPrimary)
             .lineLimit(1)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(tint.opacity(0.12))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(tint.opacity(0.16))
+            .overlay(
+                Capsule().stroke(tint.opacity(0.5), lineWidth: 1)
+            )
             .clipShape(Capsule())
     }
 
@@ -161,10 +169,10 @@ struct GameSetupView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
-                    .background(Color.cardBackground)
+                    .background(Color.inkPanel.opacity(0.65))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.strokeSubtle, lineWidth: 1)
+                            .stroke(Color.playerColor(for: index).opacity(0.4), lineWidth: 1)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }

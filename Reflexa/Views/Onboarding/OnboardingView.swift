@@ -4,7 +4,6 @@ struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     @State private var currentPage = 0
-    @State private var revealHeroLetters = false
     @State private var revealModeCards = false
 
     private let pages = 3
@@ -30,7 +29,6 @@ struct OnboardingView: View {
             .padding(.bottom, 20)
         }
         .onAppear {
-            revealHeroLetters = true
             revealModeCards = true
         }
         .preferredColorScheme(.dark)
@@ -55,24 +53,32 @@ struct OnboardingView: View {
     }
 
     private var heroPage: some View {
-        VStack(spacing: 18) {
-            Spacer(minLength: 12)
+        VStack(spacing: 24) {
+            Spacer(minLength: 18)
 
-            PulseOrb(color: .accentPrimary, size: 120, pulseScale: 1.2, pulseDuration: 1.8)
+            BrandMark(size: 144)
 
-            HStack(spacing: 0) {
-                ForEach(Array("Reflexa".enumerated()), id: \.offset) { index, char in
-                    Text(String(char))
-                        .font(.heroTitle)
-                        .foregroundStyle(Color.textPrimary)
-                        .opacity(revealHeroLetters ? 1 : 0)
-                        .animation(Spring.stagger(index), value: revealHeroLetters)
-                }
+            VStack(spacing: 8) {
+                Text("Reflexa")
+                    .font(.heroTitle)
+                    .foregroundStyle(Color.textPrimary)
+
+                Text("quick games, quick laughs")
+                    .font(.heroCaption)
+                    .foregroundStyle(Color.accentAmber)
+                    .textCase(.lowercase)
             }
 
-            Text("Train your reflexes. One tap at a time.")
+            Text("Bright arcade energy, solo reflex drills, and same-phone battles you can launch in seconds.")
                 .font(.bodyLarge)
                 .foregroundStyle(Color.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 18)
+
+            HStack(spacing: 10) {
+                heroFact("1-4 players", tint: .accentSecondary)
+                heroFact("8 game modes", tint: .accentPrimary)
+            }
 
             Spacer()
         }
@@ -80,46 +86,23 @@ struct OnboardingView: View {
     }
 
     private var modesPreviewPage: some View {
-        VStack(spacing: 16) {
-            Text("Game Modes")
-                .font(.resultTitle)
-                .foregroundStyle(Color.textPrimary)
+        VStack(spacing: 18) {
+            VStack(spacing: 6) {
+                Text("Pick your vibe")
+                    .font(.resultTitle)
+                    .foregroundStyle(Color.textPrimary)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(Array(previewGames.enumerated()), id: \.element.id) { index, game in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Image(systemName: game.iconName)
-                                .font(.system(size: 30, weight: .semibold))
-                                .foregroundStyle(Color.accentPrimary)
-
-                            Text(game.displayName)
-                                .font(.monoSmall)
-                                .foregroundStyle(Color.textPrimary)
-                                .lineLimit(2)
-
-                            Text(game.supportedModes.count > 1 ? "Solo / Multi" : "Solo")
-                                .font(.monoSmall)
-                                .foregroundStyle(Color.textSecondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.white.opacity(0.06))
-                                .clipShape(Capsule())
-                        }
-                        .padding(12)
-                        .frame(width: 120, height: 100, alignment: .topLeading)
-                        .glassCard(cornerRadius: 16)
-                        .opacity(revealModeCards ? 1 : 0)
-                        .offset(x: revealModeCards ? 0 : 20)
-                        .animation(Spring.stagger(index), value: revealModeCards)
-                    }
-                }
-                .padding(.horizontal, 20)
+                Text("Tiny rounds, loud reactions")
+                    .font(.bodyLarge)
+                    .foregroundStyle(Color.textSecondary)
             }
 
-            Text("8 modes. Solo and local multiplayer.")
-                .font(.bodyLarge)
-                .foregroundStyle(Color.textSecondary)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                ForEach(Array(previewGames.enumerated()), id: \.element.id) { index, game in
+                    previewCard(for: game, index: index)
+                }
+            }
+            .padding(.horizontal, 20)
 
             Spacer()
         }
@@ -127,19 +110,28 @@ struct OnboardingView: View {
     }
 
     private var valuePage: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 20) {
             Spacer(minLength: 10)
 
-            GlassCard(cornerRadius: 22) {
-                VStack(alignment: .leading, spacing: 14) {
-                    featureRow("No account or internet needed")
-                    featureRow("Solo and local multiplayer")
-                    featureRow("Up to 4 players on one device")
-                    featureRow("Pure reflex training, zero ads")
+            GlassCard(cornerRadius: 28) {
+                VStack(spacing: 18) {
+                    HStack(alignment: .bottom, spacing: 14) {
+                        podiumBar(height: 170, color: .player1Color, title: "1st")
+                        podiumBar(height: 128, color: .player2Color, title: "2nd")
+                        podiumBar(height: 104, color: .player3Color, title: "3rd")
+                    }
+                    .padding(.bottom, 8)
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        featureRow("No signup, no waiting, no internet needed")
+                        featureRow("Solo mode for grind mode")
+                        featureRow("Same-device party rounds for 2 or 4")
+                        featureRow("Built for quick passes and instant rematches")
+                    }
                 }
             }
 
-            Button("Let's Go") {
+            Button("Start Playing") {
                 hasCompletedOnboarding = true
             }
             .buttonStyle(PrimaryCTAButtonStyle())
@@ -181,10 +173,82 @@ struct OnboardingView: View {
                     }
                 }
             } label: {
-                Text(currentPage == pages - 1 ? "Let's Go" : "Continue")
+                Text(currentPage == pages - 1 ? "Start Playing" : "Continue")
             }
             .buttonStyle(PrimaryCTAButtonStyle())
             .padding(.horizontal, 20)
+        }
+    }
+
+    private func heroFact(_ title: String, tint: Color) -> some View {
+        Text(title)
+            .font(.monoSmall)
+            .foregroundStyle(Color.textPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(tint.opacity(0.16))
+            .overlay(
+                Capsule().stroke(tint.opacity(0.45), lineWidth: 1)
+            )
+            .clipShape(Capsule())
+    }
+
+    private func previewCard(for game: GameType, index: Int) -> some View {
+        let tint = index.isMultiple(of: 2) ? Color.accentPrimary : Color.accentSecondary
+        let accent = index.isMultiple(of: 2) ? Color.accentAmber : Color.accentBlue
+
+        return VStack(alignment: .leading, spacing: 10) {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [tint, accent],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 46, height: 46)
+                .overlay(
+                    Image(systemName: game.iconName)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(Color.white)
+                )
+
+            Text(game.displayName)
+                .font(.playerLabel)
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(2)
+
+            Text(game.supportedModes.count > 1 ? "Solo + Party" : "Solo")
+                .font(.monoSmall)
+                .foregroundStyle(Color.textSecondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Color.white.opacity(0.08))
+                .clipShape(Capsule())
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 136, alignment: .topLeading)
+        .glassCard(cornerRadius: 20)
+        .opacity(revealModeCards ? 1 : 0)
+        .offset(y: revealModeCards ? 0 : 16)
+        .animation(Spring.stagger(index), value: revealModeCards)
+    }
+
+    private func podiumBar(height: CGFloat, color: Color, title: String) -> some View {
+        VStack(spacing: 8) {
+            Text(title)
+                .font(.monoSmall)
+                .foregroundStyle(Color.textPrimary)
+
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [color, color.opacity(0.62)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 82, height: height)
         }
     }
 }

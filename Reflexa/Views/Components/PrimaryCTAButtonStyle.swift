@@ -6,23 +6,24 @@ struct PrimaryCTAButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.sectionTitle.weight(.semibold))
-            .foregroundStyle(Color.white)
+            .foregroundStyle(Color.inkPanel)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 15)
+            .padding(.vertical, 16)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                Capsule()
                     .fill(
                         LinearGradient(
-                            colors: [tint, tint.opacity(0.8)],
+                            colors: [Color.white, tint.opacity(0.22)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                Capsule()
+                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
             )
+            .shadow(color: tint.opacity(configuration.isPressed ? 0.18 : 0.34), radius: configuration.isPressed ? 10 : 20, y: 10)
             .opacity(configuration.isPressed ? 0.92 : 1)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(Spring.instant, value: configuration.isPressed)
@@ -40,14 +41,14 @@ struct SecondaryCTAButtonStyle: ButtonStyle {
             .font(.sectionTitle.weight(.semibold))
             .foregroundStyle(Color.textPrimary)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 15)
+            .padding(.vertical, 16)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                Capsule()
                     .fill(Color.cardBackground.opacity(0.82))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.strokeSubtle, lineWidth: 1)
+                Capsule()
+                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
             )
             .opacity(configuration.isPressed ? 0.86 : 1)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)

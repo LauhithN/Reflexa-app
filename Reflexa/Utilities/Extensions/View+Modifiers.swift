@@ -88,32 +88,38 @@ private struct GameScaffoldModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .top) {
-                HStack {
-                    Button(action: onExit) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 28, weight: .semibold))
-                            .foregroundStyle(Color.textPrimary.opacity(0.9))
-                    }
-                    .accessibleTapTarget()
-                    .accessibilityLabel("End Game")
-                    .accessibilityHint("Closes the active game")
+                HStack(spacing: 12) {
+                    controlButton(icon: "xmark", action: onExit)
+                        .accessibilityLabel("End Game")
+                        .accessibilityHint("Closes the active game")
+
+                    Spacer()
+
+                    Text(title)
+                        .font(.monoSmall)
+                        .foregroundStyle(Color.textPrimary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(Color.cardBackground.opacity(0.72))
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.white.opacity(0.16), lineWidth: 1)
+                        )
+                        .clipShape(Capsule())
 
                     Spacer()
 
                     if let gameType {
-                        Button {
+                        controlButton(icon: "questionmark") {
                             onHowToPlayVisibilityChanged?(true)
                             withAnimation(reduceMotion ? Spring.gentle : Spring.snappy) {
                                 showHowToPlay = true
                             }
-                        } label: {
-                            Image(systemName: "questionmark.circle.fill")
-                                .font(.system(size: 28, weight: .semibold))
-                                .foregroundStyle(Color.textPrimary.opacity(0.9))
                         }
-                        .accessibleTapTarget()
                         .accessibilityLabel("How to play")
                         .accessibilityHint("Shows instructions for \(gameType.displayName)")
+                    } else {
+                        Color.clear.frame(width: 44, height: 44)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -130,6 +136,22 @@ private struct GameScaffoldModifier: ViewModifier {
                     .zIndex(50)
                 }
             }
+    }
+
+    private func controlButton(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .black))
+                .foregroundStyle(Color.textPrimary)
+                .frame(width: 44, height: 44)
+                .background(Color.cardBackground.opacity(0.72))
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.16), lineWidth: 1)
+                )
+                .clipShape(Circle())
+        }
+        .accessibleTapTarget()
     }
 }
 

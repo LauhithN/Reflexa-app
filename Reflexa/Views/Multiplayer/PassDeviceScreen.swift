@@ -9,28 +9,40 @@ struct PassDeviceScreen: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            AmbientBackground()
 
-            VStack(spacing: 20) {
-                PulseOrb(color: playerColor, size: 140, pulseScale: 1.22, pulseDuration: 1.6)
+            VStack(spacing: 24) {
+                Spacer()
 
-                Text("\(playerName)'s Turn")
-                    .font(.resultTitle)
-                    .foregroundStyle(playerColor)
-                    .lineLimit(1)
+                GlassCard(cornerRadius: 32) {
+                    VStack(spacing: 18) {
+                        BrandMark(size: 78)
 
-                Text("Pass the device and get ready")
-                    .font(.bodyLarge)
-                    .foregroundStyle(Color.textSecondary)
+                        PulseOrb(color: playerColor, size: 132, pulseScale: 1.22, pulseDuration: 1.6)
 
-                Button {
-                    HapticManager.shared.light()
-                    startCountdown()
-                } label: {
-                    Text("Tap When Ready")
+                        Text("\(playerName)'s Turn")
+                            .font(.resultTitle)
+                            .foregroundStyle(playerColor)
+                            .lineLimit(1)
+
+                        Text("Pass the phone, keep the screen secret, then jump in when everyone is set.")
+                            .font(.bodyLarge)
+                            .foregroundStyle(Color.textSecondary)
+                            .multilineTextAlignment(.center)
+
+                        Button {
+                            HapticManager.shared.light()
+                            startCountdown()
+                        } label: {
+                            Text("Tap When Ready")
+                        }
+                        .buttonStyle(PrimaryCTAButtonStyle(tint: playerColor))
+                        .padding(.top, 6)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(PrimaryCTAButtonStyle(tint: playerColor))
-                .padding(.top, 6)
+
+                Spacer()
             }
             .padding(.horizontal, 24)
 

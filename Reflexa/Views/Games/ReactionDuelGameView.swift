@@ -102,17 +102,24 @@ struct ReactionDuelGameView: View {
     }
 
     private var centerTrigger: some View {
-        VStack(spacing: 8) {
-            PulseOrb(
-                color: triggerFired ? .accentAmber : .accentPrimary,
-                size: 120,
-                pulseScale: 1.2,
-                pulseDuration: 1.2
-            )
+        GlassCard(cornerRadius: 28) {
+            VStack(spacing: 10) {
+                PulseOrb(
+                    color: triggerFired ? .accentAmber : .accentPrimary,
+                    size: 120,
+                    pulseScale: 1.2,
+                    pulseDuration: 1.2
+                )
 
-            Text(triggerFired ? "TAP!" : "WAIT...")
-                .font(.resultTitle)
-                .foregroundStyle(triggerFired ? Color.accentAmber : Color.textSecondary)
+                Text(triggerFired ? "TAP!" : "WAIT...")
+                    .font(.resultTitle)
+                    .foregroundStyle(triggerFired ? Color.accentAmber : Color.textPrimary)
+
+                Text(triggerFired ? "first clean tap wins" : "fake starts get punished")
+                    .font(.monoSmall)
+                    .foregroundStyle(Color.textSecondary)
+            }
+            .frame(width: 210)
         }
     }
 
@@ -151,10 +158,24 @@ struct ReactionDuelGameView: View {
                     .foregroundStyle(Color.destructive)
             }
         }
-        .padding(12)
-        .background(color.opacity(0.12))
-        .playerBorder(color: color, width: 2)
-        .contentShape(Rectangle())
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [color.opacity(0.22), Color.cardBackground.opacity(0.78)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(color.opacity(0.82), lineWidth: 2)
+        )
+        .padding(8)
+        .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .onTapGesture {
             handleTap(playerIndex)
         }

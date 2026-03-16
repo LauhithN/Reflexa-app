@@ -38,18 +38,31 @@ private struct CrossDivider: View {
         GeometryReader { proxy in
             ZStack {
                 Rectangle()
-                    .fill(Color.strokeSubtle)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.accentSecondary.opacity(0.3), Color.accentPrimary.opacity(0.3)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .frame(width: 1)
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
 
                 Rectangle()
-                    .fill(Color.strokeSubtle)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.accentSecondary.opacity(0.3), Color.accentPrimary.opacity(0.3)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .frame(height: 1)
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
 
                 Circle()
-                    .fill(Color.textSecondary.opacity(0.55))
-                    .frame(width: 8, height: 8)
+                    .fill(Color.white.opacity(0.85))
+                    .frame(width: 10, height: 10)
+                    .shadow(color: Color.accentAmber.opacity(0.5), radius: 10)
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
             }
         }
